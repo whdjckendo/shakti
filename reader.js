@@ -323,7 +323,7 @@ export function initReader(opts) {
       else halves.push({ file: p.file, side: 'full' });
     }
     maxSpread = Math.ceil(halves.length / 2) - 1;
-    startSpread = halves[0] === null ? Math.min(1, maxSpread) : 0;
+    startSpread = 0;   // always open on the first page (the cover, if there is one)
     spread = startSpread;
     show(spread);
   }).catch(() => {});

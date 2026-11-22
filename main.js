@@ -389,6 +389,7 @@ const INFO = [
     body: 'Research experiement conducted on car preferences of OCEAN personalities with eye tracking. Submitted to HWWE 2026 conference. The paper will be published soon!' },
   { re: /Notebook4/, title: 'Book 1', body: 'Click to flip through it.' },
   { re: /Notebook1/, title: 'Book 2', body: 'Click to flip through it.' },
+  { re: /Notebook2/, title: 'Book 3', body: 'Click to flip through it.' },
   { mat: '_White_', title: 'Table cloth',
     body: 'Gives a soft touch to my arms when I place them on this for too long.' },
   { re: /(^|\s)(Pencil_1_\d|Lapices_en_bote1)(\s|$)/, title: 'Pencils & stationery',
@@ -576,7 +577,7 @@ addEventListener('click', () => {
     // toilets poster -> Book 1, IKEA (ETT LYCKLIG) poster -> Book 2
     const posterKey = hoverPoster && posterFocus > 0.4
       ? ({ 'poster-left': 'book1', 'poster-center': 'book2' })[hoverPoster.name] : null;
-    const bookKey = curInfo && ({ 'Book 1': 'book1', 'Book 2': 'book2' })[curInfo.title];
+    const bookKey = curInfo && ({ 'Book 1': 'book1', 'Book 2': 'book2', 'Book 3': 'book3' })[curInfo.title];
     const key = posterKey || bookKey;
     if (key && bookApi.readers[key]) { posterCta?.classList.remove('show'); bookApi.open(key); return; }
   }
@@ -1276,12 +1277,17 @@ const paint = () => new Promise((r) => requestAnimationFrame(() => requestAnimat
     const onExit = () => { targetYaw = camera.rotation.y; targetPitch = camera.rotation.x; };
     const readers = {};
     const nb1 = root.getObjectByName('Notebook4');
+    // All books keep the model book's curved shape; pages are printed on its paper.
     if (nb1) readers.book1 = initReader({
-      scene, camera, renderer, bloomPass, bookObject: nb1, pagesDir: 'books/book1', onExit });
-    // Book 2 keeps the model book's curved shape; the slides are printed on its paper.
+      scene, camera, renderer, bloomPass, bookObject: nb1, pagesDir: 'books/book1',
+      surface: 'model', paperMaterial: '_10', onExit });
     const nb2 = root.getObjectByName('Notebook1');
     if (nb2) readers.book2 = initReader({
       scene, camera, renderer, bloomPass, bookObject: nb2, pagesDir: 'books/book2',
+      surface: 'model', paperMaterial: '_10', onExit });
+    const nb3 = root.getObjectByName('Notebook2');
+    if (nb3) readers.book3 = initReader({
+      scene, camera, renderer, bloomPass, bookObject: nb3, pagesDir: 'books/book3',
       surface: 'model', paperMaterial: '_10', onExit });
     const list = Object.values(readers);
     bookApi = {
