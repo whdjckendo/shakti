@@ -216,7 +216,7 @@ export function liveSmoke(scene, origin, light = () => 1, count = 260) {
         float age = fract(aSeed.x + uTime / ${LIFE.toFixed(1)});
         float h = age * ${HEIGHT.toFixed(2)};
         // laminar at the bottom, then a slow sway that widens as it rises
-        float spread = 0.0015 + pow(age, 1.6) * 0.055;
+        float spread = 0.0015 + pow(max(age, 0.0), 1.6) * 0.055;
         float t = uTime * 0.35;
         vec3 p = uOrigin + vec3(
           sin(h * 22.0 - t * 2.0 + aSeed.y * 0.6) * spread + sin(h * 7.0 + t) * spread * 0.6,
@@ -224,7 +224,7 @@ export function liveSmoke(scene, origin, light = () => 1, count = 260) {
           cos(h * 18.0 - t * 1.6 + aSeed.z * 0.6) * spread * 0.8);
         // stray wisps drift a little apart from the main stream higher up
         p.xz += (aSeed.yz - 0.5) * age * age * 0.05;
-        vA = smoothstep(0.0, 0.06, age) * pow(1.0 - age, 1.8);
+        vA = smoothstep(0.0, 0.06, age) * pow(max(1.0 - age, 0.0), 1.8);
         vec4 mv = modelViewMatrix * vec4(p, 1.0);
         gl_PointSize = max(1.0, (0.006 + age * 0.03) * uScale * projectionMatrix[1][1] / -mv.z);
         gl_Position = projectionMatrix * mv;

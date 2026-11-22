@@ -4,6 +4,7 @@ import { GLTFLoader } from './vendor/three/jsm/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from './vendor/three/jsm/libs/meshopt_decoder.module.js';
 import { EffectComposer } from './vendor/three/jsm/postprocessing/EffectComposer.js';
 import { RenderPass } from './vendor/three/jsm/postprocessing/RenderPass.js';
+import { ShaderPass } from './vendor/three/jsm/postprocessing/ShaderPass.js';
 import { UnrealBloomPass } from './vendor/three/jsm/postprocessing/UnrealBloomPass.js';
 import { OutputPass } from './vendor/three/jsm/postprocessing/OutputPass.js';
 import { initBooks } from './books.js';
@@ -44,6 +45,18 @@ const msaaTarget = new THREE.WebGLRenderTarget(size.x, size.y, {
 });
 const composer = new EffectComposer(renderer, msaaTarget);
 composer.addPass(new RenderPass(scene, camera));
+// Safety net: a single NaN/Inf pixel (from any shader, on some GPUs) gets
+// smeared by the bloom blur into big black blocks. Replace bad pixels first.
+composer.addPass(new ShaderPass({
+  uniforms: { tDiffuse: { value: null } },
+  vertexShader: 'varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
+  fragmentShader: `uniform sampler2D tDiffuse; varying vec2 vUv;
+    void main() {
+      vec4 c = texture2D(tDiffuse, vUv);
+      if (any(isnan(c)) || any(isinf(c))) c = vec4(0.0, 0.0, 0.0, 1.0);
+      gl_FragColor = vec4(min(c.rgb, vec3(64.0)), c.a);
+    }`,
+}));
 const bloomPass = new UnrealBloomPass(
   new THREE.Vector2(window.innerWidth, window.innerHeight), 0.36, 0.85, 0.52);
 composer.addPass(bloomPass);

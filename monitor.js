@@ -99,9 +99,11 @@ export function initMonitor(opts) {
         }
         // vignette + slight blue cast of a backlit panel
         vec2 v = vUv * (1.0 - vUv);
-        col *= pow(v.x * v.y * 16.0, 0.18);
+        // max(): at the very edge v can dip a hair below 0, and pow() of a
+        // negative is NaN, which the bloom pass smears into big black blocks
+        col *= pow(max(v.x * v.y * 16.0, 0.0), 0.18);
         col = col * vec3(0.96, 0.98, 1.04) * uBright + vec3(0.006, 0.008, 0.014);
-        gl_FragColor = vec4(col, 1.0);
+        gl_FragColor = vec4(clamp(col, 0.0, 4.0), 1.0);
       }`,
   });
   const plane = new THREE.Mesh(new THREE.PlaneGeometry(W, H), mat);
