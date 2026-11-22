@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { OBJLoader } from './vendor/three/jsm/loaders/OBJLoader.js';
+import { GLTFLoader } from './vendor/three/jsm/loaders/GLTFLoader.js';
 import { EffectComposer } from './vendor/three/jsm/postprocessing/EffectComposer.js';
 import { RenderPass } from './vendor/three/jsm/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from './vendor/three/jsm/postprocessing/UnrealBloomPass.js';
@@ -297,7 +298,11 @@ function buildMaterial(srcMat) {
 }
 
 /* ---------------- Player state ---------------- */
-const SCALE = 0.001;            // model is authored in millimetres
+// New Blender model (models/room.glb) is the default; add ?obj to the URL for
+// the old SketchUp OBJ. The GLB is ~10x metres as exported, so it scales by 0.1.
+const USE_OBJ = /[?&]obj\b/.test(location.search);
+const isGlb = !USE_OBJ;
+const SCALE = USE_OBJ ? 0.001 : 0.1;   // OBJ is authored in millimetres
 const PLAYER_RADIUS = 0.26;
 const STAND_EYE = 1.52;
 const CROUCH_EYE = 0.95;
@@ -380,14 +385,22 @@ const infoHitTargets = [];   // infoMeshes + infoProxies, filled after load
 const INFO = [
   { mat: 'Screenshot_2026_08_29_022137', title: 'Ocean research paper',
     body: 'Research experiement conducted on car preferences of OCEAN personalities with eye tracking. Submitted to HWWE 2026 conference. The paper will be published soon!' },
-  { re: /Notebook1/, pdf: 'books/pdf/book1.pdf', title: 'The Politics of Design',
+  { re: /Notebook1/, title: 'The Politics of Design',
     body: 'Taught me that all design we have been seen until now has in one way or another been politically biased. Beautiful.' },
-  { re: /Notebook2/, pdf: 'books/pdf/book2.pdf', title: 'How to Talk to Anyone',
+  { re: /Notebook2/, title: 'How to Talk to Anyone',
     body: 'I used to struggle with my introvertedness for a long time. I find ways to get better at it whenever I can.' },
-  { re: /Notebook3/, pdf: 'books/pdf/book3.pdf', title: 'The Power of Positive Management',
+  { re: /Notebook3/, title: 'The Power of Positive Management',
     body: 'Since I delve into different kinds of projects at the same time, it naturally involves working with different kind of people. This book helped me understand what to prioritize when not just in a project, but in life.' },
-  { re: /Notebook4/, pdf: 'books/pdf/book4.pdf', title: 'Fletcher — A History of Architecture',
+  { re: /Notebook4/, title: 'Fletcher — A History of Architecture',
     body: 'Architecture is a wonder that I will love learning about till I live. History of architecture forms a connect to the history of anthropology, culture, and innovation in technology. All of this can be learnt from this book.' },
+  { re: /OpenBook1/, pdf: 'books/pdf/book1.pdf', title: 'Book 1',
+    body: 'Click to read.' },
+  { re: /OpenBook2/, pdf: 'books/pdf/book2.pdf', title: 'Book 2',
+    body: 'Click to read.' },
+  { re: /OpenBook3/, pdf: 'books/pdf/book3.pdf', title: 'Book 3',
+    body: 'Click to read.' },
+  { re: /OpenBook4/, pdf: 'books/pdf/book4.pdf', title: 'Book 4',
+    body: 'Click to read.' },
   { mat: '_White_', title: 'Table cloth',
     body: 'Gives a soft touch to my arms when I place them on this for too long.' },
   { re: /(^|\s)(Pencil_1_\d|Lapices_en_bote1)(\s|$)/, title: 'Pencils & stationery',
@@ -720,6 +733,27 @@ async function fetchRoomText(url) {
   return new TextDecoder().decode(merged);
 }
 
+async function fetchRoomBinary(url) {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+  const total = Number(res.headers.get('Content-Length') || 0);
+  if (!res.body) return res.arrayBuffer();
+  const reader = res.body.getReader();
+  const chunks = [];
+  let loaded = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    chunks.push(value);
+    loaded += value.length;
+    if (total) setProgress(0.85 * Math.min(1, loaded / total));
+  }
+  const merged = new Uint8Array(loaded);
+  let off = 0;
+  for (const c of chunks) { merged.set(c, off); off += c.length; }
+  return merged.buffer;
+}
+
 // Give the browser two frames to actually paint the latest status text before
 // we hand it a long synchronous task.
 const paint = () => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
@@ -729,6 +763,13 @@ const paint = () => new Promise((r) => requestAnimationFrame(() => requestAnimat
   try {
     setProgress(0.02);
     await paint();
+    if (isGlb) {
+      const buf = await fetchRoomBinary('./models/room.glb');
+      setProgress(0.9);
+      await paint();
+      const gltf = await new Promise((res, rej) => new GLTFLoader().parse(buf, './models/', res, rej));
+      root = gltf.scene;
+    } else {
     const [text, mtlText] = await Promise.all([
       fetchRoomText('./room.obj'),
       fetch('./room.mtl').then((r) => r.ok ? r.text() : ''),
@@ -745,6 +786,7 @@ const paint = () => new Promise((r) => requestAnimationFrame(() => requestAnimat
     setProgress(0.9);   // download done, parsing the model
     await paint();
     root = new OBJLoader().parse(text);
+    }
   } catch (err) {
     console.error('Could not load room.obj — serve this folder over http (node server.js).', err);
     setStatus('could not load the room');
@@ -786,11 +828,12 @@ const paint = () => new Promise((r) => requestAnimationFrame(() => requestAnimat
   root.traverse((child) => {
     if (!child.isMesh) return;
 
-    child.material = Array.isArray(child.material)
+    // The GLB already carries its own textured materials from Blender.
+    if (!isGlb) child.material = Array.isArray(child.material)
       ? child.material.map(buildMaterial)
       : buildMaterial(child.material);
 
-    if (/Tabla_Set1/.test(child.name)) {
+    if (!isGlb && /Tabla_Set1/.test(child.name)) {
       const smallShell = /Mesh3041/.test(child.name);
       const paintTabla = (mt) => {
         const g = mt.clone();
@@ -865,15 +908,16 @@ const paint = () => new Promise((r) => requestAnimationFrame(() => requestAnimat
         fairyBulbMeshes.push(child);
       }
     }
-    if (/Component_1_1/.test(child.name)) child.material = buildMaterial({ name: 'poster_left' });
-    if (/Component_1_2/.test(child.name)) child.material = buildMaterial({ name: 'poster_center' });
-    if (/Component_1_[123]/.test(child.name) || /Picture[1-4]/.test(child.name)) {
+    if (isGlb && /^poster-(left|center)$/.test(child.name)) posterMeshes.push(child);
+    if (!isGlb && /Component_1_1/.test(child.name)) child.material = buildMaterial({ name: 'poster_left' });
+    if (!isGlb && /Component_1_2/.test(child.name)) child.material = buildMaterial({ name: 'poster_center' });
+    if (!isGlb && (/Component_1_[123]/.test(child.name) || /Picture[1-4]/.test(child.name))) {
       posterMeshes.push(child);
     }
     if (/Pillow/i.test(child.name)) pillowBox.union(box);
 
     const bookKey = (child.name.match(/Notebook[1-4]/) || [])[0];
-    if (bookKey) {
+    if (bookKey && !isGlb) {
       (notebookMeshes[bookKey] = notebookMeshes[bookKey] || []).push(child);
       const covers = {
         Notebook1: 'book-politics',
@@ -891,7 +935,7 @@ const paint = () => new Promise((r) => requestAnimationFrame(() => requestAnimat
       child.material = Array.isArray(child.material)
         ? child.material.map(paintCover) : paintCover(child.material);
     }
-    if (/Headphones/.test(child.name)) {
+    if (!isGlb && /Headphones/.test(child.name)) {
       const coat = (mt) => {
         const g = mt.clone();
         g.map = getTex('headphone', 1, 1);
@@ -903,7 +947,7 @@ const paint = () => new Promise((r) => requestAnimationFrame(() => requestAnimat
       };
       child.material = Array.isArray(child.material) ? child.material.map(coat) : coat(child.material);
     }
-    if (/Pencil_1_/.test(child.name)) {
+    if (!isGlb && /Pencil_1_/.test(child.name)) {
       const p = (mt) => {
         const g = mt.clone();
         g.map = getTex('pencil', 1, 1);
