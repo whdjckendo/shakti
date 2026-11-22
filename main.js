@@ -711,7 +711,7 @@ function updateObjInfo(obj) {
   }
 }
 
-const POSE_LABEL = { stand: 'standing', crouch: 'crouching', sit: 'inside the room', lie: 'lying down' };
+const POSE_LABEL = { stand: 'Inside the room', crouch: 'Inside the room', sit: 'Inside the room', lie: 'Inside the room' };
 
 function updateHud() {
   if (poseEl) poseEl.textContent = POSE_LABEL[pose] || '';
@@ -1382,7 +1382,9 @@ const paint = () => new Promise((r) => requestAnimationFrame(() => requestAnimat
         } else wallBox.union(b);
       }
       wallBox.expandByScalar(0.06);
-      readers.wall = initFocus({ camera, box: wallBox, normal: new THREE.Vector3(1, 0, 0), onExit });
+      // The open door stands in front of this wall, so look at it from an angle,
+      // from the desk side, where nothing is in the way (nothing gets cut).
+      readers.wall = initFocus({ camera, box: wallBox, normal: new THREE.Vector3(0.78, 0, -0.62), clear: 0, fill: 0.86, onExit });
     }
     const list = Object.values(readers);
     bookApi = {
@@ -1453,6 +1455,17 @@ const paint = () => new Promise((r) => requestAnimationFrame(() => requestAnimat
         light: { color: 0xe8f0ff, intensity: 0.14, distance: 6, offset: new THREE.Vector3(-0.25, 0, 0) } },
     ]);
     liveUpdates.push((dt) => fixturesApi.update(dt));
+    // ceiling fan: plain white (it shared the wall's plaster texture)
+    const fan = root.getObjectByName('ceiling_fan1');
+    if (fan) fan.traverse((o) => {
+      if (!o.isMesh) return;
+      o.material = [].concat(o.material).map((mt) => {
+        const c = mt.clone(); c.map = null; c.color.set(0xf6f6f4); c.roughness = 0.5; c.metalness = 0;
+        if (c.emissive) { c.emissive.set(0xffffff); c.emissiveIntensity = 0.07; }   // reads white, not beige, in the warm light
+        c.needsUpdate = true; return c;
+      });
+      if (o.material.length === 1) o.material = o.material[0];
+    });
     // dust: only in the light of the lamps (not the room fill under the fan),
     // and it settles when a lamp is switched off
     const ctr = (n, dy = 0) => {
@@ -1465,7 +1478,7 @@ const paint = () => new Promise((r) => requestAnimationFrame(() => requestAnimat
       { pos: ctr('Group307', 0.1), radius: 0.38, weight: 0.6, level: () => fixturesApi.level('bedside') },
       { pos: ctr('Tube_Light1'), radius: 0.6, weight: 0.5, level: () => fixturesApi.level('tube') },
     ].filter((s) => s.pos);
-    liveUpdates.push(liveDust(scene, sources, 340));
+    liveUpdates.push(liveDust(scene, sources, 700));
     // dhoop on the desk: a thin thread of smoke from its tip
     const dhoop = root.getObjectByName('dhoop');
     if (dhoop) {

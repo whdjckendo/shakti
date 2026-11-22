@@ -167,10 +167,10 @@ export function liveDust(scene, sources, count = 900) {
         float d = length(p - aCenter.xyz) / aCenter.w;
         float twinkle = 0.55 + 0.45 * sin(uTime * (0.8 + aSeed.z * 1.6) + aSeed.x * 7.0);
         float on = uOn[int(aSrc + 0.5)];
-        vA = pow(clamp(1.0 - d, 0.0, 1.0), 2.4) * twinkle * 1.4 * on;   // denser right at the light, gone quickly
+        vA = pow(clamp(1.0 - d, 0.0, 1.0), 1.7) * twinkle * 1.4 * on;   // denser right at the light, gone quickly
         vec4 mv = modelViewMatrix * vec4(p, 1.0);
         // minuscule: about a millimetre across, never below a pixel
-        gl_PointSize = max(1.0, (0.0009 + aSeed.z * 0.0011) * uScale * projectionMatrix[1][1] / -mv.z);
+        gl_PointSize = max(2.0, (0.0026 + aSeed.z * 0.003) * uScale * projectionMatrix[1][1] / -mv.z);
         gl_Position = projectionMatrix * mv;
       }`,
     fragmentShader: /* glsl */`
@@ -178,7 +178,7 @@ export function liveDust(scene, sources, count = 900) {
       void main() {
         float r = length(gl_PointCoord - 0.5) * 2.0;
         float a = smoothstep(1.0, 0.0, r);
-        gl_FragColor = vec4(vec3(1.0, 0.88, 0.7) * a * vA * 0.85, 1.0);
+        gl_FragColor = vec4(vec3(1.0, 0.9, 0.74) * a * vA * 3.6, 1.0);   // bright enough to catch the eye
       }`,
   });
   const pts = new THREE.Points(geo, mat);

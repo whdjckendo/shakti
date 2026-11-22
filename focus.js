@@ -14,8 +14,11 @@ export function initFocus({ camera, box, normal, fill = 0.82, label = 'Back to t
   const center = box.getCenter(new THREE.Vector3());
   const size = box.getSize(new THREE.Vector3());
   // the wall-plane extent: width across the wall, height up it
-  const across = Math.abs(normal.x) > Math.abs(normal.z) ? size.z : size.x;
-  const W = across, H = size.y;
+  // extent of the area across the view direction (works for angled views too)
+  const n = normal.clone().normalize();
+  const r = new THREE.Vector3(0, 1, 0).cross(n).normalize();
+  const W = Math.abs(size.x * r.x) + Math.abs(size.z * r.z) + Math.abs(size.y * r.y);
+  const H = size.y;
 
   const ui = document.createElement('div');
   ui.className = 'focus-ui';
@@ -50,7 +53,7 @@ export function initFocus({ camera, box, normal, fill = 0.82, label = 'Back to t
     const tanV = Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2);
     const d = Math.max(H / (fill * 2 * tanV), W / (fill * 2 * tanV * camera.aspect));
     dist = d;
-    target.p.copy(center).addScaledVector(normal, d);
+    target.p.copy(center).addScaledVector(n, d);
     dummy.position.copy(target.p); dummy.up.set(0, 1, 0); dummy.lookAt(center);
     target.q.copy(dummy.quaternion);
   }
@@ -73,7 +76,7 @@ export function initFocus({ camera, box, normal, fill = 0.82, label = 'Back to t
   addEventListener('resize', () => { if (mode === 'on') { computeTarget(); camera.position.copy(target.p); camera.quaternion.copy(target.q); setNear(Math.max(baseNear, dist - clear)); } });
   function update(dt) {
     // fail-safe: outside the close-up the camera always sees everything
-    if (mode !== 'on' && camera.near !== NEAR0) setNear(NEAR0);
+    if ((mode !== 'on' || !clear) && camera.near !== NEAR0) setNear(NEAR0);
     if (mode !== 'in' && mode !== 'out') return;
     t = Math.min(1, t + dt / camDur());
     const e = ease(t);
@@ -81,7 +84,7 @@ export function initFocus({ camera, box, normal, fill = 0.82, label = 'Back to t
     camera.position.lerpVectors(from.p, b.p, e);
     camera.quaternion.copy(from.q).slerp(b.q, e);
     if (t >= 1) {
-      if (mode === 'in') { mode = 'on'; ui.classList.add('show'); baseNear = NEAR0; setNear(Math.max(NEAR0, dist - clear)); }
+      if (mode === 'in') { mode = 'on'; ui.classList.add('show'); baseNear = NEAR0; if (clear) setNear(Math.max(NEAR0, dist - clear)); }
       else {
         mode = 'off';
         document.body.classList.remove('reading');
