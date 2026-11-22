@@ -23,14 +23,49 @@
   }
 
   #loading {
-    position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
-    color: #7d8698; font: 300 13px/1 var(--ui-font);
-    letter-spacing: .18em; background: #140e08; pointer-events: none; z-index: 10;
-    /* Keeps the screen visibly alive during the parse step, which blocks the
-       main thread — a static number there reads as a hang. */
-    animation: pulse 1.4s ease-in-out infinite;
+    position: fixed; inset: 0; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 28px;
+    background: #ffffff; pointer-events: none; z-index: 10;
   }
-  @keyframes pulse { 0%, 100% { opacity: .45 } 50% { opacity: 1 } }
+  /* Throbber: an empty ring that fills with blue from the bottom up. The fill
+     moves with a transform so it keeps animating while the model parses. */
+  #ring {
+    position: relative; width: 84px; height: 84px; border-radius: 50%;
+    border: 3px solid #002fa7; overflow: hidden; background: #ffffff;
+  }
+  #ring-fill {
+    position: absolute; inset: 0; background: #002fa7;
+    transform: translateY(100%);
+    transition: transform 1.2s ease-out;
+  }
+  /* Captions are pure CSS so they keep advancing even while the main thread is
+     busy parsing the model (JS timers would freeze there). */
+  #load-text {
+    position: relative; width: 320px; height: 20px; text-align: center;
+    color: #002fa7; font: 300 15px/20px var(--ui-font); letter-spacing: .06em;
+  }
+  #load-text span { position: absolute; inset: 0; opacity: 0; }
+  #load-text .in1 { animation: cap-in1 16.5s linear both; animation-iteration-count: 1; }
+  #load-text .out1 { animation: cap-out1 16.5s linear both; animation-iteration-count: 1; }
+  #load-text .hey { animation: cap-hey 16.5s linear both; animation-iteration-count: 1; }
+  #load-text .ld { animation: cap-ld 16.5s linear both; animation-iteration-count: 1; }
+  #load-text .any { animation: cap-any 16.5s linear both; animation-iteration-count: 1; }
+  @keyframes cap-in1 { 0%,0% {opacity:1} 16.667% {opacity:1} 18.182%,100% {opacity:0} }
+  @keyframes cap-out1 { 0%,18.182% {opacity:0} 19.697% {opacity:1} 34.848% {opacity:1} 36.364%,100% {opacity:0} }
+  @keyframes cap-hey { 0%,36.364% {opacity:0} 37.879% {opacity:1} 43.939% {opacity:1} 45.455%,100% {opacity:0} }
+  @keyframes cap-ld { 0%,45.455% {opacity:0} 46.97% {opacity:1} 53.03% {opacity:1} 54.545%,100% {opacity:0} }
+  @keyframes cap-any { 0%,54.545% {opacity:0} 56.061% {opacity:1} 62.121% {opacity:1} 63.636%,100% {opacity:0} }
+  /* After the scripted lines: keep breathing in / out until the site is ready. */
+  #load-text .in2 { animation: cap-loop 6s linear 10.5s infinite both; }
+  #load-text .out2 { animation: cap-loop 6s linear 13.5s infinite both; }
+  @keyframes cap-loop { 0%,100% { opacity: 0 } 4%,46% { opacity: 1 } 50% { opacity: 0 } }
+  #load-text .goes, #load-text .err { opacity: 0; animation: none; }
+  #load-text.goes .in1, #load-text.goes .out1, #load-text.goes .hey, #load-text.goes .ld,
+  #load-text.goes .any, #load-text.goes .in2, #load-text.goes .out2,
+  #load-text.err .in1, #load-text.err .out1, #load-text.err .hey, #load-text.err .ld,
+  #load-text.err .any, #load-text.err .in2, #load-text.err .out2 { animation: none; opacity: 0; }
+  #load-text.goes .goes, #load-text.err .err { opacity: 1; transition: opacity .25s ease; }
+  #loading.done { opacity: 0; transition: opacity .5s ease; }
 
   /* ---- guide ---- */
   #hud {
@@ -173,7 +208,7 @@
   body.reading canvas { cursor: auto; }
 
   @media (prefers-reduced-motion: reduce) {
-    #loading { animation: none }
+    #ring-fill { transition: none }
     #hud { transition: none }
     #poster-cta { transition: none }
   }
@@ -212,7 +247,7 @@
     </div>
   </div>
 
-  <div id="loading">starting…</div>
+  <div id="loading"><div id="ring"><div id="ring-fill"></div></div><div id="load-text"><span class="in1">Breathe in...</span><span class="out1">Breathe out...</span><span class="hey">Hey.</span><span class="ld">It's loading.</span><span class="any">Anytime now.</span><span class="in2">Breathe in...</span><span class="out2">Breathe out...</span><span class="goes">Here goes...</span><span class="err">Could not load the room</span></div></div>
 
   <script type="importmap">
   { "imports": { "three": "./vendor/three/build/three.module.js" } }
