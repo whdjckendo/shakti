@@ -39,7 +39,8 @@ export function initFocus({ camera, box, normal, fill = 0.82, label = 'Back to t
   // Things standing between the camera and the wall (the floor lamp, the door)
   // would block the view: while looking closely, clip anything more than
   // `clear` metres in front of the wall.
-  let baseNear = camera.near, dist = 1;
+  const NEAR0 = camera.near;
+  let baseNear = NEAR0, dist = 1;
   const setNear = (n) => { camera.near = n; camera.updateProjectionMatrix(); }
   const from = { p: new THREE.Vector3(), q: new THREE.Quaternion() };
   const target = { p: new THREE.Vector3(), q: new THREE.Quaternion() };
@@ -66,11 +67,13 @@ export function initFocus({ camera, box, normal, fill = 0.82, label = 'Back to t
     if (mode !== 'on') return;
     ui.classList.remove('show');
     from.p.copy(camera.position); from.q.copy(camera.quaternion);
-    setNear(baseNear);
+    setNear(NEAR0);
     mode = 'out'; t = 0;
   }
   addEventListener('resize', () => { if (mode === 'on') { computeTarget(); camera.position.copy(target.p); camera.quaternion.copy(target.q); setNear(Math.max(baseNear, dist - clear)); } });
   function update(dt) {
+    // fail-safe: outside the close-up the camera always sees everything
+    if (mode !== 'on' && camera.near !== NEAR0) setNear(NEAR0);
     if (mode !== 'in' && mode !== 'out') return;
     t = Math.min(1, t + dt / camDur());
     const e = ease(t);
@@ -78,7 +81,7 @@ export function initFocus({ camera, box, normal, fill = 0.82, label = 'Back to t
     camera.position.lerpVectors(from.p, b.p, e);
     camera.quaternion.copy(from.q).slerp(b.q, e);
     if (t >= 1) {
-      if (mode === 'in') { mode = 'on'; ui.classList.add('show'); baseNear = camera.near; setNear(Math.max(baseNear, dist - clear)); }
+      if (mode === 'in') { mode = 'on'; ui.classList.add('show'); baseNear = NEAR0; setNear(Math.max(NEAR0, dist - clear)); }
       else {
         mode = 'off';
         document.body.classList.remove('reading');
