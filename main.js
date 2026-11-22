@@ -8,6 +8,7 @@ import { UnrealBloomPass } from './vendor/three/jsm/postprocessing/UnrealBloomPa
 import { OutputPass } from './vendor/three/jsm/postprocessing/OutputPass.js';
 import { initBooks } from './books.js';
 import { initReader } from './reader.js';
+import { initMonitor } from './monitor.js';
 import { liveCalendar, liveClock, liveDust } from './live.js';
 
 const liveUpdates = [];
@@ -581,6 +582,7 @@ addEventListener('click', () => {
     const posterKey = hoverPoster && posterFocus > 0.4
       ? ({ 'poster-left': 'book1', 'poster-center': 'book2' })[hoverPoster.name] : null;
     const bookKey = curInfo && ({ 'Book 1': 'book1', 'Book 2': 'book2', 'Book 3': 'book3', 'Book 4': 'book4' })[curInfo.title];
+    if (!posterKey && !bookKey && bookApi.tryOpenFromView()) return;   // the monitor
     const key = posterKey || bookKey;
     if (key && bookApi.readers[key]) { posterCta?.classList.remove('show'); bookApi.open(key); return; }
   }
@@ -1296,12 +1298,21 @@ const paint = () => new Promise((r) => requestAnimationFrame(() => requestAnimat
     if (nb4) readers.book4 = initReader({
       scene, camera, renderer, bloomPass, bookObject: nb4, pagesDir: 'books/book4',
       surface: 'model', paperMaterial: '_10', onExit });
+    // desk monitor: intro loop, click to zoom in and play, clickable buttons
+    const screenMesh = root.getObjectByName('Mesh541_3');
+    if (screenMesh) {
+      const pl = root.getObjectByName('poster-left'), pc = root.getObjectByName('poster-center');
+      const posterTarget = (pl && pc)
+        ? new THREE.Box3().setFromObject(pl).union(new THREE.Box3().setFromObject(pc)).getCenter(new THREE.Vector3())
+        : null;
+      readers.monitor = initMonitor({ scene, camera, screenMesh, bloomPass, posterTarget, onExit });
+    }
     const list = Object.values(readers);
     bookApi = {
       readers,
       get active() { return list.some((r) => r.active); },
       update(dt) { list.forEach((r) => r.update(dt)); },
-      tryOpenFromView: () => false,
+      tryOpenFromView: () => !!(readers.monitor && readers.monitor.tryOpenFromView()),
       open: (k) => readers[k] && readers[k].open(),
     };
   }

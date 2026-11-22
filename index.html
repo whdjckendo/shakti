@@ -273,9 +273,20 @@
   @media (prefers-reduced-motion: reduce) { #pdf-view .panel, #pdf-view { transition: none } }
 
   /* ---- credits tab + panel ---- */
+  #topbar { position: fixed; top: 16px; right: 18px; z-index: 20; display: flex; gap: 8px; transition: opacity .3s ease; }
+  body.reading #topbar { opacity: 0; pointer-events: none; }
+  #sound-btn {
+    width: 32px; height: 30px; padding: 0; display: grid; place-items: center; border-radius: 14px;
+    background: rgba(22, 14, 10, 0.42); color: #f6e6cc; border: 1px solid rgba(255, 214, 176, 0.28);
+    backdrop-filter: blur(18px) saturate(140%); -webkit-backdrop-filter: blur(18px) saturate(140%); cursor: pointer;
+  }
+  #sound-btn:hover { background: rgba(22, 14, 10, 0.62); }
+  #sound-btn svg { width: 16px; height: 16px; }
+  #sound-btn .off { display: none; }
+  #sound-btn.muted .on { display: none; }
+  #sound-btn.muted .off { display: block; }
   #credits-tab {
-    position: fixed; top: 16px; right: 18px; z-index: 20;
-    padding: 8px 14px; border-radius: 0 0 0 0; border-radius: 14px;
+    padding: 8px 14px; border-radius: 14px;
     background: rgba(22, 14, 10, 0.42); color: #f6e6cc;
     border: 1px solid rgba(255, 214, 176, 0.28);
     backdrop-filter: blur(18px) saturate(140%); -webkit-backdrop-filter: blur(18px) saturate(140%);
@@ -283,7 +294,6 @@
     transition: opacity .3s ease, background .2s ease;
   }
   #credits-tab:hover { background: rgba(22, 14, 10, 0.62); }
-  body.reading #credits-tab { opacity: 0; pointer-events: none; }
   #credits {
     position: fixed; inset: 0; z-index: 40; display: flex; align-items: center; justify-content: center;
     background: rgba(12, 8, 6, 0); visibility: hidden; pointer-events: none;
@@ -330,7 +340,51 @@
   </div>
   <div id="hint">press H for controls</div>
   <div id="poster-cta">click to know more.</div>
-  <button id="credits-tab" type="button">Credits</button>
+  <div id="topbar">
+    <button id="sound-btn" type="button" aria-label="Sound off" title="Sound">
+      <svg class="on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M16.5 8.5a5 5 0 0 1 0 7"/><path d="M19 6a8.5 8.5 0 0 1 0 12"/></svg>
+      <svg class="off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M17 9l5 6M22 9l-5 6"/></svg>
+    </button>
+    <button id="credits-tab" type="button">Credits</button>
+  </div>
+  <audio id="ambient" src="media/ambient.mp3" loop preload="auto"></audio>
+  <script>
+    (function () {
+      // Ambient sound: on by default; browsers only allow it after the
+      // visitor's first click or key, so it fades in then.
+      var a = document.getElementById('ambient'), btn = document.getElementById('sound-btn');
+      var VOL = 0.4, on = true, fade = null;
+      try { on = localStorage.getItem('shakthi-sound') !== 'off'; } catch (e) {}
+      var paint = function () {
+        btn.classList.toggle('muted', !on);
+        btn.setAttribute('aria-label', on ? 'Sound off' : 'Sound on');
+      };
+      var ramp = function (to, done) {
+        clearInterval(fade);
+        fade = setInterval(function () {
+          var v = a.volume + (to - a.volume) * 0.12;
+          if (Math.abs(to - v) < 0.01) { v = to; clearInterval(fade); done && done(); }
+          a.volume = v;
+        }, 40);
+      };
+      var start = function () {
+        if (!on) return;
+        if (a.paused) { a.volume = 0; a.play().then(function () { ramp(VOL); }).catch(function () {}); }
+        else ramp(VOL);
+      };
+      btn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        on = !on;
+        try { localStorage.setItem('shakthi-sound', on ? 'on' : 'off'); } catch (err) {}
+        paint();
+        if (on) start(); else ramp(0, function () { a.pause(); });
+      });
+      var first = function () { start(); removeEventListener('pointerdown', first); removeEventListener('keydown', first); };
+      addEventListener('pointerdown', first); addEventListener('keydown', first);
+      paint();
+      start();   // works where autoplay is allowed
+    })();
+  </script>
   <div id="credits" role="dialog" aria-label="Credits"><div class="card">
     <button class="cx" type="button" aria-label="Close">&times;</button>
     <img src="credits/room.jpg" alt="The real room this website is modelled on" loading="lazy">
