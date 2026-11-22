@@ -390,6 +390,7 @@ const INFO = [
   { re: /Notebook4/, title: 'Book 1', body: 'Click to flip through it.' },
   { re: /Notebook1/, title: 'Book 2', body: 'Click to flip through it.' },
   { re: /Notebook2/, title: 'Book 3', body: 'Click to flip through it.' },
+  { re: /Notebook3/, title: 'Book 4', body: 'Click to flip through it.' },
   { mat: '_White_', title: 'Table cloth',
     body: 'Gives a soft touch to my arms when I place them on this for too long.' },
   { re: /(^|\s)(Pencil_1_\d|Lapices_en_bote1)(\s|$)/, title: 'Pencils & stationery',
@@ -577,7 +578,7 @@ addEventListener('click', () => {
     // toilets poster -> Book 1, IKEA (ETT LYCKLIG) poster -> Book 2
     const posterKey = hoverPoster && posterFocus > 0.4
       ? ({ 'poster-left': 'book1', 'poster-center': 'book2' })[hoverPoster.name] : null;
-    const bookKey = curInfo && ({ 'Book 1': 'book1', 'Book 2': 'book2', 'Book 3': 'book3' })[curInfo.title];
+    const bookKey = curInfo && ({ 'Book 1': 'book1', 'Book 2': 'book2', 'Book 3': 'book3', 'Book 4': 'book4' })[curInfo.title];
     const key = posterKey || bookKey;
     if (key && bookApi.readers[key]) { posterCta?.classList.remove('show'); bookApi.open(key); return; }
   }
@@ -1288,6 +1289,10 @@ const paint = () => new Promise((r) => requestAnimationFrame(() => requestAnimat
     const nb3 = root.getObjectByName('Notebook2');
     if (nb3) readers.book3 = initReader({
       scene, camera, renderer, bloomPass, bookObject: nb3, pagesDir: 'books/book3',
+      surface: 'model', paperMaterial: '_10', onExit });
+    const nb4 = root.getObjectByName('Notebook3');
+    if (nb4) readers.book4 = initReader({
+      scene, camera, renderer, bloomPass, bookObject: nb4, pagesDir: 'books/book4',
       surface: 'model', paperMaterial: '_10', onExit });
     const list = Object.values(readers);
     bookApi = {

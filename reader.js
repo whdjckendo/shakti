@@ -108,7 +108,7 @@ export function initReader(opts) {
   const files = new Map();
   // Model mode: each image is fitted (not stretched) onto the book's spread,
   // with white space around it if the proportions differ.
-  const paddedTex = (f, single) => {
+  const paddedTex = (f, single, onLeft) => {
     const cv = document.createElement('canvas');
     const t = new THREE.CanvasTexture(cv);
     const spreadAspect = paper.size.z / paper.size.x;
@@ -119,7 +119,7 @@ export function initReader(opts) {
     g.fillStyle = '#ffffff'; g.fillRect(0, 0, W, H);
     const img = new Image();
     img.onload = () => {
-      const boxW = single ? W / 2 : W, boxX = single ? W / 2 : 0;
+      const boxW = single ? W / 2 : W, boxX = single ? (onLeft ? 0 : W / 2) : 0;
       const s = Math.min(boxW / img.width, H / img.height);
       const w = img.width * s, h = img.height * s;
       g.drawImage(img, boxX + (boxW - w) / 2, (H - h) / 2, w, h);
@@ -128,14 +128,15 @@ export function initReader(opts) {
     img.src = `./${pagesDir}/${f}`;
     return t;
   };
-  const fileTex = (f, single) => {
-    if (!files.has(f)) {
-      const t = MODEL ? paddedTex(f, single) : loader.load(`./${pagesDir}/${f}`);
+  const fileTex = (f, single, onLeft) => {
+    const key = f + (MODEL && single && onLeft ? '#L' : '');
+    if (!files.has(key)) {
+      const t = MODEL ? paddedTex(f, single, onLeft) : loader.load(`./${pagesDir}/${f}`);
       t.colorSpace = THREE.SRGBColorSpace;
       t.anisotropy = aniso;
-      files.set(f, t);
+      files.set(key, t);
     }
-    return files.get(f);
+    return files.get(key);
   };
   // halves[i] = { file, side: 'full' | 'L' | 'R' } in reading order
   let halves = [];
@@ -145,17 +146,19 @@ export function initReader(opts) {
     if (!h) return null;
     const key = h.file + h.side;
     if (halfCache.has(key)) return halfCache.get(key);
-    let t = fileTex(h.file, h.side === 'full');
-    if (h.side !== 'full' || MODEL) {
+    const single = h.side === 'full';
+    const onLeft = i % 2 === 0;          // even slots are left-hand pages
+    let t = fileTex(h.file, single, onLeft);
+    if (!single || MODEL) {
       t = t.clone();
       t.repeat.x = 0.5;
-      t.offset.x = (h.side === 'R' || h.side === 'full') ? 0.5 : 0;
+      t.offset.x = (h.side === 'R' || (single && !onLeft)) ? 0.5 : 0;
     }
     halfCache.set(key, t);
     return t;
   };
   // the whole-spread texture a half belongs to (model surfaces carry spread UVs)
-  const spreadTexOf = (i) => (halves[i] ? fileTex(halves[i].file, halves[i].side === 'full') : null);
+  const spreadTexOf = (i) => (halves[i] ? fileTex(halves[i].file, halves[i].side === 'full', i % 2 === 0) : null);
   const mirrored = new Map();
   const mirror = (t) => {
     if (!t) return null;
