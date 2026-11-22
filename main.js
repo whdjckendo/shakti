@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { OBJLoader } from './vendor/three/jsm/loaders/OBJLoader.js';
 import { GLTFLoader } from './vendor/three/jsm/loaders/GLTFLoader.js';
+import { MeshoptDecoder } from './vendor/three/jsm/libs/meshopt_decoder.module.js';
 import { EffectComposer } from './vendor/three/jsm/postprocessing/EffectComposer.js';
 import { RenderPass } from './vendor/three/jsm/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from './vendor/three/jsm/postprocessing/UnrealBloomPass.js';
@@ -767,7 +768,7 @@ const paint = () => new Promise((r) => requestAnimationFrame(() => requestAnimat
       const buf = await fetchRoomBinary('./models/room.glb');
       setProgress(0.9);
       await paint();
-      const gltf = await new Promise((res, rej) => new GLTFLoader().parse(buf, './models/', res, rej));
+      const gltf = await new Promise((res, rej) => new GLTFLoader().setMeshoptDecoder(MeshoptDecoder).parse(buf, './models/', res, rej));
       root = gltf.scene;
     } else {
     const [text, mtlText] = await Promise.all([
@@ -1078,7 +1079,7 @@ const paint = () => new Promise((r) => requestAnimationFrame(() => requestAnimat
   ceiling.position.set((area.min.x + area.max.x) / 2, capY, (area.min.z + area.max.z) / 2);
   if (!isGlb) scene.add(ceiling);   // the Blender room has its own ceiling; this cap sat at desk height there
 
-  addDoorAndWindows(floorY);
+  if (!isGlb) addDoorAndWindows(floorY);   // old room only: the Blender model has its own door
 
   bounce.position.set(mid.x, floorY + 1.55, mid.z);
 
@@ -1107,8 +1108,6 @@ const paint = () => new Promise((r) => requestAnimationFrame(() => requestAnimat
   // That 'desk lamp' is really the headphone stand; its glow made a bright
   // hotspot on the wall, so it stays dark in the new model.
   if (isGlb) for (const l of deskFrost) l.intensity = 0;
-  // The new model has one door; the extra grey open-door leaf is removed.
-  if (isGlb) { const extraDoor = root.getObjectByName('Group279'); if (extraDoor) extraDoor.visible = false; }
 
   // Fabric shade: warm, self-lit, paper-lantern. Clone so the shared
   // FrontColor used on walls never picks up the glow.
