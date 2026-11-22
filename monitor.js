@@ -135,7 +135,11 @@ export function initMonitor(opts) {
     </div>
     <div class="mcard contact" role="dialog" aria-label="Contact">
       <button class="cx" aria-label="Close">&times;</button>
-      <img src="./media/contact.jpg" alt="Contact">
+      <div class="cimg">
+        <img src="./media/contact.jpg" alt="whdjckendo@gmail.com, link to my resume">
+        <a class="hot-mail" href="mailto:whdjckendo@gmail.com" aria-label="Email whdjckendo@gmail.com"></a>
+        <a class="hot-resume" href="./media/resume.pdf" target="_blank" rel="noopener" aria-label="Open my resume"></a>
+      </div>
       <p class="soon">Contact details coming soon.</p>
     </div>`;
   document.body.appendChild(ui);
@@ -165,7 +169,12 @@ export function initMonitor(opts) {
   #monitor-ui .key .msg{min-height:20px;margin:10px 0 0;font-size:13px;color:#ffb4a0}
   #monitor-ui .key.shake{animation:mshake .4s}
   @keyframes mshake{20%,60%{margin-left:-8px}40%,80%{margin-left:8px}}
-  #monitor-ui .contact{padding:14px}
+  #monitor-ui .contact{padding:12px;width:min(520px,90vw)}
+  #monitor-ui .contact .cimg{position:relative}
+  #monitor-ui .contact .cimg a{position:absolute;border-radius:10px;transition:background .2s ease,box-shadow .2s ease}
+  #monitor-ui .contact .cimg a:hover,#monitor-ui .contact .cimg a:focus-visible{background:rgba(0,47,167,.08);box-shadow:0 0 0 2px rgba(0,47,167,.35)}
+  #monitor-ui .contact .hot-mail{left:5%;top:36%;width:62%;height:18%}
+  #monitor-ui .contact .hot-resume{left:32%;top:58%;width:57%;height:19%}
   #monitor-ui .contact img{display:block;width:100%;border-radius:12px}
   #monitor-ui .contact .soon{display:none;margin:8px 10px}`;
   document.head.appendChild(css);
@@ -173,6 +182,8 @@ export function initMonitor(opts) {
   const keyInput = ui.querySelector('#key-input'), keyMsg = ui.querySelector('.key .msg');
   const contactImg = contactCard.querySelector('img');
   contactImg.addEventListener('error', () => { contactImg.style.display = 'none'; contactCard.querySelector('.soon').style.display = 'block'; });
+  // links inside the card: let them work, don't let the click fall through
+  contactCard.querySelectorAll('a').forEach((l) => l.addEventListener('click', (e) => e.stopPropagation()));
   const openCard = (c) => { c.classList.add('open'); if (c === keyCard) { keyMsg.textContent = ''; keyInput.value = ''; keyInput.focus(); requestAnimationFrame(() => keyInput.focus()); setTimeout(() => keyInput.focus(), 120); } };
   const closeCards = () => { keyCard.classList.remove('open'); contactCard.classList.remove('open'); };
   const cardOpen = () => keyCard.classList.contains('open') || contactCard.classList.contains('open');
