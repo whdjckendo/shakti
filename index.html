@@ -353,7 +353,7 @@
       // Ambient sound: on by default; browsers only allow it after the
       // visitor's first click or key, so it fades in then.
       var a = document.getElementById('ambient'), btn = document.getElementById('sound-btn');
-      var VOL = 0.4, on = true, fade = null;
+      var VOL = 0.52, on = true, fade = null;
       try { on = localStorage.getItem('shakthi-sound') !== 'off'; } catch (e) {}
       var paint = function () {
         btn.classList.toggle('muted', !on);
