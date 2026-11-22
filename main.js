@@ -1068,7 +1068,7 @@ const paint = () => new Promise((r) => requestAnimationFrame(() => requestAnimat
   );
   ceiling.rotation.x = Math.PI / 2;
   ceiling.position.set((area.min.x + area.max.x) / 2, capY, (area.min.z + area.max.z) / 2);
-  scene.add(ceiling);
+  if (!isGlb) scene.add(ceiling);   // the Blender room has its own ceiling; this cap sat at desk height there
 
   addDoorAndWindows(floorY);
 
