@@ -248,6 +248,29 @@
     #poster-cta { transition: none }
   }
   @media (max-width: 640px) { #hud { display: none } }
+
+  /* ---- full-screen PDF viewer ---- */
+  #pdf-view {
+    position: fixed; inset: 0; z-index: 30; display: flex; align-items: center; justify-content: center;
+    background: rgba(12, 8, 6, 0); pointer-events: none; visibility: hidden;
+    transition: background .45s ease, visibility 0s linear .5s;
+  }
+  #pdf-view.show { background: rgba(12, 8, 6, .72); pointer-events: auto; visibility: visible; transition: background .45s ease; }
+  #pdf-view .panel {
+    position: relative; width: 100%; height: 100%; display: flex; flex-direction: column;
+    background: #fff; border-radius: 28px; overflow: hidden;
+    transform: scale(.3); opacity: 0;
+    transition: transform .5s cubic-bezier(.2,.8,.2,1), opacity .35s ease, border-radius .5s ease;
+  }
+  #pdf-view.show .panel { transform: none; opacity: 1; border-radius: 0; }
+  #pdf-view .bar { display: flex; align-items: center; gap: 14px; padding: 10px 14px 10px 20px; background: #f4f4f4; border-bottom: 1px solid #e2e2e2; font: 400 14px/1.2 var(--ui-font); color: #3d3d3d; }
+  #pdf-view .pt { flex: 1; }
+  #pdf-view .pl { color: #3d3d3d; font-size: 12px; }
+  #pdf-view .px { width: 34px; height: 34px; border: 0; border-radius: 50%; background: #e6e6e6; color: #3d3d3d; font-size: 18px; cursor: pointer; }
+  #pdf-view .px:hover { background: #d8d8d8; }
+  #pdf-view iframe { flex: 1; width: 100%; border: 0; background: #fff; }
+  #pdf-view .pm { display: none; margin: auto; padding: 24px; font: 300 15px/1.6 var(--ui-font); color: #3d3d3d; text-align: center; }
+  @media (prefers-reduced-motion: reduce) { #pdf-view .panel, #pdf-view { transition: none } }
 </style>
 </head>
 <body>
@@ -270,6 +293,7 @@
   </div>
   <div id="hint">press H for controls</div>
   <div id="poster-cta">click to know more.</div>
+  <div id="pdf-view"><div class="panel"><div class="bar"><span class="pt"></span><a class="pl" target="_blank" rel="noopener">open in new tab</a><button class="px" aria-label="Close">&times;</button></div><iframe title="Book PDF"></iframe><div class="pm">This book's PDF hasn't been added yet.</div></div></div>
   <div id="objinfo"><span class="t"></span><span class="m"></span></div>
 
   <div id="book-cta">open the book</div>

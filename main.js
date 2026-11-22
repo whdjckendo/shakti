@@ -380,13 +380,13 @@ const infoHitTargets = [];   // infoMeshes + infoProxies, filled after load
 const INFO = [
   { mat: 'Screenshot_2026_08_29_022137', title: 'Ocean research paper',
     body: 'Research experiement conducted on car preferences of OCEAN personalities with eye tracking. Submitted to HWWE 2026 conference. The paper will be published soon!' },
-  { re: /Notebook1/, title: 'The Politics of Design',
+  { re: /Notebook1/, pdf: 'books/pdf/book1.pdf', title: 'The Politics of Design',
     body: 'Taught me that all design we have been seen until now has in one way or another been politically biased. Beautiful.' },
-  { re: /Notebook2/, title: 'How to Talk to Anyone',
+  { re: /Notebook2/, pdf: 'books/pdf/book2.pdf', title: 'How to Talk to Anyone',
     body: 'I used to struggle with my introvertedness for a long time. I find ways to get better at it whenever I can.' },
-  { re: /Notebook3/, title: 'The Power of Positive Management',
+  { re: /Notebook3/, pdf: 'books/pdf/book3.pdf', title: 'The Power of Positive Management',
     body: 'Since I delve into different kinds of projects at the same time, it naturally involves working with different kind of people. This book helped me understand what to prioritize when not just in a project, but in life.' },
-  { re: /Notebook4/, title: 'Fletcher — A History of Architecture',
+  { re: /Notebook4/, pdf: 'books/pdf/book4.pdf', title: 'Fletcher — A History of Architecture',
     body: 'Architecture is a wonder that I will love learning about till I live. History of architecture forms a connect to the history of anthropology, culture, and innovation in technology. All of this can be learnt from this book.' },
   { mat: '_White_', title: 'Table cloth',
     body: 'Gives a soft touch to my arms when I place them on this for too long.' },
@@ -518,6 +518,7 @@ window.addEventListener('touchmove', (e) => {
 const DEFAULT_FOV = 60;
 let targetFov = DEFAULT_FOV;
 window.addEventListener('wheel', (e) => {
+  if (pdfOpen) return;
   if (bookApi && bookApi.active) return;
   targetFov = THREE.MathUtils.clamp(targetFov + e.deltaY * 0.02, 28, 78);
 }, { passive: true });
@@ -543,6 +544,7 @@ function setPose(next) {
 
 addEventListener('keydown', (e) => {
   if (e.repeat) return;
+  if (pdfOpen) return;
   if (bookApi && bookApi.active) return;   // reading: books.js owns the keyboard
   if (keyMap[e.code]) {
     move[keyMap[e.code]] = true;
@@ -563,11 +565,50 @@ addEventListener('keyup', (e) => {
 addEventListener('blur', () => { move.f = move.b = move.l = move.r = move.run = false; });
 
 addEventListener('click', () => {
+  if (pdfOpen) return;
+  if (curInfo && curInfo.pdf) { openPdf(curInfo); return; }
   if (bookApi && bookApi.tryOpenFromView()) return;
   if (!hoverPoster || posterFocus < 0.4) return;
   posterCta?.classList.add('show');
 });
 
+
+
+/* ---------------- Full-screen PDF viewer ----------------
+   Click a desk book -> a panel grows from the middle of the screen to fill the
+   window and shows that book's PDF. Drop the files in books/pdf/book1.pdf ..
+   book4.pdf. x / Esc / clicking the dark edge closes it. */
+const pdfEl = document.getElementById('pdf-view');
+const pdfFrame = pdfEl && pdfEl.querySelector('iframe');
+const pdfTitle = pdfEl && pdfEl.querySelector('.pt');
+const pdfMissing = pdfEl && pdfEl.querySelector('.pm');
+const pdfLink = pdfEl && pdfEl.querySelector('.pl');
+let pdfOpen = false;
+async function openPdf(info) {
+  if (!pdfEl || pdfOpen) return;
+  pdfOpen = true;
+  move.f = move.b = move.l = move.r = move.run = false;
+  pdfTitle.textContent = info.title;
+  pdfLink.href = info.pdf;
+  pdfEl.classList.add('show');
+  let ok = false;
+  try { const r = await fetch(info.pdf, { method: 'HEAD' }); ok = r.ok && /pdf/i.test(r.headers.get('content-type') || ''); } catch (_) {}
+  pdfMissing.style.display = ok ? 'none' : 'block';
+  pdfFrame.style.display = ok ? 'block' : 'none';
+  pdfLink.style.display = ok ? 'inline' : 'none';
+  if (ok) pdfFrame.src = info.pdf + '#view=FitH';
+}
+function closePdf() {
+  if (!pdfOpen) return;
+  pdfOpen = false;
+  pdfEl.classList.remove('show');
+  setTimeout(() => { if (!pdfOpen) pdfFrame.removeAttribute('src'); }, 400);
+}
+if (pdfEl) {
+  pdfEl.querySelector('.px').addEventListener('click', closePdf);
+  pdfEl.addEventListener('click', (e) => { if (e.target === pdfEl) closePdf(); });
+  addEventListener('keydown', (e) => { if (e.code === 'Escape') closePdf(); });
+}
 
 /* ---------------- Guide UI ----------------
    A key legend that shows itself on arrival and whenever the pose changes,
@@ -1158,7 +1199,9 @@ const paint = () => new Promise((r) => requestAnimationFrame(() => requestAnimat
     m.emissiveIntensity = n === 'Color_M09' || n === '_30' ? 1.05 : n === '_26' ? 0.8 : 0.5;
   }
 
-  bookApi = initBooks({
+  // The four desk books now open as full-screen PDFs (see openPdf), so the old
+  // flip-book rig that hid them is switched off.
+  if (false) bookApi = initBooks({
     THREE, scene, camera, renderer, bloomPass,
     posterMeshes, notebookGroups: notebookMeshes,
     onExit: () => { targetYaw = camera.rotation.y; targetPitch = camera.rotation.x; },
