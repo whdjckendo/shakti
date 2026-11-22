@@ -368,7 +368,7 @@
         }, 40);
       };
       var start = function () {
-        if (!on) return;
+        if (!on || music) return;
         if (a.paused) { a.volume = 0; a.play().then(function () { ramp(VOL); }).catch(function () {}); }
         else ramp(VOL);
       };
@@ -378,6 +378,13 @@
         try { localStorage.setItem('shakthi-sound', on ? 'on' : 'off'); } catch (err) {}
         paint();
         if (on) start(); else ramp(0, function () { a.pause(); });
+        dispatchEvent(new CustomEvent('site-sound', { detail: { on: on } }));
+      });
+      // music from the headphones takes over from the ambient track
+      var music = false;
+      addEventListener('site-music', function (e) {
+        music = e.detail.playing;
+        if (music) ramp(0, function () { a.pause(); }); else start();
       });
       var first = function () { start(); removeEventListener('pointerdown', first); removeEventListener('keydown', first); };
       addEventListener('pointerdown', first); addEventListener('keydown', first);

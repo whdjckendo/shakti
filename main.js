@@ -9,9 +9,11 @@ import { OutputPass } from './vendor/three/jsm/postprocessing/OutputPass.js';
 import { initBooks } from './books.js';
 import { initReader } from './reader.js';
 import { initMonitor } from './monitor.js';
+import { initMusic } from './music.js';
 import { liveCalendar, liveClock, liveDust } from './live.js';
 
 const liveUpdates = [];
+let musicApi = null;
 let bookApi = null;
 const notebookMeshes = {};   // "Notebook1".. -> [Mesh], handed to initBooks
 
@@ -389,6 +391,7 @@ const infoProxies = [];
 const infoHitTargets = [];   // infoMeshes + infoProxies, filled after load
 const INFO = [
   // Blender room (checked first)
+  { re: /(^| )Headphones__1_1( |$)/, title: 'Headphones', body: 'Wear them.', music: true },
   { re: /(^| )Group6( |$)/, title: 'Floor lamp',
     body: 'Made this floor lamp in 2 days during my bachelors for the thin niche beside my bed in my hostel.' },
   { re: /(^| )Group5( |$)/, title: 'Table lamp',
@@ -589,6 +592,7 @@ addEventListener('click', () => {
     const posterKey = hoverPoster && posterFocus > 0.4
       ? ({ 'poster-left': 'book1', 'poster-center': 'book2', 'A4_-_2': 'book3' })[hoverPoster.name] : null;
     const bookKey = curInfo && ({ 'Book 1': 'book1', 'Book 2': 'book2', 'Book 3': 'book3', 'Book 4': 'book4' })[curInfo.title];
+    if (curInfo && curInfo.music && musicApi) { musicApi.wear(); return; }   // headphones -> music menu
     if (!posterKey && !bookKey && bookApi.tryOpenFromView()) return;   // the monitor
     const key = posterKey || bookKey;
     if (key && bookApi.readers[key]) { posterCta?.classList.remove('show'); bookApi.open(key); return; }
@@ -1313,6 +1317,12 @@ const paint = () => new Promise((r) => requestAnimationFrame(() => requestAnimat
         ? new THREE.Box3().setFromObject(pl).union(new THREE.Box3().setFromObject(pc)).getCenter(new THREE.Vector3())
         : null;
       readers.monitor = initMonitor({ scene, camera, screenMesh, bloomPass, posterTarget, onExit });
+      const hp = root.getObjectByName('Headphones__1_1');
+      if (hp) {
+        musicApi = initMusic({ monitor: readers.monitor, headphones: hp, renderer,
+          infoEntry: INFO.find((e) => e.music) });
+        liveUpdates.push((dt) => musicApi.update(dt));
+      }
     }
     const list = Object.values(readers);
     bookApi = {
@@ -1345,6 +1355,7 @@ const paint = () => new Promise((r) => requestAnimationFrame(() => requestAnimat
     );
     proxy.position.copy(box.getCenter(new THREE.Vector3()));
     proxy.userData.info = info;
+    proxy.userData.isProxy = true;
     scene.add(proxy);
     infoProxies.push(proxy);
     delete info._m;
@@ -1506,7 +1517,14 @@ function animate() {
     if (posterCta) posterCta.classList.toggle('show', posterFocus > 0.35);
 
     // Reticle resting on a documented object -> bottom-left info card.
-    const ihit = raycaster.intersectObjects(infoHitTargets, false)[0];
+    // A proxy box wraps its object loosely; if a real documented mesh sits just
+    // inside it (the headphones inside the stand's box), that one wins.
+    const ihits = raycaster.intersectObjects(infoHitTargets, false);
+    let ihit = ihits[0];
+    if (ihit && ihit.object.userData.isProxy) {
+      const real = ihits.find((h) => !h.object.userData.isProxy);
+      if (real && real.distance - ihit.distance < 0.35) ihit = real;
+    }
     updateObjInfo(ihit && ihit.distance < 7 ? ihit.object : null);
   } else if (curInfo) {
     updateObjInfo(null);

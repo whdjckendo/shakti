@@ -115,7 +115,11 @@ export function initMonitor(opts) {
     // undo the cover crop
     return new THREE.Vector2(0.5 + (u - 0.5) * mat.uniforms.uCrop.value, v);
   };
+  // Other screens (e.g. the music menu) can take over the monitor:
+  // content = { texture, hit(px, py) -> id|null, hover(id), click(id) } in 1920x1080 px.
+  let content = null;
   const buttonAt = (vuv) => {
+    if (vuv && content) return content.hit(vuv.x * 1920, (1 - vuv.y) * 1080);
     if (!vuv || video.currentTime < BUTTONS_FROM) return null;
     const px = vuv.x * 1920, py = (1 - vuv.y) * 1080;
     return BUTTONS.find((b) => Math.hypot(px - b.x, py - b.y) < b.r) || null;
@@ -210,6 +214,7 @@ export function initMonitor(opts) {
     if (mode !== 'on' || cardOpen()) { hover = null; ui.classList.remove('hot'); return; }
     const vuv = pick(e);
     const b = buttonAt(vuv);
+    if (content) { content.hover(b); ui.classList.toggle('hot', b != null); return; }
     hover = b;
     ui.classList.toggle('hot', !!b);
     if (b) mat.uniforms.uHover.value.set(b.x / 1920, 1 - b.y / 1080, mat.uniforms.uHover.value.z);
@@ -218,7 +223,8 @@ export function initMonitor(opts) {
     if (mode !== 'on') return;
     if (cardOpen()) { closeCards(); return; }
     const b = buttonAt(pick(e));
-    if (!b) return;
+    if (b == null) return;
+    if (content) { content.click(b, e); return; }
     if (b.id === 'work') close(posterTarget);
     else if (b.id === 'explore') close();
     else if (b.id === 'heart') openCard(keyCard);
@@ -242,10 +248,12 @@ export function initMonitor(opts) {
     dummy.position.copy(target.p); dummy.up.set(0, 1, 0); dummy.lookAt(center);
     target.q.copy(dummy.quaternion);
   }
-  function open() {
+  function open(withContent) {
     if (mode !== 'off') return false;
-    started = true;
-    kick();
+    content = withContent || null;
+    mat.uniforms.uTex.value = content ? content.texture : tex;
+    mat.uniforms.uHover.value.z = 0;
+    if (!content) { started = true; kick(); }
     home.p.copy(camera.position); home.q.copy(camera.quaternion);
     from.p.copy(home.p); from.q.copy(home.q);
     computeTarget();
@@ -295,6 +303,7 @@ export function initMonitor(opts) {
         if (mode === 'in') { mode = 'on'; ui.classList.add('show'); }
         else {
           mode = 'off';
+          if (content) { content.hover(null); content.closed && content.closed(); content = null; mat.uniforms.uTex.value = tex; }
           document.body.classList.remove('reading');
           camera.rotation.setFromQuaternion(home.q, 'YXZ');
           onExit && onExit();
