@@ -1,11 +1,24 @@
 import * as THREE from 'three';
 import { OBJLoader } from './vendor/three/jsm/loaders/OBJLoader.js';
+import { GLTFLoader } from './vendor/three/jsm/loaders/GLTFLoader.js';
+import { MeshoptDecoder } from './vendor/three/jsm/libs/meshopt_decoder.module.js';
 import { EffectComposer } from './vendor/three/jsm/postprocessing/EffectComposer.js';
 import { RenderPass } from './vendor/three/jsm/postprocessing/RenderPass.js';
+import { ShaderPass } from './vendor/three/jsm/postprocessing/ShaderPass.js';
 import { UnrealBloomPass } from './vendor/three/jsm/postprocessing/UnrealBloomPass.js';
 import { OutputPass } from './vendor/three/jsm/postprocessing/OutputPass.js';
 import { initBooks } from './books.js';
+import { initReader } from './reader.js';
+import { initMonitor } from './monitor.js';
+import { initMusic } from './music.js';
+import { initFixtures } from './fixtures.js';
+import { initFocus } from './focus.js';
+import { liveCalendar, liveClock, liveDust, liveSmoke } from './live.js';
 
+const liveUpdates = [];
+let musicApi = null;
+let fixturesApi = null;
+let tipCleared = false;
 let bookApi = null;
 const notebookMeshes = {};   // "Notebook1".. -> [Mesh], handed to initBooks
 
@@ -32,6 +45,18 @@ const msaaTarget = new THREE.WebGLRenderTarget(size.x, size.y, {
 });
 const composer = new EffectComposer(renderer, msaaTarget);
 composer.addPass(new RenderPass(scene, camera));
+// Safety net: a single NaN/Inf pixel (from any shader, on some GPUs) gets
+// smeared by the bloom blur into big black blocks. Replace bad pixels first.
+composer.addPass(new ShaderPass({
+  uniforms: { tDiffuse: { value: null } },
+  vertexShader: 'varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
+  fragmentShader: `uniform sampler2D tDiffuse; varying vec2 vUv;
+    void main() {
+      vec4 c = texture2D(tDiffuse, vUv);
+      if (any(isnan(c)) || any(isinf(c))) c = vec4(0.0, 0.0, 0.0, 1.0);
+      gl_FragColor = vec4(min(c.rgb, vec3(64.0)), c.a);
+    }`,
+}));
 const bloomPass = new UnrealBloomPass(
   new THREE.Vector2(window.innerWidth, window.innerHeight), 0.36, 0.85, 0.52);
 composer.addPass(bloomPass);
@@ -297,7 +322,11 @@ function buildMaterial(srcMat) {
 }
 
 /* ---------------- Player state ---------------- */
-const SCALE = 0.001;            // model is authored in millimetres
+// New Blender model (models/room.glb) is the default; add ?obj to the URL for
+// the old SketchUp OBJ. The GLB is ~10x metres as exported, so it scales by 0.1.
+const USE_OBJ = /[?&]obj\b/.test(location.search);
+const isGlb = !USE_OBJ;
+const SCALE = USE_OBJ ? 0.001 : 0.1;   // OBJ is authored in millimetres
 const PLAYER_RADIUS = 0.26;
 const STAND_EYE = 1.52;
 const CROUCH_EYE = 0.95;
@@ -378,21 +407,29 @@ const infoMeshes = [];
 const infoProxies = [];
 const infoHitTargets = [];   // infoMeshes + infoProxies, filled after load
 const INFO = [
+  // Blender room (checked first)
+  { re: /(^| )Headphones__1_1( |$)/, title: 'Headphones', body: 'Wear them.', music: true },
+  { re: /(^| )Group6( |$)/, title: 'Floor lamp', light: 'floor',
+    text: 'Made this floor lamp in 2 days during my bachelors for the thin niche beside my bed in my hostel.' },
+  { re: /(^| )Group5( |$)/, title: 'Table lamp', light: 'table',
+    text: 'Made this table lamp out of plastic bag waste. Again, during my bachelors. (You can tell I love being in the workshop).' },
+  { re: /(^| )Group307( |$)/, title: 'Bedside lamp', light: 'bedside' },
+  { re: /FAIRY_LIGHT\d|Star_Lights19/, mat: '_Translucent_Glass_Gray_2', title: 'Fairy lights', light: 'fairy' },
+  { re: /(^| )Tube_Light1( |$)/, title: 'Tube light', light: 'tube' },
+  // the calendar and the photos pinned under it: the "Wall of Always"
+  { re: /(^| )calendar( |$)|^WhatsApp_Image|^(amol|bhuv|suddi|thris)\b/, title: 'Wall of Always', wall: true,
+    body: 'Look closer into the \u201cWall of Always\u201d.' },
   { mat: 'Screenshot_2026_08_29_022137', title: 'Ocean research paper',
     body: 'Research experiement conducted on car preferences of OCEAN personalities with eye tracking. Submitted to HWWE 2026 conference. The paper will be published soon!' },
-  { re: /Notebook1/, title: 'The Politics of Design',
-    body: 'Taught me that all design we have been seen until now has in one way or another been politically biased. Beautiful.' },
-  { re: /Notebook2/, title: 'How to Talk to Anyone',
-    body: 'I used to struggle with my introvertedness for a long time. I find ways to get better at it whenever I can.' },
-  { re: /Notebook3/, title: 'The Power of Positive Management',
-    body: 'Since I delve into different kinds of projects at the same time, it naturally involves working with different kind of people. This book helped me understand what to prioritize when not just in a project, but in life.' },
-  { re: /Notebook4/, title: 'Fletcher — A History of Architecture',
-    body: 'Architecture is a wonder that I will love learning about till I live. History of architecture forms a connect to the history of anthropology, culture, and innovation in technology. All of this can be learnt from this book.' },
+  { re: /Notebook4/, title: 'Book 1', body: 'Click to flip through it.' },
+  { re: /Notebook1/, title: 'Book 2', body: 'Click to flip through it.' },
+  { re: /Notebook2/, title: 'Book 3', body: 'Click to flip through it.' },
+  { re: /Notebook3/, title: 'Book 4', body: 'Click to flip through it.' },
   { mat: '_White_', title: 'Table cloth',
     body: 'Gives a soft touch to my arms when I place them on this for too long.' },
   { re: /(^|\s)(Pencil_1_\d|Lapices_en_bote1)(\s|$)/, title: 'Pencils & stationery',
     body: 'Having a 10B, 2B and 2H pencil are a must.' },
-  { re: /(^|\s)M_JLIGHET1(\s|$)/, proxy: true, title: 'Headphone stand',
+  { re: /(^|\s)M_JLIGHET1(\s|$)/, proxy: true, title: 'Headphone stand', stand: true,
     body: 'MÖJLIGHET Headset/tablet stand by IKEA. My professor Anand Belhe taught me that good product design always has character, and this product is a testament to that.' },
   { mat: 'Concrete_Aggregate_Smoke', title: 'Flooring',
     body: 'I have vivid spatial memories of the flat I grew up in. Maybe it was the budding space designer in me. Mosaic flooring was one of it.' },
@@ -414,7 +451,10 @@ const INFO = [
     body: 'When I want to turn my brain off and make something, for the pure joy of creation. Although I have learnt origami is more mathematical than I thought.' },
 ];
 function matchInfo(child) {
-  const nm = child.name || '';
+  let nm = child.name || '';
+  // GLB meshes don't carry their group path in the name (OBJ ones did), so
+  // join the ancestors the same way.
+  if (isGlb) { for (let o = child.parent; o && o.name !== 'Model' && o.parent; o = o.parent) nm += ' ' + o.name; }
   const mats = (Array.isArray(child.material) ? child.material : [child.material])
     .map((m) => m && m.name).filter(Boolean);
   for (const e of INFO) {
@@ -518,6 +558,7 @@ window.addEventListener('touchmove', (e) => {
 const DEFAULT_FOV = 60;
 let targetFov = DEFAULT_FOV;
 window.addEventListener('wheel', (e) => {
+  if (pdfOpen) return;
   if (bookApi && bookApi.active) return;
   targetFov = THREE.MathUtils.clamp(targetFov + e.deltaY * 0.02, 28, 78);
 }, { passive: true });
@@ -543,6 +584,7 @@ function setPose(next) {
 
 addEventListener('keydown', (e) => {
   if (e.repeat) return;
+  if (pdfOpen) return;
   if (bookApi && bookApi.active) return;   // reading: books.js owns the keyboard
   if (keyMap[e.code]) {
     move[keyMap[e.code]] = true;
@@ -563,11 +605,67 @@ addEventListener('keyup', (e) => {
 addEventListener('blur', () => { move.f = move.b = move.l = move.r = move.run = false; });
 
 addEventListener('click', () => {
+  if (pdfOpen) return;
+  if (bookApi && bookApi.active) return;
+  // Blender room: the toilets poster or the open book itself opens Book 1.
+  if (isGlb && bookApi && bookApi.open) {
+    // toilets poster -> Book 1, IKEA (ETT LYCKLIG) poster -> Book 2, Navigation poster -> Book 3
+    const posterKey = hoverPoster && posterFocus > 0.4
+      ? ({ 'poster-left': 'book1', 'poster-center': 'book2', 'A4_-_2': 'book3' })[hoverPoster.name] : null;
+    const bookKey = curInfo && ({ 'Book 1': 'book1', 'Book 2': 'book2', 'Book 3': 'book3', 'Book 4': 'book4' })[curInfo.title];
+    if (curInfo && curInfo.wall && bookApi.readers.wall) { bookApi.readers.wall.open(); return; }
+    if (curInfo && curInfo.light && fixturesApi && fixturesApi.has(curInfo.light)) {   // light switch
+      fixturesApi.toggle(curInfo.light); refreshInfo(); return;
+    }
+    if (curInfo && curInfo.stand && musicApi && musicApi.worn) { musicApi.takeOff(); refreshInfo(); return; }
+    if (curInfo && curInfo.music && musicApi) { musicApi.wear(); return; }   // headphones -> music menu
+    if (!posterKey && !bookKey && bookApi.tryOpenFromView()) return;   // the monitor
+    const key = posterKey || bookKey;
+    if (key && bookApi.readers[key]) { posterCta?.classList.remove('show'); bookApi.open(key); return; }
+  }
+  if (curInfo && curInfo.pdf) { openPdf(curInfo); return; }
   if (bookApi && bookApi.tryOpenFromView()) return;
   if (!hoverPoster || posterFocus < 0.4) return;
   posterCta?.classList.add('show');
 });
 
+
+
+/* ---------------- Full-screen PDF viewer ----------------
+   Click a desk book -> a panel grows from the middle of the screen to fill the
+   window and shows that book's PDF. Drop the files in books/pdf/book1.pdf ..
+   book4.pdf. x / Esc / clicking the dark edge closes it. */
+const pdfEl = document.getElementById('pdf-view');
+const pdfFrame = pdfEl && pdfEl.querySelector('iframe');
+const pdfTitle = pdfEl && pdfEl.querySelector('.pt');
+const pdfMissing = pdfEl && pdfEl.querySelector('.pm');
+const pdfLink = pdfEl && pdfEl.querySelector('.pl');
+let pdfOpen = false;
+async function openPdf(info) {
+  if (!pdfEl || pdfOpen) return;
+  pdfOpen = true;
+  move.f = move.b = move.l = move.r = move.run = false;
+  pdfTitle.textContent = info.title;
+  pdfLink.href = info.pdf;
+  pdfEl.classList.add('show');
+  let ok = false;
+  try { const r = await fetch(info.pdf, { method: 'HEAD' }); ok = r.ok && /pdf/i.test(r.headers.get('content-type') || ''); } catch (_) {}
+  pdfMissing.style.display = ok ? 'none' : 'block';
+  pdfFrame.style.display = ok ? 'block' : 'none';
+  pdfLink.style.display = ok ? 'inline' : 'none';
+  if (ok) pdfFrame.src = info.pdf + '#view=FitH';
+}
+function closePdf() {
+  if (!pdfOpen) return;
+  pdfOpen = false;
+  pdfEl.classList.remove('show');
+  setTimeout(() => { if (!pdfOpen) pdfFrame.removeAttribute('src'); }, 400);
+}
+if (pdfEl) {
+  pdfEl.querySelector('.px').addEventListener('click', closePdf);
+  pdfEl.addEventListener('click', (e) => { if (e.target === pdfEl) closePdf(); });
+  addEventListener('keydown', (e) => { if (e.code === 'Escape') closePdf(); });
+}
 
 /* ---------------- Guide UI ----------------
    A key legend that shows itself on arrival and whenever the pose changes,
@@ -583,6 +681,34 @@ let hudPinned = false;
 let hudTimer = 0;
 
 let curInfo = null;
+// Some cards change with the room: light switches say off/on, the stand
+// offers to take the headphones off while they're on.
+function infoBody(info) {
+  if (info.light) {
+    const off = fixturesApi && fixturesApi.has(info.light) && !fixturesApi.isOn(info.light);
+    const sw = off ? 'Click to turn it back on.' : 'Click to turn it off.';
+    return info.text ? `${info.text} ${sw}` : sw;
+  }
+  if (info.stand && musicApi && musicApi.worn) return 'Take off headphones.';
+  return info.body;
+}
+// What a click on the thing under the reticle will do, shown right by it.
+function clickLabel() {
+  if (posterFocus > 0.35 && hoverPoster) return 'Click to know more';
+  const i = curInfo;
+  if (i) {
+    if (i.light && fixturesApi && fixturesApi.has(i.light)) return fixturesApi.isOn(i.light) ? 'Click to turn it off' : 'Click to turn it on';
+    if (i.wall) return 'Click to look closer';
+    if (i.music) return musicApi && musicApi.worn ? 'Click to change the music' : 'Click to wear them';
+    if (i.stand && musicApi && musicApi.worn) return 'Click to take off headphones';
+    if (/^Book \d$/.test(i.title)) return 'Click to read';
+  }
+  const mon = bookApi && bookApi.readers && bookApi.readers.monitor;
+  if (mon && mon.aimed && mon.aimed()) return 'Click to watch';
+  return null;
+}
+const setClickTip = (label, x, y) => window.__clickTip && window.__clickTip(label, x, y);
+function refreshInfo() { if (curInfo && objinfoMsgEl) objinfoMsgEl.textContent = infoBody(curInfo); }
 function updateObjInfo(obj) {
   const info = (obj && obj.userData.info) || null;
   if (info === curInfo) return;
@@ -590,7 +716,7 @@ function updateObjInfo(obj) {
   if (!objinfoEl) return;
   if (info) {
     objinfoTitleEl.textContent = info.title;
-    objinfoMsgEl.textContent = info.body;
+    objinfoMsgEl.textContent = infoBody(info);
     objinfoEl.classList.add('show');
     hudEl && hudEl.classList.remove('show');   // don't stack in the same corner
   } else {
@@ -598,7 +724,7 @@ function updateObjInfo(obj) {
   }
 }
 
-const POSE_LABEL = { stand: 'standing', crouch: 'crouching', sit: 'at the desk', lie: 'lying down' };
+const POSE_LABEL = { stand: 'Inside the room', crouch: 'Inside the room', sit: 'Inside the room', lie: 'Inside the room' };
 
 function updateHud() {
   if (poseEl) poseEl.textContent = POSE_LABEL[pose] || '';
@@ -679,6 +805,27 @@ async function fetchRoomText(url) {
   return new TextDecoder().decode(merged);
 }
 
+async function fetchRoomBinary(url) {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+  const total = Number(res.headers.get('Content-Length') || 0);
+  if (!res.body) return res.arrayBuffer();
+  const reader = res.body.getReader();
+  const chunks = [];
+  let loaded = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    chunks.push(value);
+    loaded += value.length;
+    if (total) setProgress(0.85 * Math.min(1, loaded / total));
+  }
+  const merged = new Uint8Array(loaded);
+  let off = 0;
+  for (const c of chunks) { merged.set(c, off); off += c.length; }
+  return merged.buffer;
+}
+
 // Give the browser two frames to actually paint the latest status text before
 // we hand it a long synchronous task.
 const paint = () => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
@@ -688,6 +835,13 @@ const paint = () => new Promise((r) => requestAnimationFrame(() => requestAnimat
   try {
     setProgress(0.02);
     await paint();
+    if (isGlb) {
+      const buf = await fetchRoomBinary('./models/room.glb');
+      setProgress(0.9);
+      await paint();
+      const gltf = await new Promise((res, rej) => new GLTFLoader().setMeshoptDecoder(MeshoptDecoder).parse(buf, './models/', res, rej));
+      root = gltf.scene;
+    } else {
     const [text, mtlText] = await Promise.all([
       fetchRoomText('./room.obj'),
       fetch('./room.mtl').then((r) => r.ok ? r.text() : ''),
@@ -704,6 +858,7 @@ const paint = () => new Promise((r) => requestAnimationFrame(() => requestAnimat
     setProgress(0.9);   // download done, parsing the model
     await paint();
     root = new OBJLoader().parse(text);
+    }
   } catch (err) {
     console.error('Could not load room.obj — serve this folder over http (node server.js).', err);
     setStatus('could not load the room');
@@ -745,11 +900,12 @@ const paint = () => new Promise((r) => requestAnimationFrame(() => requestAnimat
   root.traverse((child) => {
     if (!child.isMesh) return;
 
-    child.material = Array.isArray(child.material)
+    // The GLB already carries its own textured materials from Blender.
+    if (!isGlb) child.material = Array.isArray(child.material)
       ? child.material.map(buildMaterial)
       : buildMaterial(child.material);
 
-    if (/Tabla_Set1/.test(child.name)) {
+    if (!isGlb && /Tabla_Set1/.test(child.name)) {
       const smallShell = /Mesh3041/.test(child.name);
       const paintTabla = (mt) => {
         const g = mt.clone();
@@ -774,6 +930,13 @@ const paint = () => new Promise((r) => requestAnimationFrame(() => requestAnimat
         child.geometry = child.geometry.clone();
         child.geometry.scale(-1, 1, 1);
         child.geometry.computeVertexNormals();
+      }
+    }
+    if (isGlb) {
+      // Blender exported the laptop body with a white emission, so the whole
+      // MacBook glowed. Only screens should glow.
+      for (const mt of [].concat(child.material)) {
+        if (mt && mt.name === 'macbook_aluminium') { mt.emissive.set(0x000000); mt.emissiveMap = null; }
       }
     }
     child.castShadow = false;
@@ -824,15 +987,16 @@ const paint = () => new Promise((r) => requestAnimationFrame(() => requestAnimat
         fairyBulbMeshes.push(child);
       }
     }
-    if (/Component_1_1/.test(child.name)) child.material = buildMaterial({ name: 'poster_left' });
-    if (/Component_1_2/.test(child.name)) child.material = buildMaterial({ name: 'poster_center' });
-    if (/Component_1_[123]/.test(child.name) || /Picture[1-4]/.test(child.name)) {
+    if (isGlb && (/^poster-(left|center)$/.test(child.name) || child.name === 'A4_-_2')) posterMeshes.push(child);   // A4_-_2 = Navigation poster
+    if (!isGlb && /Component_1_1/.test(child.name)) child.material = buildMaterial({ name: 'poster_left' });
+    if (!isGlb && /Component_1_2/.test(child.name)) child.material = buildMaterial({ name: 'poster_center' });
+    if (!isGlb && (/Component_1_[123]/.test(child.name) || /Picture[1-4]/.test(child.name))) {
       posterMeshes.push(child);
     }
     if (/Pillow/i.test(child.name)) pillowBox.union(box);
 
     const bookKey = (child.name.match(/Notebook[1-4]/) || [])[0];
-    if (bookKey) {
+    if (bookKey && !isGlb) {
       (notebookMeshes[bookKey] = notebookMeshes[bookKey] || []).push(child);
       const covers = {
         Notebook1: 'book-politics',
@@ -850,7 +1014,7 @@ const paint = () => new Promise((r) => requestAnimationFrame(() => requestAnimat
       child.material = Array.isArray(child.material)
         ? child.material.map(paintCover) : paintCover(child.material);
     }
-    if (/Headphones/.test(child.name)) {
+    if (!isGlb && /Headphones/.test(child.name)) {
       const coat = (mt) => {
         const g = mt.clone();
         g.map = getTex('headphone', 1, 1);
@@ -862,7 +1026,7 @@ const paint = () => new Promise((r) => requestAnimationFrame(() => requestAnimat
       };
       child.material = Array.isArray(child.material) ? child.material.map(coat) : coat(child.material);
     }
-    if (/Pencil_1_/.test(child.name)) {
+    if (!isGlb && /Pencil_1_/.test(child.name)) {
       const p = (mt) => {
         const g = mt.clone();
         g.map = getTex('pencil', 1, 1);
@@ -883,6 +1047,12 @@ const paint = () => new Promise((r) => requestAnimationFrame(() => requestAnimat
   });
 
   scene.add(root);
+  if (isGlb) {
+    // In the Blender model the floor lamp is Group6 (shade = Group10). Without
+    // this the lamp glow fell back to a corner and lit a bare patch of wall.
+    const lamp = root.getObjectByName('Group6');
+    if (lamp) floorLampBox.makeEmpty().setFromObject(lamp);
+  }
 
   // Walkable area comes from the floor plane; fall back to the whole model.
   const area = floorBox.isEmpty() ? new THREE.Box3().setFromObject(root) : floorBox;
@@ -913,6 +1083,12 @@ const paint = () => new Promise((r) => requestAnimationFrame(() => requestAnimat
     area.getCenter(seatPos);
     seatPos.y = floorY;
   }
+  if (isGlb) {
+    // In the new model the desk runs along the x = 0 wall. The chair mesh
+    // sits under the desk, so pull it out and face the wall/monitor.
+    seatPos.set(1.0, floorY, -1.3);
+    seatedEye = 1.1;
+  }
   eyeHeight = seatedEye;
   camera.position.set(seatPos.x, floorY + seatedEye, seatPos.z);
 
@@ -938,7 +1114,9 @@ const paint = () => new Promise((r) => requestAnimationFrame(() => requestAnimat
 
   // A seated person faces their desk, so aim at the laptop rather than at
   // whichever direction happens to have the most clear floor.
-  if (!focusBox.isEmpty()) {
+  if (isGlb) {
+    baseYaw = Math.PI / 2;   // facing -x, toward the desk wall
+  } else if (!focusBox.isEmpty()) {
     const f = new THREE.Vector3();
     focusBox.getCenter(f);
     baseYaw = Math.atan2(-(f.x - camera.position.x), -(f.z - camera.position.z));
@@ -958,7 +1136,9 @@ const paint = () => new Promise((r) => requestAnimationFrame(() => requestAnimat
   rim.target.position.copy(mid);
   rim.target.updateMatrixWorld();
 
-  const capY = (wallBox.isEmpty() ? shell.max.y : wallBox.max.y) - 0.005;
+  // (In the Blender model the wall material is also used on the desk, which
+  // dragged this cap down to desk height, so use the room's real top.)
+  const capY = ((isGlb || wallBox.isEmpty()) ? shell.max.y : wallBox.max.y) - 0.005;
   const ceiling = new THREE.Mesh(
     new THREE.PlaneGeometry(area.max.x - area.min.x, area.max.z - area.min.z),
     new THREE.MeshStandardMaterial({
@@ -968,9 +1148,9 @@ const paint = () => new Promise((r) => requestAnimationFrame(() => requestAnimat
   );
   ceiling.rotation.x = Math.PI / 2;
   ceiling.position.set((area.min.x + area.max.x) / 2, capY, (area.min.z + area.max.z) / 2);
-  scene.add(ceiling);
+  if (!isGlb) scene.add(ceiling);   // the Blender room has its own ceiling; this cap sat at desk height there
 
-  addDoorAndWindows(floorY);
+  if (!isGlb) addDoorAndWindows(floorY);   // old room only: the Blender model has its own door
 
   bounce.position.set(mid.x, floorY + 1.55, mid.z);
 
@@ -996,6 +1176,9 @@ const paint = () => new Promise((r) => requestAnimationFrame(() => requestAnimat
   } else {
     placeFrost(deskFrost, new THREE.Vector3(seatPos.x - 0.5, floorY + 1.2, seatPos.z), 0.07);
   }
+  // That 'desk lamp' is really the headphone stand; its glow made a bright
+  // hotspot on the wall, so it stays dark in the new model.
+  if (isGlb) for (const l of deskFrost) l.intensity = 0;
 
   // Fabric shade: warm, self-lit, paper-lantern. Clone so the shared
   // FrontColor used on walls never picks up the glow.
@@ -1089,7 +1272,7 @@ const paint = () => new Promise((r) => requestAnimationFrame(() => requestAnimat
   // The poster wall the character faces carries warm fairy lights; the wall
   // at their back was unlit and read as solid black. Mirror the same swag of
   // bulbs there, in red, with point fills so the plaster actually catches it.
-  {
+  if (!isGlb) {
     const start = new THREE.Vector3(seatPos.x, 0, seatPos.z);
     // rotation.y = baseYaw -> forward is (-sin, 0, -cos); the back wall is the
     // opposite way.
@@ -1158,7 +1341,74 @@ const paint = () => new Promise((r) => requestAnimationFrame(() => requestAnimat
     m.emissiveIntensity = n === 'Color_M09' || n === '_30' ? 1.05 : n === '_26' ? 0.8 : 0.5;
   }
 
-  bookApi = initBooks({
+  // The four desk books now open as full-screen PDFs (see openPdf), so the old
+  // flip-book rig that hid them is switched off.
+  if (isGlb) {
+    const onExit = () => { targetYaw = camera.rotation.y; targetPitch = camera.rotation.x; };
+    const readers = {};
+    const nb1 = root.getObjectByName('Notebook4');
+    // All books keep the model book's curved shape; pages are printed on its paper.
+    if (nb1) readers.book1 = initReader({
+      scene, camera, renderer, bloomPass, bookObject: nb1, pagesDir: 'books/book1',
+      surface: 'model', paperMaterial: '_10', onExit });
+    const nb2 = root.getObjectByName('Notebook1');
+    if (nb2) readers.book2 = initReader({
+      scene, camera, renderer, bloomPass, bookObject: nb2, pagesDir: 'books/book2',
+      surface: 'model', paperMaterial: '_10', onExit });
+    const nb3 = root.getObjectByName('Notebook2');
+    if (nb3) readers.book3 = initReader({
+      scene, camera, renderer, bloomPass, bookObject: nb3, pagesDir: 'books/book3',
+      surface: 'model', paperMaterial: '_10', onExit });
+    const nb4 = root.getObjectByName('Notebook3');
+    if (nb4) readers.book4 = initReader({
+      scene, camera, renderer, bloomPass, bookObject: nb4, pagesDir: 'books/book4',
+      surface: 'model', paperMaterial: '_10', onExit });
+    // desk monitor: intro loop, click to zoom in and play, clickable buttons
+    const screenMesh = root.getObjectByName('Mesh541_3');
+    if (screenMesh) {
+      const pl = root.getObjectByName('poster-left'), pc = root.getObjectByName('poster-center');
+      const posterTarget = (pl && pc)
+        ? new THREE.Box3().setFromObject(pl).union(new THREE.Box3().setFromObject(pc)).getCenter(new THREE.Vector3())
+        : null;
+      readers.monitor = initMonitor({ scene, camera, screenMesh, bloomPass, posterTarget, onExit });
+      const hp = root.getObjectByName('Headphones__1_1');
+      if (hp) {
+        musicApi = initMusic({ monitor: readers.monitor, headphones: hp, renderer,
+          infoEntry: INFO.find((e) => e.music) });
+        liveUpdates.push((dt) => musicApi.update(dt));
+      }
+    }
+    // Wall of Always: the calendar plus the photos near it (photos elsewhere
+    // in the room keep their own cards)
+    const cal = root.getObjectByName('calendar');
+    if (cal) {
+      const calBox = new THREE.Box3().setFromObject(cal);
+      const calC = calBox.getCenter(new THREE.Vector3());
+      const wallBox = calBox.clone();
+      for (let i = infoMeshes.length - 1; i >= 0; i--) {
+        const o = infoMeshes[i];
+        if (!o.userData.info || !o.userData.info.wall) continue;
+        const b = new THREE.Box3().setFromObject(o);
+        if (b.getCenter(new THREE.Vector3()).distanceTo(calC) > 0.75) {
+          o.userData.info = null; infoMeshes.splice(i, 1);
+          const k = infoHitTargets.indexOf(o); if (k >= 0) infoHitTargets.splice(k, 1);
+        } else wallBox.union(b);
+      }
+      wallBox.expandByScalar(0.06);
+      // The open door stands in front of this wall, so look at it from an angle,
+      // from the desk side, where nothing is in the way (nothing gets cut).
+      readers.wall = initFocus({ camera, box: wallBox, normal: new THREE.Vector3(0.78, 0, -0.62), clear: 0, fill: 0.86, onExit });
+    }
+    const list = Object.values(readers);
+    bookApi = {
+      readers,
+      get active() { return list.some((r) => r.active); },
+      update(dt) { list.forEach((r) => r.update(dt)); },
+      tryOpenFromView: () => !!(readers.monitor && readers.monitor.tryOpenFromView()),
+      open: (k) => readers[k] && readers[k].open(),
+    };
+  }
+  if (false) bookApi = initBooks({
     THREE, scene, camera, renderer, bloomPass,
     posterMeshes, notebookGroups: notebookMeshes,
     onExit: () => { targetYaw = camera.rotation.y; targetPitch = camera.rotation.x; },
@@ -1180,6 +1430,7 @@ const paint = () => new Promise((r) => requestAnimationFrame(() => requestAnimat
     );
     proxy.position.copy(box.getCenter(new THREE.Vector3()));
     proxy.userData.info = info;
+    proxy.userData.isProxy = true;
     scene.add(proxy);
     infoProxies.push(proxy);
     delete info._m;
@@ -1194,6 +1445,61 @@ const paint = () => new Promise((r) => requestAnimationFrame(() => requestAnimat
   // revealed is the finished room, not a half-drawn one.
   await paint();
   // Fill the circle, say so, and give the message two seconds before opening.
+  if (isGlb && root) {
+    // visitor's own date and time on the wall calendar and alarm clock
+    liveUpdates.push(liveCalendar(root.getObjectByName('calendar'), renderer));
+    liveUpdates.push(liveClock(root.getObjectByName('Mesh1100'), renderer));   // alarm clock face
+    // light switches for every fixture
+    const fairy = [];
+    root.traverse((o) => {
+      if (/^FAIRY_LIGHT\d/.test(o.name)) fairy.push(o);
+      else if (o.isMesh && [].concat(o.material).some((mt) => mt && mt.name === '_Translucent_Glass_Gray_2')) fairy.push(o);
+    });
+    const warm = 0xffc27a;
+    fixturesApi = initFixtures(scene, [
+      { key: 'floor', node: root.getObjectByName('Group6'), adopt: true },
+      { key: 'table', node: root.getObjectByName('Group5'),
+        light: { color: warm, intensity: 0.05, distance: 1.6, offset: new THREE.Vector3(0.04, 0.06, 0) } },
+      { key: 'bedside', node: root.getObjectByName('Group307'),
+        light: { color: warm, intensity: 0.06, distance: 2.2, offset: new THREE.Vector3(0, 0.08, 0) } },
+      { key: 'fairy', node: fairy },
+      { key: 'tube', node: root.getObjectByName('Tube_Light1'), on: false,
+        glow: { color: 0xf4f8ff, intensity: 1.4 },
+        light: { color: 0xe8f0ff, intensity: 0.14, distance: 6, offset: new THREE.Vector3(-0.25, 0, 0) } },
+    ]);
+    liveUpdates.push((dt) => fixturesApi.update(dt));
+    // ceiling fan: plain white (it shared the wall's plaster texture)
+    const fan = root.getObjectByName('ceiling_fan1');
+    if (fan) fan.traverse((o) => {
+      if (!o.isMesh) return;
+      o.material = [].concat(o.material).map((mt) => {
+        const c = mt.clone(); c.map = null; c.color.set(0xf6f6f4); c.roughness = 0.5; c.metalness = 0;
+        if (c.emissive) { c.emissive.set(0xffffff); c.emissiveIntensity = 0.07; }   // reads white, not beige, in the warm light
+        c.needsUpdate = true; return c;
+      });
+      if (o.material.length === 1) o.material = o.material[0];
+    });
+    // dust: only in the light of the lamps (not the room fill under the fan),
+    // and it settles when a lamp is switched off
+    const ctr = (n, dy = 0) => {
+      const o = root.getObjectByName(n);
+      return o ? new THREE.Box3().setFromObject(o).getCenter(new THREE.Vector3()).add(new THREE.Vector3(0, dy, 0)) : null;
+    };
+    const sources = [
+      { pos: ctr('Group10'), radius: 0.55, weight: 1.0, level: () => fixturesApi.level('floor') },   // floor lamp shade
+      { pos: ctr('Group5', 0.08), radius: 0.24, weight: 0.22, level: () => fixturesApi.level('table') },
+      { pos: ctr('Group307', 0.1), radius: 0.38, weight: 0.6, level: () => fixturesApi.level('bedside') },
+      { pos: ctr('Tube_Light1'), radius: 0.6, weight: 0.5, level: () => fixturesApi.level('tube') },
+    ].filter((s) => s.pos);
+    liveUpdates.push(liveDust(scene, sources, 560));
+    // dhoop on the desk: a thin thread of smoke from its tip
+    const dhoop = root.getObjectByName('dhoop');
+    if (dhoop) {
+      const db = new THREE.Box3().setFromObject(dhoop);
+      const tip = new THREE.Vector3((db.min.x + db.max.x) / 2, db.max.y, (db.min.z + db.max.z) / 2);
+      liveUpdates.push(liveSmoke(scene, tip, () => Math.max(fixturesApi.level('floor'), 0.6 * fixturesApi.level('table'))));
+    }
+  }
   setProgress(1);
   if (loadText) loadText.className = 'goes';
   // Same 2 seconds as before: let the water finish filling, then melt the
@@ -1323,13 +1629,26 @@ function animate() {
     if (posterCta) posterCta.classList.toggle('show', posterFocus > 0.35);
 
     // Reticle resting on a documented object -> bottom-left info card.
-    const ihit = raycaster.intersectObjects(infoHitTargets, false)[0];
+    // A proxy box wraps its object loosely; if a real documented mesh sits just
+    // inside it (the headphones inside the stand's box), that one wins.
+    const ihits = raycaster.intersectObjects(infoHitTargets, false);
+    let ihit = ihits[0];
+    if (ihit && ihit.object.userData.isProxy) {
+      const real = ihits.find((h) => !h.object.userData.isProxy);
+      if (real && real.distance - ihit.distance < 0.35) ihit = real;
+    }
     updateObjInfo(ihit && ihit.distance < 7 ? ihit.object : null);
-  } else if (curInfo) {
-    updateObjInfo(null);
+    setClickTip(clickLabel(), innerWidth / 2, innerHeight / 2);
+  } else {
+    if (curInfo) updateObjInfo(null);
+    // entering a close-up view: drop the reticle's tip once (overlays may
+    // then show their own tip at the mouse)
+    if (!tipCleared) { setClickTip(null); tipCleared = true; }
   }
+  if (!reading) tipCleared = false;
 
   if (bookApi) bookApi.update(dt);
+  for (const u of liveUpdates) u(dt);
 
   composer.render();
 }

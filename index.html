@@ -128,20 +128,17 @@
     content: ''; position: absolute; left: 50%; top: 50%; border-radius: 50%;
     transform: translate(-50%, -50%);
   }
-  #reticle::before {
-    width: 5px; height: 5px;
-    background: rgba(255,214,170,.95);
-    box-shadow: 0 0 8px 2px rgba(255,132,40,.75);
-  }
+  /* cursor: a solid #002fa7 circle, same 22px size as before */
+  #reticle::before { display: none; }
   #reticle::after {
-    width: 22px; height: 22px;
-    border: 1px solid rgba(255,190,140,.38);
+    width: 22px; height: 22px; background: #002fa7;
+    box-shadow: 0 0 0 1px rgba(255,255,255,.55), 0 2px 8px rgba(0,0,0,.35);
   }
 
   #pose {
     position: fixed; left: 24px; top: 20px; pointer-events: none;
-    font: 400 11px/1 var(--ui-font);
-    letter-spacing: .16em; text-transform: uppercase;
+    font: 400 13px/1 var(--ui-font);
+    letter-spacing: .04em;
     color: #9aa5b8; text-shadow: 0 1px 6px rgba(0,0,0,.85);
   }
 
@@ -248,6 +245,146 @@
     #poster-cta { transition: none }
   }
   @media (max-width: 640px) { #hud { display: none } }
+
+  /* ---- full-screen PDF viewer ---- */
+  #pdf-view {
+    position: fixed; inset: 0; z-index: 30; display: flex; align-items: center; justify-content: center;
+    background: rgba(12, 8, 6, 0); pointer-events: none; visibility: hidden;
+    transition: background .45s ease, visibility 0s linear .5s;
+  }
+  #pdf-view.show { background: rgba(12, 8, 6, .72); pointer-events: auto; visibility: visible; transition: background .45s ease; }
+  #pdf-view .panel {
+    position: relative; width: 100%; height: 100%; display: flex; flex-direction: column;
+    background: #fff; border-radius: 28px; overflow: hidden;
+    transform: scale(.3); opacity: 0;
+    transition: transform .5s cubic-bezier(.2,.8,.2,1), opacity .35s ease, border-radius .5s ease;
+  }
+  #pdf-view.show .panel { transform: none; opacity: 1; border-radius: 0; }
+  #pdf-view .bar { display: flex; align-items: center; gap: 14px; padding: 10px 14px 10px 20px; background: #f4f4f4; border-bottom: 1px solid #e2e2e2; font: 400 14px/1.2 var(--ui-font); color: #3d3d3d; }
+  #pdf-view .pt { flex: 1; }
+  #pdf-view .pl { color: #3d3d3d; font-size: 12px; }
+  #pdf-view .px { width: 34px; height: 34px; border: 0; border-radius: 50%; background: #e6e6e6; color: #3d3d3d; font-size: 18px; cursor: pointer; }
+  #pdf-view .px:hover { background: #d8d8d8; }
+  #pdf-view iframe { flex: 1; width: 100%; border: 0; background: #fff; }
+  #pdf-view .pm { display: none; margin: auto; padding: 24px; font: 300 15px/1.6 var(--ui-font); color: #3d3d3d; text-align: center; }
+  @media (prefers-reduced-motion: reduce) { #pdf-view .panel, #pdf-view { transition: none } }
+
+  /* ---- credits tab + panel ---- */
+  #topbar { position: fixed; top: 16px; right: 18px; z-index: 20; display: flex; gap: 8px; transition: opacity .3s ease; }
+  body.reading #topbar { opacity: 0; pointer-events: none; }
+  #sound-btn {
+    width: 32px; height: 30px; padding: 0; display: grid; place-items: center; border-radius: 14px;
+    background: rgba(22, 14, 10, 0.42); color: #f6e6cc; border: 1px solid rgba(255, 214, 176, 0.28);
+    backdrop-filter: blur(18px) saturate(140%); -webkit-backdrop-filter: blur(18px) saturate(140%); cursor: pointer;
+  }
+  #sound-btn:hover { background: rgba(22, 14, 10, 0.62); }
+  #sound-btn svg { width: 16px; height: 16px; }
+  #sound-btn .off { display: none; }
+  #sound-btn.muted .on { display: none; }
+  #sound-btn.muted .off { display: block; }
+  #hp-off {
+    display: none; padding: 8px 14px; border-radius: 14px; cursor: pointer;
+    background: #002fa7; color: #fff; border: 1px solid rgba(255, 255, 255, 0.25);
+    font: 400 12px/1 var(--ui-font); letter-spacing: .06em;
+  }
+  #hp-off:hover { background: #0638c4; }
+  body.hp-on #hp-off { display: block; }
+  #credits-tab {
+    padding: 8px 14px; border-radius: 14px;
+    background: rgba(22, 14, 10, 0.42); color: #f6e6cc;
+    border: 1px solid rgba(255, 214, 176, 0.28);
+    backdrop-filter: blur(18px) saturate(140%); -webkit-backdrop-filter: blur(18px) saturate(140%);
+    font: 400 12px/1 var(--ui-font); letter-spacing: .08em; cursor: pointer;
+    transition: opacity .3s ease, background .2s ease;
+  }
+  #credits-tab:hover { background: rgba(22, 14, 10, 0.62); }
+  #credits {
+    position: fixed; inset: 0; z-index: 40; display: flex; align-items: center; justify-content: center;
+    background: rgba(12, 8, 6, 0); visibility: hidden; pointer-events: none;
+    transition: background .35s ease, visibility 0s linear .4s;
+  }
+  #credits.show { background: rgba(12, 8, 6, .6); visibility: visible; pointer-events: auto; transition: background .35s ease; }
+  #credits .card {
+    position: relative; width: min(620px, 92vw); max-height: 90vh; overflow: auto;
+    border-radius: 20px; background: rgba(22, 14, 10, 0.72);
+    border: 1px solid rgba(255, 214, 176, 0.28);
+    backdrop-filter: blur(22px) saturate(140%); -webkit-backdrop-filter: blur(22px) saturate(140%);
+    box-shadow: 0 18px 50px rgba(0,0,0,.4); color: #f6e6cc;
+    transform: translateY(14px) scale(.98); opacity: 0;
+    transition: transform .4s cubic-bezier(.2,.8,.2,1), opacity .3s ease;
+  }
+  #credits.show .card { transform: none; opacity: 1; }
+  #credits img { display: block; width: 100%; height: auto; border-radius: 20px 20px 0 0; }
+  #credits .txt { padding: 20px 24px 24px; font: 300 14px/1.65 var(--ui-font); }
+  #credits h2 { margin: 0 0 10px; font: 600 11px/1.3 var(--ui-font); letter-spacing: .16em; text-transform: uppercase; color: #ffd9b0; }
+  #credits p { margin: 0 0 12px; }
+  #credits a { color: #ffd9b0; word-break: break-all; }
+  #credits .cx { position: absolute; top: 12px; right: 12px; width: 34px; height: 34px; border: 0; border-radius: 50%;
+    background: rgba(22,14,10,.6); color: #f6e6cc; font-size: 20px; line-height: 34px; cursor: pointer; }
+  @media (prefers-reduced-motion: reduce) { #credits, #credits .card { transition: none } }
+
+  /* the real mouse cursor (menus, monitor, books) matches the reticle */
+  html, body, button, a, input, .focus-ui, #monitor-ui, #reader-ui {
+    cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24'%3E%3Ccircle cx='12' cy='12' r='11' fill='%23002fa7' stroke='white' stroke-opacity='.55' stroke-width='1'/%3E%3C/svg%3E") 12 12, auto !important;
+  }
+  input[type=password], input[type=text] { cursor: text !important; }
+  /* the old bottom "click to know more" bar is now the tip by the cursor */
+  #poster-cta { display: none !important; }
+  #click-tip {
+    position: fixed; z-index: 60; pointer-events: none; left: 0; top: 0;
+    padding: 6px 11px; border-radius: 11px; white-space: nowrap;
+    background: rgba(22, 14, 10, 0.62); color: #f6e6cc;
+    border: 1px solid rgba(255, 214, 176, 0.3);
+    backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    font: 400 12px/1 var(--ui-font); letter-spacing: .04em;
+    opacity: 0; transform: translate(20px, 14px); transition: opacity .18s ease;
+  }
+  #click-tip.show { opacity: 1; }
+
+  /* ---- accessibility ---- */
+  #a11y-btn {
+    width: 32px; height: 30px; padding: 0; display: grid; place-items: center; border-radius: 14px;
+    background: rgba(22, 14, 10, 0.42); color: #f6e6cc; border: 1px solid rgba(255, 214, 176, 0.28);
+    backdrop-filter: blur(18px) saturate(140%); -webkit-backdrop-filter: blur(18px) saturate(140%);
+  }
+  #a11y-btn:hover { background: rgba(22, 14, 10, 0.62); }
+  #a11y-btn svg { width: 17px; height: 17px; }
+  #a11y-panel {
+    position: fixed; top: 56px; right: 18px; z-index: 45; width: 270px; padding: 16px 16px 14px;
+    border-radius: 16px; background: rgba(22, 14, 10, 0.82); color: #f6e6cc;
+    border: 1px solid rgba(255, 214, 176, 0.3); box-shadow: 0 14px 40px rgba(0,0,0,.4);
+    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    font: 400 13px/1.4 var(--ui-font); display: none;
+  }
+  #a11y-panel.show { display: block; }
+  #a11y-panel h3 { margin: 0 0 12px; font: 600 11px/1 var(--ui-font); letter-spacing: .16em; text-transform: uppercase; color: #ffd9b0; }
+  #a11y-panel .grp { margin: 0 0 12px; }
+  #a11y-panel .lbl { display: block; margin-bottom: 6px; color: #e9d6bd; font-size: 12px; }
+  #a11y-panel .row { display: flex; flex-wrap: wrap; gap: 6px; }
+  #a11y-panel .row button, #a11y-panel .tog {
+    padding: 7px 10px; border-radius: 10px; border: 1px solid rgba(255,214,176,.3);
+    background: rgba(255,255,255,.06); color: #f6e6cc; font: 400 12px/1 var(--ui-font);
+  }
+  #a11y-panel .row button[aria-pressed=true], #a11y-panel .tog[aria-pressed=true] { background: #002fa7; border-color: #6f8ff0; color: #fff; }
+  #a11y-panel .tog { width: 100%; text-align: left; margin-top: 6px; }
+  #a11y-panel :focus-visible, #topbar :focus-visible { outline: 2px solid #ffd9b0; outline-offset: 2px; }
+  /* text size: scale every piece of on-screen text */
+  #objinfo, #topbar, #click-tip, #credits .card, #monitor-ui .mcard, #reader-ui .rc, #reader-ui button,
+  .focus-ui button, #monitor-ui .mx, #pose, #hint, #hud, #a11y-panel { zoom: var(--ui-zoom, 1); }
+  /* colour-vision correction (daltonize) */
+  html.cb-protan body { filter: url(#cb-protan); }
+  html.cb-deutan body { filter: url(#cb-deutan); }
+  html.cb-tritan body { filter: url(#cb-tritan); }
+  html.cb-grey body { filter: grayscale(1) contrast(1.08); }
+  /* high contrast: solid cards, white text, strong edges */
+  html.hi-con #objinfo, html.hi-con #click-tip, html.hi-con #credits .card, html.hi-con #monitor-ui .mcard,
+  html.hi-con #a11y-panel, html.hi-con #topbar button, html.hi-con #reader-ui .rc {
+    background: #000 !important; color: #fff !important; border: 2px solid #fff !important;
+    backdrop-filter: none !important; -webkit-backdrop-filter: none !important;
+  }
+  html.hi-con #objinfo .t, html.hi-con #credits h2, html.hi-con #credits a { color: #ffe066 !important; }
+  html.hi-con #reticle::after { box-shadow: 0 0 0 3px #fff; }
+  html.reduce-motion *, html.reduce-motion *::before, html.reduce-motion *::after { transition: none !important; animation-duration: .01ms !important; }
 </style>
 </head>
 <body>
@@ -259,17 +396,159 @@
   <div id="hud">
     <table>
       <tr><td><span class="k">W</span><span class="k">A</span><span class="k">S</span><span class="k">D</span></td><td class="act">move</td></tr>
-      <tr><td><span class="k">Shift</span></td><td class="act">run</td></tr>
       <tr><td><span class="k">Mouse</span></td><td class="act">steer the focus point</td></tr>
       <tr><td><span class="k">E</span></td><td class="act">sit at the desk</td></tr>
       <tr data-needs="bed"><td><span class="k">F</span></td><td class="act">lie on the bed</td></tr>
-      <tr><td><span class="k">C</span></td><td class="act">crouch</td></tr>
       <tr><td><span class="k">Space</span></td><td class="act">stand up</td></tr>
       <tr><td><span class="k">H</span></td><td class="act">keep this open</td></tr>
     </table>
   </div>
   <div id="hint">press H for controls</div>
   <div id="poster-cta">click to know more.</div>
+  <div id="topbar">
+    <button id="sound-btn" type="button" aria-label="Sound off" title="Sound">
+      <svg class="on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M16.5 8.5a5 5 0 0 1 0 7"/><path d="M19 6a8.5 8.5 0 0 1 0 12"/></svg>
+      <svg class="off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h4l5-4v14l-5-4H4z"/><path d="M17 9l5 6M22 9l-5 6"/></svg>
+    </button>
+    <button id="hp-off" type="button">Take off headphones</button>
+    <button id="a11y-btn" type="button" aria-label="Accessibility settings" aria-expanded="false" aria-controls="a11y-panel" title="Accessibility">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="4.5" r="1.6" fill="currentColor"/><path d="M5 8.5c2.3.7 4.6 1 7 1s4.7-.3 7-1"/><path d="M12 9.5v5"/><path d="M8.5 21l3.5-6.5 3.5 6.5"/></svg>
+    </button>
+    <button id="credits-tab" type="button">Credits</button>
+  </div>
+  <div id="a11y-panel" role="dialog" aria-label="Accessibility settings">
+    <h3>Accessibility</h3>
+    <div class="grp"><span class="lbl" id="a-ts">Text size</span>
+      <div class="row" role="group" aria-labelledby="a-ts" data-k="text">
+        <button type="button" data-v="1">A</button><button type="button" data-v="1.2" style="font-size:14px">A</button>
+        <button type="button" data-v="1.4" style="font-size:16px">A</button><button type="button" data-v="1.65" style="font-size:18px">A</button>
+      </div></div>
+    <div class="grp"><span class="lbl" id="a-cv">Colour vision</span>
+      <div class="row" role="group" aria-labelledby="a-cv" data-k="cb">
+        <button type="button" data-v="">Default</button><button type="button" data-v="protan">Protanopia</button>
+        <button type="button" data-v="deutan">Deuteranopia</button><button type="button" data-v="tritan">Tritanopia</button>
+        <button type="button" data-v="grey">Greyscale</button>
+      </div></div>
+    <button type="button" class="tog" data-t="hi-con">High contrast text</button>
+    <button type="button" class="tog" data-t="reduce-motion">Reduce motion (no dust, instant camera)</button>
+  </div>
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <filter id="cb-protan" color-interpolation-filters="linearRGB"><feColorMatrix type="matrix" values="1 0 0 0 0  -0.255 1.255 0 0 0  0.303 -0.545 1.242 0 0  0 0 0 1 0"/></filter>
+    <filter id="cb-deutan" color-interpolation-filters="linearRGB"><feColorMatrix type="matrix" values="1 0 0 0 0  -0.438 1.438 0 0 0  0.262 -0.562 1.300 0 0  0 0 0 1 0"/></filter>
+    <filter id="cb-tritan" color-interpolation-filters="linearRGB"><feColorMatrix type="matrix" values="1.050 -0.382 0.332 0 0  0 1.234 -0.234 0 0  0 0 1 0 0  0 0 0 1 0"/></filter>
+  </svg>
+  <div id="click-tip" role="status" aria-live="polite"></div>
+  <script>
+    (function () {
+      // click prompt that follows the cursor (or sits by the reticle)
+      var tip = document.getElementById('click-tip'), last = null;
+      window.__clickTip = function (label, x, y) {
+        if (!label) { tip.classList.remove('show'); last = null; return; }
+        if (label !== last) { tip.textContent = label; last = label; }
+        tip.style.left = (x || 0) + 'px'; tip.style.top = (y || 0) + 'px';
+        tip.classList.add('show');
+      };
+      // accessibility settings, remembered on this device
+      var root = document.documentElement, btn = document.getElementById('a11y-btn'), panel = document.getElementById('a11y-panel');
+      var prefs = { text: '1', cb: '', 'hi-con': false, 'reduce-motion': matchMedia('(prefers-reduced-motion: reduce)').matches };
+      try { var saved = JSON.parse(localStorage.getItem('shakthi-a11y') || 'null'); if (saved) for (var k in saved) prefs[k] = saved[k]; } catch (e) {}
+      var apply = function () {
+        root.style.setProperty('--ui-zoom', prefs.text);
+        ['protan', 'deutan', 'tritan', 'grey'].forEach(function (c) { root.classList.toggle('cb-' + c, prefs.cb === c); });
+        root.classList.toggle('hi-con', !!prefs['hi-con']);
+        root.classList.toggle('reduce-motion', !!prefs['reduce-motion']);
+        panel.querySelectorAll('.row').forEach(function (r) {
+          r.querySelectorAll('button').forEach(function (b) { b.setAttribute('aria-pressed', String(String(prefs[r.dataset.k]) === b.dataset.v)); });
+        });
+        panel.querySelectorAll('.tog').forEach(function (b) { b.setAttribute('aria-pressed', String(!!prefs[b.dataset.t])); });
+        try { localStorage.setItem('shakthi-a11y', JSON.stringify(prefs)); } catch (e) {}
+      };
+      panel.addEventListener('click', function (e) {
+        e.stopPropagation();
+        var b = e.target.closest('button'); if (!b) return;
+        if (b.dataset.t) prefs[b.dataset.t] = !prefs[b.dataset.t];
+        else if (b.parentNode.dataset.k) prefs[b.parentNode.dataset.k] = b.dataset.v;
+        apply();
+      });
+      btn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        var open = !panel.classList.contains('show');
+        panel.classList.toggle('show', open); btn.setAttribute('aria-expanded', String(open));
+        if (open) { var f = panel.querySelector('button'); f && f.focus(); }
+      });
+      addEventListener('click', function () { panel.classList.remove('show'); btn.setAttribute('aria-expanded', 'false'); });
+      addEventListener('keydown', function (e) { if (e.code === 'Escape' && panel.classList.contains('show')) { panel.classList.remove('show'); btn.focus(); } });
+      apply();
+    })();
+  </script>
+  <audio id="ambient" src="media/ambient.mp3" loop preload="auto"></audio>
+  <script>
+    (function () {
+      // Ambient sound: on by default; browsers only allow it after the
+      // visitor's first click or key, so it fades in then.
+      var a = document.getElementById('ambient'), btn = document.getElementById('sound-btn');
+      var VOL = 0.62, on = true, fade = null;
+      try { on = localStorage.getItem('shakthi-sound') !== 'off'; } catch (e) {}
+      var paint = function () {
+        btn.classList.toggle('muted', !on);
+        btn.setAttribute('aria-label', on ? 'Sound off' : 'Sound on');
+      };
+      var ramp = function (to, done) {
+        clearInterval(fade);
+        fade = setInterval(function () {
+          var v = a.volume + (to - a.volume) * 0.12;
+          if (Math.abs(to - v) < 0.01) { v = to; clearInterval(fade); done && done(); }
+          a.volume = v;
+        }, 40);
+      };
+      var start = function () {
+        if (!on || music) return;
+        if (a.paused) { a.volume = 0; a.play().then(function () { ramp(VOL); }).catch(function () {}); }
+        else ramp(VOL);
+      };
+      btn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        on = !on;
+        try { localStorage.setItem('shakthi-sound', on ? 'on' : 'off'); } catch (err) {}
+        paint();
+        if (on) start(); else ramp(0, function () { a.pause(); });
+        dispatchEvent(new CustomEvent('site-sound', { detail: { on: on } }));
+      });
+      // music from the headphones takes over from the ambient track
+      var music = false;
+      addEventListener('site-music', function (e) {
+        music = e.detail.playing;
+        if (music) ramp(0, function () { a.pause(); }); else start();
+      });
+      var first = function () { start(); removeEventListener('pointerdown', first); removeEventListener('keydown', first); };
+      addEventListener('pointerdown', first); addEventListener('keydown', first);
+      paint();
+      start();   // works where autoplay is allowed
+    })();
+  </script>
+  <div id="credits" role="dialog" aria-label="Credits"><div class="card">
+    <button class="cx" type="button" aria-label="Close">&times;</button>
+    <img src="credits/room.jpg" alt="The real room this website is modelled on" loading="lazy">
+    <div class="txt">
+      <h2>Credits</h2>
+      <p>Credit to Divyansh Srivastava for starting the website. Check out what else he started here: <a href="https://divyansh-portfolio-v2.vercel.app/" target="_blank" rel="noopener">https://divyansh-portfolio-v2.vercel.app/</a></p>
+      <p>Credit to Sthitapragna Kollepara for always providing his 2 cent throughout the process. Check out his 99 cent here: <a href="https://kspportfolio-one.vercel.app/" target="_blank" rel="noopener">https://kspportfolio-one.vercel.app/</a></p>
+    </div>
+  </div></div>
+  <script>
+    (function () {
+      document.getElementById('hp-off').addEventListener('click', function (e) {
+        e.stopPropagation(); dispatchEvent(new Event('take-off-headphones'));
+      });
+      var tab = document.getElementById('credits-tab'), box = document.getElementById('credits');
+      var close = function () { box.classList.remove('show'); };
+      tab.addEventListener('click', function (e) { e.stopPropagation(); box.classList.add('show'); });
+      box.addEventListener('click', function (e) { e.stopPropagation(); if (e.target === box) close(); });
+      box.querySelector('.cx').addEventListener('click', close);
+      addEventListener('keydown', function (e) { if (e.code === 'Escape') close(); });
+    })();
+  </script>
+  <div id="pdf-view"><div class="panel"><div class="bar"><span class="pt"></span><a class="pl" target="_blank" rel="noopener">open in new tab</a><button class="px" aria-label="Close">&times;</button></div><iframe title="Book PDF"></iframe><div class="pm">This book's PDF hasn't been added yet.</div></div></div>
   <div id="objinfo"><span class="t"></span><span class="m"></span></div>
 
   <div id="book-cta">open the book</div>
