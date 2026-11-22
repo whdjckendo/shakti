@@ -8,7 +8,9 @@ import { UnrealBloomPass } from './vendor/three/jsm/postprocessing/UnrealBloomPa
 import { OutputPass } from './vendor/three/jsm/postprocessing/OutputPass.js';
 import { initBooks } from './books.js';
 import { initReader } from './reader.js';
+import { liveCalendar, liveClock, liveDust } from './live.js';
 
+const liveUpdates = [];
 let bookApi = null;
 const notebookMeshes = {};   // "Notebook1".. -> [Mesh], handed to initBooks
 
@@ -1339,6 +1341,24 @@ const paint = () => new Promise((r) => requestAnimationFrame(() => requestAnimat
   // revealed is the finished room, not a half-drawn one.
   await paint();
   // Fill the circle, say so, and give the message two seconds before opening.
+  if (isGlb && root) {
+    // visitor's own date and time on the wall calendar and alarm clock
+    liveUpdates.push(liveCalendar(root.getObjectByName('calendar'), renderer));
+    liveUpdates.push(liveClock(root.getObjectByName('Mesh1100'), renderer));   // alarm clock face
+    // dust floating in the warm lamp light (the red fairy strip is skipped)
+    const sources = [];
+    scene.traverse((o) => {
+      if (!o.isPointLight || o.intensity <= 0.02) return;
+      const c = o.color;
+      if (c.g < 0.55 * c.r) return;
+      const p = o.getWorldPosition(new THREE.Vector3());
+      const near = sources.find((s) => s.pos.distanceTo(p) < 0.5);
+      if (near) near.weight += o.intensity;
+      else sources.push({ pos: p, radius: 0.85, weight: o.intensity });
+    });
+    sources.forEach((s) => { s.weight = Math.sqrt(s.weight); });
+    liveUpdates.push(liveDust(scene, sources));
+  }
   setProgress(1);
   if (loadText) loadText.className = 'goes';
   // Same 2 seconds as before: let the water finish filling, then melt the
@@ -1475,6 +1495,7 @@ function animate() {
   }
 
   if (bookApi) bookApi.update(dt);
+  for (const u of liveUpdates) u(dt);
 
   composer.render();
 }

@@ -271,6 +271,43 @@
   #pdf-view iframe { flex: 1; width: 100%; border: 0; background: #fff; }
   #pdf-view .pm { display: none; margin: auto; padding: 24px; font: 300 15px/1.6 var(--ui-font); color: #3d3d3d; text-align: center; }
   @media (prefers-reduced-motion: reduce) { #pdf-view .panel, #pdf-view { transition: none } }
+
+  /* ---- credits tab + panel ---- */
+  #credits-tab {
+    position: fixed; top: 16px; right: 18px; z-index: 20;
+    padding: 8px 14px; border-radius: 0 0 0 0; border-radius: 14px;
+    background: rgba(22, 14, 10, 0.42); color: #f6e6cc;
+    border: 1px solid rgba(255, 214, 176, 0.28);
+    backdrop-filter: blur(18px) saturate(140%); -webkit-backdrop-filter: blur(18px) saturate(140%);
+    font: 400 12px/1 var(--ui-font); letter-spacing: .08em; cursor: pointer;
+    transition: opacity .3s ease, background .2s ease;
+  }
+  #credits-tab:hover { background: rgba(22, 14, 10, 0.62); }
+  body.reading #credits-tab { opacity: 0; pointer-events: none; }
+  #credits {
+    position: fixed; inset: 0; z-index: 40; display: flex; align-items: center; justify-content: center;
+    background: rgba(12, 8, 6, 0); visibility: hidden; pointer-events: none;
+    transition: background .35s ease, visibility 0s linear .4s;
+  }
+  #credits.show { background: rgba(12, 8, 6, .6); visibility: visible; pointer-events: auto; transition: background .35s ease; }
+  #credits .card {
+    position: relative; width: min(620px, 92vw); max-height: 90vh; overflow: auto;
+    border-radius: 20px; background: rgba(22, 14, 10, 0.72);
+    border: 1px solid rgba(255, 214, 176, 0.28);
+    backdrop-filter: blur(22px) saturate(140%); -webkit-backdrop-filter: blur(22px) saturate(140%);
+    box-shadow: 0 18px 50px rgba(0,0,0,.4); color: #f6e6cc;
+    transform: translateY(14px) scale(.98); opacity: 0;
+    transition: transform .4s cubic-bezier(.2,.8,.2,1), opacity .3s ease;
+  }
+  #credits.show .card { transform: none; opacity: 1; }
+  #credits img { display: block; width: 100%; height: auto; border-radius: 20px 20px 0 0; }
+  #credits .txt { padding: 20px 24px 24px; font: 300 14px/1.65 var(--ui-font); }
+  #credits h2 { margin: 0 0 10px; font: 600 11px/1.3 var(--ui-font); letter-spacing: .16em; text-transform: uppercase; color: #ffd9b0; }
+  #credits p { margin: 0 0 12px; }
+  #credits a { color: #ffd9b0; word-break: break-all; }
+  #credits .cx { position: absolute; top: 12px; right: 12px; width: 34px; height: 34px; border: 0; border-radius: 50%;
+    background: rgba(22,14,10,.6); color: #f6e6cc; font-size: 20px; line-height: 34px; cursor: pointer; }
+  @media (prefers-reduced-motion: reduce) { #credits, #credits .card { transition: none } }
 </style>
 </head>
 <body>
@@ -293,6 +330,26 @@
   </div>
   <div id="hint">press H for controls</div>
   <div id="poster-cta">click to know more.</div>
+  <button id="credits-tab" type="button">Credits</button>
+  <div id="credits" role="dialog" aria-label="Credits"><div class="card">
+    <button class="cx" type="button" aria-label="Close">&times;</button>
+    <img src="credits/room.jpg" alt="The real room this website is modelled on" loading="lazy">
+    <div class="txt">
+      <h2>Credits</h2>
+      <p>Credit to Divyansh Srivastava for starting the website. Check out what else he started here: <a href="https://divyansh-portfolio-v2.vercel.app/" target="_blank" rel="noopener">https://divyansh-portfolio-v2.vercel.app/</a></p>
+      <p>Credit to Sthitapragna Kollepara for always providing his 2 cent throughout the process. Check out his 99 cent here: <a href="https://kspportfolio-one.vercel.app/" target="_blank" rel="noopener">https://kspportfolio-one.vercel.app/</a></p>
+    </div>
+  </div></div>
+  <script>
+    (function () {
+      var tab = document.getElementById('credits-tab'), box = document.getElementById('credits');
+      var close = function () { box.classList.remove('show'); };
+      tab.addEventListener('click', function (e) { e.stopPropagation(); box.classList.add('show'); });
+      box.addEventListener('click', function (e) { e.stopPropagation(); if (e.target === box) close(); });
+      box.querySelector('.cx').addEventListener('click', close);
+      addEventListener('keydown', function (e) { if (e.code === 'Escape') close(); });
+    })();
+  </script>
   <div id="pdf-view"><div class="panel"><div class="bar"><span class="pt"></span><a class="pl" target="_blank" rel="noopener">open in new tab</a><button class="px" aria-label="Close">&times;</button></div><iframe title="Book PDF"></iframe><div class="pm">This book's PDF hasn't been added yet.</div></div></div>
   <div id="objinfo"><span class="t"></span><span class="m"></span></div>
 

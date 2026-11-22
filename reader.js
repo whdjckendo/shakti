@@ -427,6 +427,7 @@ export function initReader(opts) {
     computeTarget();
     onTop(true);
     mode = 'in'; t = 0;
+    document.body.classList.add('reading');
     return true;
   }
   function close() {
@@ -452,6 +453,7 @@ export function initReader(opts) {
         if (mode === 'in') { mode = 'read'; ui.classList.add('show'); }
         else {
           mode = 'off';
+          document.body.classList.remove('reading');
           onTop(false);
           spread = startSpread; show(spread);
           camera.rotation.setFromQuaternion(home.q, 'YXZ');
