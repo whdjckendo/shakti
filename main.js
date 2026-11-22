@@ -1272,7 +1272,7 @@ const paint = () => new Promise((r) => requestAnimationFrame(() => requestAnimat
     const nb = root.getObjectByName('Notebook4');
     if (nb) bookApi = initReader({
       scene, camera, renderer, bloomPass, bookObject: nb,
-      pagesDir: 'books/book1', pageCount: 7,
+      pagesDir: 'books/book1',
       onExit: () => { targetYaw = camera.rotation.y; targetPitch = camera.rotation.x; },
     });
   }

@@ -12,7 +12,7 @@ import * as THREE from 'three';
    Leave: ×, Esc.
 ------------------------------------------------------------------- */
 
-const FILL = 0.8;            // book covers 80% of the screen
+const FILL = 0.85;           // book covers 85% of the screen
 const CAM_DUR = 1.1;
 const FLIP_DUR = 0.8;
 const SEGS = 32;             // flip leaf resolution (for the curl)
@@ -21,7 +21,7 @@ const BLANK = 0xf3efe6;
 const ease = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
 
 export function initReader(opts) {
-  const { scene, camera, renderer, bloomPass, bookObject, pagesDir, pageCount, onExit } = opts;
+  const { scene, camera, renderer, bloomPass, bookObject, pagesDir, onExit } = opts;
   const baseBloom = bloomPass ? bloomPass.strength : 0;
   const aniso = renderer.capabilities.getMaxAnisotropy();
 
@@ -32,23 +32,41 @@ export function initReader(opts) {
   center.y = box.max.y + 0.003;
   // Spine runs along the longer-facing axis toward the reader; the room's desk
   // faces −X from the chair, so page "up" is −X and page "right" is −Z.
-  const PAGE_H = Math.min(size.x, size.z) * 1.0;
+  // Each page keeps the PDF's proportion (A3 portrait, w/h = 0.707). The open
+  // book is sized to sit inside the real book's footprint on the desk.
+  const PAGE_ASPECT = 841.89 / 1190.55;
+  const PAGE_H = Math.min(size.x, size.z / (2 * PAGE_ASPECT));
 
   // ---- textures ----
+  // pages.json lists the PDF pages; a 'spread' page is one double-page image
+  // that is split down the middle across the left and right pages.
   const loader = new THREE.TextureLoader();
-  const tex = [];
-  let aspect = 0.707;
-  const load = (n) => {
-    if (n < 1 || n > pageCount) return null;
-    if (!tex[n]) {
-      tex[n] = loader.load(`./${pagesDir}/p${n}.jpg`, (t) => {
-        const im = t.image;
-        if (n === 1 && im.width) { aspect = im.width / im.height; buildGeometry(); }
-      });
-      tex[n].colorSpace = THREE.SRGBColorSpace;
-      tex[n].anisotropy = aniso;
+  const files = new Map();
+  const fileTex = (f) => {
+    if (!files.has(f)) {
+      const t = loader.load(`./${pagesDir}/${f}`);
+      t.colorSpace = THREE.SRGBColorSpace;
+      t.anisotropy = aniso;
+      files.set(f, t);
     }
-    return tex[n];
+    return files.get(f);
+  };
+  // halves[i] = { file, side: 'full' | 'L' | 'R' } in reading order
+  let halves = [];
+  const halfCache = new Map();
+  const load = (i) => {
+    const h = halves[i];
+    if (!h) return null;
+    const key = h.file + h.side;
+    if (halfCache.has(key)) return halfCache.get(key);
+    let t = fileTex(h.file);
+    if (h.side !== 'full') {
+      t = t.clone();
+      t.repeat.x = 0.5;
+      t.offset.x = h.side === 'R' ? 0.5 : 0;
+    }
+    halfCache.set(key, t);
+    return t;
   };
   const mirrored = new Map();
   const mirror = (t) => {
@@ -56,16 +74,26 @@ export function initReader(opts) {
     if (mirrored.has(t)) return mirrored.get(t);
     const m = t.clone();
     m.wrapS = THREE.RepeatWrapping;
-    m.repeat.x = -1; m.offset.x = 1;
+    m.offset.x = t.offset.x + t.repeat.x;
+    m.repeat.x = -t.repeat.x;
     m.needsUpdate = true;
     mirrored.set(t, m);
     return m;
   };
   const mat = (side) => new THREE.MeshBasicMaterial({ color: BLANK, side, toneMapped: false });
+  // Pages ignore scene lights (so text stays crisp), so they're dimmed to the
+  // room's level while lying on the desk and brought to full when reading.
+  const IDLE_SHADE = 0.42;
+  let shade = IDLE_SHADE;
+  const tint = (m) => { if (m.map) m.color.setScalar(shade); else m.color.set(BLANK).multiplyScalar(shade); };
   const setTex = (m, t) => {
-    m.map = t || null;
-    m.color.set(t ? 0xffffff : BLANK);
-    m.needsUpdate = true;
+    if (m.map !== (t || null)) { m.map = t || null; m.needsUpdate = true; }
+    tint(m);
+  };
+  const setShade = (k) => {
+    shade = k;
+    for (const m of [left, right, flipFront, flipBack]) tint(m.material);
+    board.material.color.set(0x3a2a1e).multiplyScalar(k);
   };
 
   // ---- rig: local +X -> world −Z (page right), local +Y -> world −X (page up),
@@ -74,8 +102,8 @@ export function initReader(opts) {
   rig.rotation.order = 'YXZ';
   rig.rotation.set(-Math.PI / 2, Math.PI / 2, 0);
   rig.position.copy(center);
-  rig.visible = false;
   scene.add(rig);
+  bookObject.visible = false;   // the open book on the desk is this rig
 
   const board = new THREE.Mesh(new THREE.PlaneGeometry(1, 1),
     new THREE.MeshBasicMaterial({ color: 0x3a2a1e, toneMapped: false }));
@@ -92,14 +120,13 @@ export function initReader(opts) {
   rig.add(board, left, right, spine, flipFront, flipBack);
   // Draw the open book over anything nearby on the desk (a closed book was
   // poking over the top edge of the pages).
-  [board, left, right, spine, flipFront, flipBack].forEach((m, i) => {
-    m.material.depthTest = false;
-    m.renderOrder = 100 + i;
-  });
+  const rigMeshes = [board, left, right, spine, flipFront, flipBack];
+  rigMeshes.forEach((m, i) => { m.renderOrder = 100 + i; });
+  const onTop = (on) => rigMeshes.forEach((m) => { m.material.depthTest = !on; });
 
-  let PW = PAGE_H * aspect;
+  let PW = PAGE_H * PAGE_ASPECT;
   function buildGeometry() {
-    PW = PAGE_H * aspect;
+    PW = PAGE_H * PAGE_ASPECT;
     left.geometry.dispose(); left.geometry = new THREE.PlaneGeometry(PW, PAGE_H);
     left.position.x = -PW / 2;
     right.geometry.dispose(); right.geometry = new THREE.PlaneGeometry(PW, PAGE_H);
@@ -145,19 +172,29 @@ export function initReader(opts) {
     flipGeo.computeBoundingSphere();
   }
   buildGeometry();
+  setShade(IDLE_SHADE);
 
-  // ---- spreads: 0 = [blank | 1], s = [2s | 2s+1] ----
-  const maxSpread = Math.floor(pageCount / 2);
-  let spread = 0;
-  const leftOf = (s) => (s === 0 ? null : 2 * s);
-  const rightOf = (s) => (2 * s + 1 <= pageCount ? 2 * s + 1 : null);
+  // ---- spreads: halves in order; 0 = [blank | cover], s = [2s-1 | 2s] ----
+  let maxSpread = 0;
+  let spread = 1;
+  const leftOf = (s) => (s === 0 ? -1 : 2 * s - 1);
+  const rightOf = (s) => 2 * s;
   function show(s) {
     setTex(left.material, load(leftOf(s)));
     setTex(right.material, load(rightOf(s)));
-    // preload neighbours
-    [leftOf(s + 1), rightOf(s + 1), leftOf(s - 1), rightOf(s - 1)].forEach((n) => n && load(n));
+    [leftOf(s + 1), rightOf(s + 1), leftOf(s - 1), rightOf(s - 1)].forEach((n) => load(n));
     updateUi();
   }
+  fetch(`./${pagesDir}/pages.json`).then((r) => r.json()).then((j) => {
+    halves = [];
+    for (const p of j.pages) {
+      if (p.spread) halves.push({ file: p.file, side: 'L' }, { file: p.file, side: 'R' });
+      else halves.push({ file: p.file, side: 'full' });
+    }
+    maxSpread = Math.ceil((halves.length - 1) / 2);
+    spread = Math.min(1, maxSpread);
+    show(spread);
+  }).catch(() => {});
 
   // ---- UI overlay ----
   const ui = document.createElement('div');
@@ -189,8 +226,7 @@ export function initReader(opts) {
   function updateUi() {
     btnPrev.disabled = spread <= 0;
     btnNext.disabled = spread >= maxSpread;
-    const l = leftOf(spread), r = rightOf(spread);
-    counter.textContent = `${[l, r].filter(Boolean).join('–')} / ${pageCount}`;
+    counter.textContent = spread === 0 ? 'cover' : `${spread} / ${maxSpread}`;
   }
   ui.querySelector('.rx').addEventListener('click', (e) => { e.stopPropagation(); close(); });
   btnPrev.addEventListener('click', (e) => { e.stopPropagation(); turn(-1); });
@@ -250,14 +286,12 @@ export function initReader(opts) {
     home.p.copy(camera.position); home.q.copy(camera.quaternion); home.fov = camera.fov;
     from.p.copy(home.p); from.q.copy(home.q); from.fov = home.fov;
     computeTarget();
-    spread = 0; show(0);
-    rig.visible = true;
-    bookObject.visible = false;
+    onTop(true);
     mode = 'in'; t = 0;
     return true;
   }
   function close() {
-    if (mode !== 'read') return;
+    if (mode !== 'read' || flip) return;
     ui.classList.remove('show');
     from.p.copy(camera.position); from.q.copy(camera.quaternion); from.fov = camera.fov;
     mode = 'out'; t = 0;
@@ -274,12 +308,13 @@ export function initReader(opts) {
       camera.fov = from.fov + (b.fov - from.fov) * e;
       camera.updateProjectionMatrix();
       if (bloomPass) bloomPass.strength = mode === 'in' ? baseBloom * (1 - e) : baseBloom * e;
+      setShade(mode === 'in' ? IDLE_SHADE + (1 - IDLE_SHADE) * e : 1 - (1 - IDLE_SHADE) * e);
       if (t >= 1) {
         if (mode === 'in') { mode = 'read'; ui.classList.add('show'); }
         else {
           mode = 'off';
-          rig.visible = false;
-          bookObject.visible = true;
+          onTop(false);
+          spread = Math.min(1, maxSpread); show(spread);
           camera.rotation.setFromQuaternion(home.q, 'YXZ');
           onExit && onExit();
         }
