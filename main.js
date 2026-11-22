@@ -630,12 +630,17 @@ function toggleHud() {
    report real byte progress and, crucially, repaint a "building" message
    before parsing — parsing ~80k faces blocks the main thread, so a spinner
    started after that point would never get a chance to render. */
-const ringFill = document.getElementById('ring-fill');
+const water = document.getElementById('water');
+const ringStroke = document.getElementById('ring-stroke');
 const loadText = document.getElementById('load-text');
 
 // Fill the throbber: 0 = empty ring, 1 = solid circle.
 const setProgress = (p) => {
-  if (ringFill) ringFill.style.transform = `translateY(${(1 - Math.max(0, Math.min(1, p))) * 100}%)`;
+  p = Math.max(0, Math.min(1, p));
+  // The wave sits 11px below the top of the water, so start that far below
+  // the circle; at p = 1 the waterline is above the rim and the circle is solid.
+  if (water) water.style.transform = `translateY(${(48 + 11) * (1 - p)}px)`;
+  if (ringStroke) ringStroke.style.opacity = String(1 - p);
 };
 
 // Errors / plain messages only (progress is shown by the ring).

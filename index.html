@@ -24,25 +24,48 @@
 
   #loading {
     position: fixed; inset: 0; display: flex; flex-direction: column;
-    align-items: center; justify-content: center; gap: 28px;
+    align-items: center; justify-content: center; gap: 22px;
     background: #ffffff; pointer-events: none; z-index: 10;
   }
-  /* Throbber: an empty ring that fills with blue from the bottom up. The fill
-     moves with a transform so it keeps animating while the model parses. */
+  /* Throbber: a small circle that fills with blue "water" rising from the
+     bottom. Everything that moves is a transform/opacity animation, so it keeps
+     flowing even while the main thread is busy parsing the model. */
   #ring {
-    position: relative; width: 84px; height: 84px; border-radius: 50%;
-    border: 3px solid #002fa7; overflow: hidden; background: #ffffff;
+    position: relative; width: 48px; height: 48px; border-radius: 50%;
+    overflow: hidden; clip-path: circle(50%); background: #ffffff;
   }
-  #ring-fill {
-    position: absolute; inset: 0; background: #002fa7;
-    transform: translateY(100%);
+  /* Hairline light-grey outline (0.5pt); fades away as the circle fills. */
+  #ring-stroke {
+    position: absolute; inset: 0; border-radius: 50%;
+    border: 0.67px solid #cfcfcf; opacity: 1;
+    transition: opacity 1.2s ease-out;
+  }
+  #water {
+    position: absolute; left: 0; right: 0; top: 0; height: 100%;
+    background: #002fa7; transform: translateY(59px);
     transition: transform 1.2s ease-out;
   }
+  #water .wave {
+    position: absolute; left: 0; bottom: calc(100% - 1px); height: 14px;
+    width: calc(100% + 96px);
+    background-repeat: repeat-x; background-size: 48px 14px;
+  }
+  #water .wave.front {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 14'%3E%3Cpath d='M0 7Q12 -1 24 7T48 7V14H0Z' fill='%23002fa7'/%3E%3C/svg%3E");
+    animation: wave-a 2.4s linear infinite;
+  }
+  #water .wave.back {
+    bottom: calc(100% - 3px);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 14'%3E%3Cpath d='M0 7Q12 -1 24 7T48 7V14H0Z' fill='%23002fa7' fill-opacity='.35'/%3E%3C/svg%3E");
+    animation: wave-b 3.6s linear infinite;
+  }
+  @keyframes wave-a { from { transform: translateX(0) } to { transform: translateX(-48px) } }
+  @keyframes wave-b { from { transform: translateX(-48px) } to { transform: translateX(0) } }
   /* Captions are pure CSS so they keep advancing even while the main thread is
      busy parsing the model (JS timers would freeze there). */
   #load-text {
     position: relative; width: 320px; height: 20px; text-align: center;
-    color: #002fa7; font: 300 15px/20px var(--ui-font); letter-spacing: .06em;
+    color: #3d3d3d; font: 300 15px/20px var(--ui-font); letter-spacing: .06em;
   }
   #load-text span { position: absolute; inset: 0; opacity: 0; }
   #load-text .in1 { animation: cap-in1 16.5s linear both; animation-iteration-count: 1; }
@@ -208,7 +231,8 @@
   body.reading canvas { cursor: auto; }
 
   @media (prefers-reduced-motion: reduce) {
-    #ring-fill { transition: none }
+    #water, #ring-stroke { transition: none }
+    #water .wave { animation: none }
     #hud { transition: none }
     #poster-cta { transition: none }
   }
@@ -247,7 +271,7 @@
     </div>
   </div>
 
-  <div id="loading"><div id="ring"><div id="ring-fill"></div></div><div id="load-text"><span class="in1">Breathe in...</span><span class="out1">Breathe out...</span><span class="hey">Hey.</span><span class="ld">It's loading.</span><span class="any">Anytime now.</span><span class="in2">Breathe in...</span><span class="out2">Breathe out...</span><span class="goes">Here goes...</span><span class="err">Could not load the room</span></div></div>
+  <div id="loading"><div id="ring"><div id="ring-stroke"></div><div id="water"><div class="wave back"></div><div class="wave front"></div></div></div><div id="load-text"><span class="in1">Breathe in...</span><span class="out1">Breathe out...</span><span class="hey">Hey.</span><span class="ld">It's loading.</span><span class="any">Anytime now.</span><span class="in2">Breathe in...</span><span class="out2">Breathe out...</span><span class="goes">Here goes...</span><span class="err">Could not load the room</span></div></div>
 
   <script type="importmap">
   { "imports": { "three": "./vendor/three/build/three.module.js" } }
