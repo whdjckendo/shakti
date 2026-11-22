@@ -975,6 +975,12 @@ const paint = () => new Promise((r) => requestAnimationFrame(() => requestAnimat
   });
 
   scene.add(root);
+  if (isGlb) {
+    // In the Blender model the floor lamp is Group6 (shade = Group10). Without
+    // this the lamp glow fell back to a corner and lit a bare patch of wall.
+    const lamp = root.getObjectByName('Group6');
+    if (lamp) floorLampBox.makeEmpty().setFromObject(lamp);
+  }
 
   // Walkable area comes from the floor plane; fall back to the whole model.
   const area = floorBox.isEmpty() ? new THREE.Box3().setFromObject(root) : floorBox;
@@ -1058,7 +1064,9 @@ const paint = () => new Promise((r) => requestAnimationFrame(() => requestAnimat
   rim.target.position.copy(mid);
   rim.target.updateMatrixWorld();
 
-  const capY = (wallBox.isEmpty() ? shell.max.y : wallBox.max.y) - 0.005;
+  // (In the Blender model the wall material is also used on the desk, which
+  // dragged this cap down to desk height, so use the room's real top.)
+  const capY = ((isGlb || wallBox.isEmpty()) ? shell.max.y : wallBox.max.y) - 0.005;
   const ceiling = new THREE.Mesh(
     new THREE.PlaneGeometry(area.max.x - area.min.x, area.max.z - area.min.z),
     new THREE.MeshStandardMaterial({
@@ -1096,6 +1104,11 @@ const paint = () => new Promise((r) => requestAnimationFrame(() => requestAnimat
   } else {
     placeFrost(deskFrost, new THREE.Vector3(seatPos.x - 0.5, floorY + 1.2, seatPos.z), 0.07);
   }
+  // That 'desk lamp' is really the headphone stand; its glow made a bright
+  // hotspot on the wall, so it stays dark in the new model.
+  if (isGlb) for (const l of deskFrost) l.intensity = 0;
+  // The new model has one door; the extra grey open-door leaf is removed.
+  if (isGlb) { const extraDoor = root.getObjectByName('Group279'); if (extraDoor) extraDoor.visible = false; }
 
   // Fabric shade: warm, self-lit, paper-lantern. Clone so the shared
   // FrontColor used on walls never picks up the glow.
@@ -1189,7 +1202,7 @@ const paint = () => new Promise((r) => requestAnimationFrame(() => requestAnimat
   // The poster wall the character faces carries warm fairy lights; the wall
   // at their back was unlit and read as solid black. Mirror the same swag of
   // bulbs there, in red, with point fills so the plaster actually catches it.
-  {
+  if (!isGlb) {
     const start = new THREE.Vector3(seatPos.x, 0, seatPos.z);
     // rotation.y = baseYaw -> forward is (-sin, 0, -cos); the back wall is the
     // opposite way.
