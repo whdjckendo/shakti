@@ -138,7 +138,7 @@ export function liveDust(scene, sources, count = 900) {
     let r = Math.random() * total, src = sources[0];
     for (const s of sources) { if ((r -= s.weight) <= 0) { src = s; break; } }
     // uniform inside a sphere
-    const u = Math.random(), v = Math.random(), w = Math.cbrt(Math.random());
+    const u = Math.random(), v = Math.random(), w = Math.pow(Math.random(), 0.8);   // more motes near the source
     const th = u * Math.PI * 2, ph = Math.acos(2 * v - 1);
     const d = src.radius * w;
     pos[i * 3] = src.pos.x + d * Math.sin(ph) * Math.cos(th);
@@ -163,7 +163,7 @@ export function liveDust(scene, sources, count = 900) {
         vec3 p = position + vec3(sin(t * 1.7) * 0.05, sin(t * 1.1 + 2.0) * 0.06 - 0.02 * fract(t * 0.25), cos(t * 1.3) * 0.05);
         float d = length(p - aCenter.xyz) / aCenter.w;
         float twinkle = 0.55 + 0.45 * sin(uTime * (0.8 + aSeed.z * 1.6) + aSeed.x * 7.0);
-        vA = pow(clamp(1.0 - d, 0.0, 1.0), 1.6) * twinkle;
+        vA = pow(clamp(1.0 - d, 0.0, 1.0), 2.4) * twinkle * 1.2;   // denser right at the light, gone quickly
         vec4 mv = modelViewMatrix * vec4(p, 1.0);
         gl_PointSize = (0.0035 + aSeed.z * 0.004) * uScale * projectionMatrix[1][1] / -mv.z;
         gl_Position = projectionMatrix * mv;

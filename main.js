@@ -388,6 +388,13 @@ const infoMeshes = [];
 const infoProxies = [];
 const infoHitTargets = [];   // infoMeshes + infoProxies, filled after load
 const INFO = [
+  // Blender room (checked first)
+  { re: /(^| )Group6( |$)/, title: 'Floor lamp',
+    body: 'Made this floor lamp in 2 days during my bachelors for the thin niche beside my bed in my hostel.' },
+  { re: /(^| )Group5( |$)/, title: 'Table lamp',
+    body: 'Made this table lamp out of plastic bag waste. Again, during my bachelors. (You can tell I love being in the workshop).' },
+  { re: /(^| )calendar( |$)/, title: 'Calendar',
+    body: 'Look closer into the \u201cWall of Always\u201d.' },
   { mat: 'Screenshot_2026_08_29_022137', title: 'Ocean research paper',
     body: 'Research experiement conducted on car preferences of OCEAN personalities with eye tracking. Submitted to HWWE 2026 conference. The paper will be published soon!' },
   { re: /Notebook4/, title: 'Book 1', body: 'Click to flip through it.' },
@@ -1365,10 +1372,10 @@ const paint = () => new Promise((r) => requestAnimationFrame(() => requestAnimat
       const p = o.getWorldPosition(new THREE.Vector3());
       const near = sources.find((s) => s.pos.distanceTo(p) < 0.5);
       if (near) near.weight += o.intensity;
-      else sources.push({ pos: p, radius: 0.85, weight: o.intensity });
+      else sources.push({ pos: p, radius: 0.5, weight: o.intensity });
     });
     sources.forEach((s) => { s.weight = Math.sqrt(s.weight); });
-    liveUpdates.push(liveDust(scene, sources));
+    liveUpdates.push(liveDust(scene, sources, 380));
   }
   setProgress(1);
   if (loadText) loadText.className = 'goes';
