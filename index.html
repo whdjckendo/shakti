@@ -59,6 +59,16 @@
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 14'%3E%3Cpath d='M0 7Q12 -1 24 7T48 7V14H0Z' fill='%23002fa7' fill-opacity='.35'/%3E%3C/svg%3E");
     animation: wave-b 3.6s linear infinite;
   }
+  /* Once full, the circle loses its shape: edges wobble, blur and dissolve. */
+  #ring.melt { clip-path: none; animation: melt 1.2s ease-in-out forwards; }
+  @keyframes melt {
+    0%   { border-radius: 50%; transform: scale(1); opacity: 1; filter: blur(0) }
+    20%  { border-radius: 58% 42% 55% 45% / 46% 56% 44% 54%; transform: scale(1.05, .95); opacity: 1 }
+    40%  { border-radius: 43% 57% 41% 59% / 58% 42% 58% 42%; transform: scale(.95, 1.06); opacity: 1; filter: blur(1px) }
+    60%  { border-radius: 57% 43% 61% 39% / 41% 59% 41% 59%; transform: scale(1.04, .94); opacity: .8; filter: blur(2.5px) }
+    80%  { border-radius: 41% 59% 45% 55% / 55% 45% 55% 45%; transform: scale(.7); opacity: .4; filter: blur(5px) }
+    100% { border-radius: 50%; transform: scale(.35); opacity: 0; filter: blur(9px) }
+  }
   @keyframes wave-a { from { transform: translateX(0) } to { transform: translateX(-48px) } }
   @keyframes wave-b { from { transform: translateX(-48px) } to { transform: translateX(0) } }
   /* Captions are pure CSS so they keep advancing even while the main thread is
@@ -233,6 +243,7 @@
   @media (prefers-reduced-motion: reduce) {
     #water, #ring-stroke { transition: none }
     #water .wave { animation: none }
+    #ring.melt { animation: none; opacity: 0 }
     #hud { transition: none }
     #poster-cta { transition: none }
   }
