@@ -12,7 +12,7 @@ import { initMonitor } from './monitor.js';
 import { initMusic } from './music.js';
 import { initFixtures } from './fixtures.js';
 import { initFocus } from './focus.js';
-import { liveCalendar, liveClock, liveDust } from './live.js';
+import { liveCalendar, liveClock, liveDust, liveSmoke } from './live.js';
 
 const liveUpdates = [];
 let musicApi = null;
@@ -711,7 +711,7 @@ function updateObjInfo(obj) {
   }
 }
 
-const POSE_LABEL = { stand: 'standing', crouch: 'crouching', sit: 'at the desk', lie: 'lying down' };
+const POSE_LABEL = { stand: 'standing', crouch: 'crouching', sit: 'inside the room', lie: 'lying down' };
 
 function updateHud() {
   if (poseEl) poseEl.textContent = POSE_LABEL[pose] || '';
@@ -1466,6 +1466,13 @@ const paint = () => new Promise((r) => requestAnimationFrame(() => requestAnimat
       { pos: ctr('Tube_Light1'), radius: 0.6, weight: 0.5, level: () => fixturesApi.level('tube') },
     ].filter((s) => s.pos);
     liveUpdates.push(liveDust(scene, sources, 340));
+    // dhoop on the desk: a thin thread of smoke from its tip
+    const dhoop = root.getObjectByName('dhoop');
+    if (dhoop) {
+      const db = new THREE.Box3().setFromObject(dhoop);
+      const tip = new THREE.Vector3((db.min.x + db.max.x) / 2, db.max.y, (db.min.z + db.max.z) / 2);
+      liveUpdates.push(liveSmoke(scene, tip, () => Math.max(fixturesApi.level('floor'), 0.6 * fixturesApi.level('table'))));
+    }
   }
   setProgress(1);
   if (loadText) loadText.className = 'goes';

@@ -191,3 +191,63 @@ export function liveDust(scene, sources, count = 900) {
     sources.forEach((s, k) => { if (k < 8) mat.uniforms.uOn.value[k] = s.level ? s.level() : 1; });
   };
 }
+
+// ---- incense (dhoop) smoke: a thin, calm stream that rises straight, then
+// slowly curls and thins out. Brighter where the lamp light reaches it.
+// light: () => 0..1 how lit it is right now
+export function liveSmoke(scene, origin, light = () => 1, count = 260) {
+  const LIFE = 7.0, HEIGHT = 0.34;
+  const seed = new Float32Array(count * 3);
+  for (let i = 0; i < count; i++) seed.set([i / count, Math.random(), Math.random()], i * 3);
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(count * 3), 3));
+  geo.setAttribute('aSeed', new THREE.BufferAttribute(seed, 3));
+  const mat = new THREE.ShaderMaterial({
+    transparent: true, depthWrite: false, toneMapped: false,
+    uniforms: {
+      uTime: { value: 0 }, uScale: { value: innerHeight / 2 }, uOrigin: { value: origin.clone() },
+      uLight: { value: 1 },
+    },
+    vertexShader: /* glsl */`
+      attribute vec3 aSeed;
+      uniform float uTime; uniform float uScale; uniform vec3 uOrigin;
+      varying float vA;
+      void main() {
+        float age = fract(aSeed.x + uTime / ${LIFE.toFixed(1)});
+        float h = age * ${HEIGHT.toFixed(2)};
+        // laminar at the bottom, then a slow sway that widens as it rises
+        float spread = 0.0015 + pow(age, 1.6) * 0.055;
+        float t = uTime * 0.35;
+        vec3 p = uOrigin + vec3(
+          sin(h * 22.0 - t * 2.0 + aSeed.y * 0.6) * spread + sin(h * 7.0 + t) * spread * 0.6,
+          h,
+          cos(h * 18.0 - t * 1.6 + aSeed.z * 0.6) * spread * 0.8);
+        // stray wisps drift a little apart from the main stream higher up
+        p.xz += (aSeed.yz - 0.5) * age * age * 0.05;
+        vA = smoothstep(0.0, 0.06, age) * pow(1.0 - age, 1.8);
+        vec4 mv = modelViewMatrix * vec4(p, 1.0);
+        gl_PointSize = max(1.0, (0.006 + age * 0.03) * uScale * projectionMatrix[1][1] / -mv.z);
+        gl_Position = projectionMatrix * mv;
+      }`,
+    fragmentShader: /* glsl */`
+      uniform float uLight;
+      varying float vA;
+      void main() {
+        float r = length(gl_PointCoord - 0.5) * 2.0;
+        float a = smoothstep(1.0, 0.0, r);
+        a *= a;
+        vec3 col = mix(vec3(0.55, 0.53, 0.5), vec3(1.0, 0.9, 0.76), uLight);
+        gl_FragColor = vec4(col, a * vA * (0.05 + 0.07 * uLight));
+      }`,
+  });
+  const pts = new THREE.Points(geo, mat);
+  pts.frustumCulled = false;
+  pts.renderOrder = 5;
+  scene.add(pts);
+  addEventListener('resize', () => { mat.uniforms.uScale.value = innerHeight / 2; });
+  return (dt) => {
+    pts.visible = !document.documentElement.classList.contains('reduce-motion');
+    mat.uniforms.uTime.value += dt;
+    mat.uniforms.uLight.value += (light() - mat.uniforms.uLight.value) * Math.min(1, dt * 3);
+  };
+}
