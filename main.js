@@ -1199,13 +1199,13 @@ const paint = () => new Promise((r) => requestAnimationFrame(() => requestAnimat
   // Same 2 seconds as before: let the water finish filling, then melt the
   // circle away so it is gone before the room is revealed.
   const wait = (ms) => new Promise((r) => setTimeout(r, ms));
-  await wait(700);
+  await wait(1300);
   const ringEl = document.getElementById('ring');
   if (ringEl) ringEl.classList.add('melt');
-  await wait(1300);
+  await wait(700);
   if (loadingEl) {
     loadingEl.classList.add('done');
-    await new Promise((r) => setTimeout(r, 500));
+    await new Promise((r) => setTimeout(r, 300));
     loadingEl.remove();
   }
 })();

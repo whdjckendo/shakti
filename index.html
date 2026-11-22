@@ -60,7 +60,7 @@
     animation: wave-b 3.6s linear infinite;
   }
   /* Once full, the circle loses its shape: edges wobble, blur and dissolve. */
-  #ring.melt { clip-path: none; animation: melt 1.2s ease-in-out forwards; }
+  #ring.melt { clip-path: none; animation: melt .7s ease-in-out forwards; }
   @keyframes melt {
     0%   { border-radius: 50%; transform: scale(1); opacity: 1; filter: blur(0) }
     20%  { border-radius: 58% 42% 55% 45% / 46% 56% 44% 54%; transform: scale(1.05, .95); opacity: 1 }
@@ -98,7 +98,7 @@
   #load-text.err .in1, #load-text.err .out1, #load-text.err .hey, #load-text.err .ld,
   #load-text.err .any, #load-text.err .in2, #load-text.err .out2 { animation: none; opacity: 0; }
   #load-text.goes .goes, #load-text.err .err { opacity: 1; transition: opacity .25s ease; }
-  #loading.done { opacity: 0; transition: opacity .5s ease; }
+  #loading.done { opacity: 0; transition: opacity .3s ease; }
 
   /* ---- guide ---- */
   #hud {
