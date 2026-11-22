@@ -7,6 +7,7 @@ import { RenderPass } from './vendor/three/jsm/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from './vendor/three/jsm/postprocessing/UnrealBloomPass.js';
 import { OutputPass } from './vendor/three/jsm/postprocessing/OutputPass.js';
 import { initBooks } from './books.js';
+import { initReader } from './reader.js';
 
 let bookApi = null;
 const notebookMeshes = {};   // "Notebook1".. -> [Mesh], handed to initBooks
@@ -386,22 +387,7 @@ const infoHitTargets = [];   // infoMeshes + infoProxies, filled after load
 const INFO = [
   { mat: 'Screenshot_2026_08_29_022137', title: 'Ocean research paper',
     body: 'Research experiement conducted on car preferences of OCEAN personalities with eye tracking. Submitted to HWWE 2026 conference. The paper will be published soon!' },
-  { re: /Notebook1/, title: 'The Politics of Design',
-    body: 'Taught me that all design we have been seen until now has in one way or another been politically biased. Beautiful.' },
-  { re: /Notebook2/, title: 'How to Talk to Anyone',
-    body: 'I used to struggle with my introvertedness for a long time. I find ways to get better at it whenever I can.' },
-  { re: /Notebook3/, title: 'The Power of Positive Management',
-    body: 'Since I delve into different kinds of projects at the same time, it naturally involves working with different kind of people. This book helped me understand what to prioritize when not just in a project, but in life.' },
-  { re: /Notebook4/, title: 'Fletcher — A History of Architecture',
-    body: 'Architecture is a wonder that I will love learning about till I live. History of architecture forms a connect to the history of anthropology, culture, and innovation in technology. All of this can be learnt from this book.' },
-  { re: /OpenBook1/, pdf: 'books/pdf/book1.pdf', title: 'Book 1',
-    body: 'Click to read.' },
-  { re: /OpenBook2/, pdf: 'books/pdf/book2.pdf', title: 'Book 2',
-    body: 'Click to read.' },
-  { re: /OpenBook3/, pdf: 'books/pdf/book3.pdf', title: 'Book 3',
-    body: 'Click to read.' },
-  { re: /OpenBook4/, pdf: 'books/pdf/book4.pdf', title: 'Book 4',
-    body: 'Click to read.' },
+  { re: /Notebook4/, title: 'Book 1', body: 'Click to flip through it.' },
   { mat: '_White_', title: 'Table cloth',
     body: 'Gives a soft touch to my arms when I place them on this for too long.' },
   { re: /(^|\s)(Pencil_1_\d|Lapices_en_bote1)(\s|$)/, title: 'Pencils & stationery',
@@ -428,7 +414,10 @@ const INFO = [
     body: 'When I want to turn my brain off and make something, for the pure joy of creation. Although I have learnt origami is more mathematical than I thought.' },
 ];
 function matchInfo(child) {
-  const nm = child.name || '';
+  let nm = child.name || '';
+  // GLB meshes don't carry their group path in the name (OBJ ones did), so
+  // join the ancestors the same way.
+  if (isGlb) { for (let o = child.parent; o && o.name !== 'Model' && o.parent; o = o.parent) nm += ' ' + o.name; }
   const mats = (Array.isArray(child.material) ? child.material : [child.material])
     .map((m) => m && m.name).filter(Boolean);
   for (const e of INFO) {
@@ -580,6 +569,13 @@ addEventListener('blur', () => { move.f = move.b = move.l = move.r = move.run = 
 
 addEventListener('click', () => {
   if (pdfOpen) return;
+  if (bookApi && bookApi.active) return;
+  // Blender room: the toilets poster or the open book itself opens Book 1.
+  if (isGlb && bookApi && bookApi.open) {
+    const onPoster = hoverPoster && posterFocus > 0.4 && hoverPoster.name === 'poster-left';
+    const onBook = curInfo && curInfo.title === 'Book 1';
+    if (onPoster || onBook) { posterCta?.classList.remove('show'); bookApi.open(); return; }
+  }
   if (curInfo && curInfo.pdf) { openPdf(curInfo); return; }
   if (bookApi && bookApi.tryOpenFromView()) return;
   if (!hoverPoster || posterFocus < 0.4) return;
@@ -1272,6 +1268,14 @@ const paint = () => new Promise((r) => requestAnimationFrame(() => requestAnimat
 
   // The four desk books now open as full-screen PDFs (see openPdf), so the old
   // flip-book rig that hid them is switched off.
+  if (isGlb) {
+    const nb = root.getObjectByName('Notebook4');
+    if (nb) bookApi = initReader({
+      scene, camera, renderer, bloomPass, bookObject: nb,
+      pagesDir: 'books/book1', pageCount: 7,
+      onExit: () => { targetYaw = camera.rotation.y; targetPitch = camera.rotation.x; },
+    });
+  }
   if (false) bookApi = initBooks({
     THREE, scene, camera, renderer, bloomPass,
     posterMeshes, notebookGroups: notebookMeshes,
