@@ -585,9 +585,9 @@ addEventListener('click', () => {
   if (bookApi && bookApi.active) return;
   // Blender room: the toilets poster or the open book itself opens Book 1.
   if (isGlb && bookApi && bookApi.open) {
-    // toilets poster -> Book 1, IKEA (ETT LYCKLIG) poster -> Book 2
+    // toilets poster -> Book 1, IKEA (ETT LYCKLIG) poster -> Book 2, Navigation poster -> Book 3
     const posterKey = hoverPoster && posterFocus > 0.4
-      ? ({ 'poster-left': 'book1', 'poster-center': 'book2' })[hoverPoster.name] : null;
+      ? ({ 'poster-left': 'book1', 'poster-center': 'book2', 'A4_-_2': 'book3' })[hoverPoster.name] : null;
     const bookKey = curInfo && ({ 'Book 1': 'book1', 'Book 2': 'book2', 'Book 3': 'book3', 'Book 4': 'book4' })[curInfo.title];
     if (!posterKey && !bookKey && bookApi.tryOpenFromView()) return;   // the monitor
     const key = posterKey || bookKey;
@@ -929,7 +929,7 @@ const paint = () => new Promise((r) => requestAnimationFrame(() => requestAnimat
         fairyBulbMeshes.push(child);
       }
     }
-    if (isGlb && /^poster-(left|center)$/.test(child.name)) posterMeshes.push(child);
+    if (isGlb && (/^poster-(left|center)$/.test(child.name) || child.name === 'A4_-_2')) posterMeshes.push(child);   // A4_-_2 = Navigation poster
     if (!isGlb && /Component_1_1/.test(child.name)) child.material = buildMaterial({ name: 'poster_left' });
     if (!isGlb && /Component_1_2/.test(child.name)) child.material = buildMaterial({ name: 'poster_center' });
     if (!isGlb && (/Component_1_[123]/.test(child.name) || /Picture[1-4]/.test(child.name))) {
