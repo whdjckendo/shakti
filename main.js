@@ -1487,11 +1487,11 @@ const paint = () => new Promise((r) => requestAnimationFrame(() => requestAnimat
     };
     const sources = [
       { pos: ctr('Group10'), radius: 0.55, weight: 1.0, level: () => fixturesApi.level('floor') },   // floor lamp shade
-      { pos: ctr('Group5', 0.08), radius: 0.32, weight: 0.55, level: () => fixturesApi.level('table') },
+      { pos: ctr('Group5', 0.08), radius: 0.24, weight: 0.22, level: () => fixturesApi.level('table') },
       { pos: ctr('Group307', 0.1), radius: 0.38, weight: 0.6, level: () => fixturesApi.level('bedside') },
       { pos: ctr('Tube_Light1'), radius: 0.6, weight: 0.5, level: () => fixturesApi.level('tube') },
     ].filter((s) => s.pos);
-    liveUpdates.push(liveDust(scene, sources, 700));
+    liveUpdates.push(liveDust(scene, sources, 560));
     // dhoop on the desk: a thin thread of smoke from its tip
     const dhoop = root.getObjectByName('dhoop');
     if (dhoop) {

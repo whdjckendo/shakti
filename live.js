@@ -178,7 +178,7 @@ export function liveDust(scene, sources, count = 900) {
       void main() {
         float r = length(gl_PointCoord - 0.5) * 2.0;
         float a = smoothstep(1.0, 0.0, r);
-        gl_FragColor = vec4(vec3(1.0, 0.9, 0.74) * a * vA * 3.6, 1.0);   // bright enough to catch the eye
+        gl_FragColor = vec4(vec3(1.0, 0.9, 0.74) * a * vA * 2.5, 1.0);   // bright enough to catch the eye
       }`,
   });
   const pts = new THREE.Points(geo, mat);
