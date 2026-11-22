@@ -166,6 +166,7 @@ export function initMusic(opts) {
   let fade = 1, fadeTo = 1;
   function setWorn(on) {
     worn = on;
+    document.body.classList.toggle('hp-on', on);
     fadeTo = on ? 0 : 1;
     if (infoEntry) infoEntry.body = on ? 'Change the music.' : 'Wear them.';
   }
@@ -199,5 +200,7 @@ export function initMusic(opts) {
     monitor.open(content);
   }
 
-  return { wear, update, get worn() { return worn; } };
+  // the top-right "take off headphones" button (index.html) fires this
+  addEventListener('take-off-headphones', () => stop());
+  return { wear, update, takeOff: stop, get worn() { return worn; } };
 }

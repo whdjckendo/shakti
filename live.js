@@ -127,16 +127,18 @@ export function liveClock(mesh, renderer) {
 }
 
 // ---- dust motes floating in the lamp light ----
-// sources: [{ pos: Vector3, radius, weight }]
+// sources: [{ pos: Vector3, radius, weight, level?: () => 0..1 }]  (max 8)
 export function liveDust(scene, sources, count = 900) {
   if (!sources.length) return () => {};
   const total = sources.reduce((s, x) => s + x.weight, 0);
   const pos = new Float32Array(count * 3);
   const ctr = new Float32Array(count * 4);
   const seed = new Float32Array(count * 3);
+  const srcIdx = new Float32Array(count);
   for (let i = 0; i < count; i++) {
-    let r = Math.random() * total, src = sources[0];
-    for (const s of sources) { if ((r -= s.weight) <= 0) { src = s; break; } }
+    let r = Math.random() * total, src = sources[0], si = 0;
+    for (let k = 0; k < sources.length; k++) { if ((r -= sources[k].weight) <= 0) { src = sources[k]; si = k; break; } }
+    srcIdx[i] = si;
     // uniform inside a sphere
     const u = Math.random(), v = Math.random(), w = Math.pow(Math.random(), 0.8);   // more motes near the source
     const th = u * Math.PI * 2, ph = Math.acos(2 * v - 1);
@@ -151,21 +153,24 @@ export function liveDust(scene, sources, count = 900) {
   geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
   geo.setAttribute('aCenter', new THREE.BufferAttribute(ctr, 4));
   geo.setAttribute('aSeed', new THREE.BufferAttribute(seed, 3));
+  geo.setAttribute('aSrc', new THREE.BufferAttribute(srcIdx, 1));
   const mat = new THREE.ShaderMaterial({
     transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false,
-    uniforms: { uTime: { value: 0 }, uScale: { value: innerHeight / 2 } },
+    uniforms: { uTime: { value: 0 }, uScale: { value: innerHeight / 2 }, uOn: { value: new Array(8).fill(1) } },
     vertexShader: /* glsl */`
-      attribute vec4 aCenter; attribute vec3 aSeed;
-      uniform float uTime; uniform float uScale;
+      attribute vec4 aCenter; attribute vec3 aSeed; attribute float aSrc;
+      uniform float uTime; uniform float uScale; uniform float uOn[8];
       varying float vA;
       void main() {
         float t = uTime * 0.06 * aSeed.y + aSeed.x;
         vec3 p = position + vec3(sin(t * 1.7) * 0.05, sin(t * 1.1 + 2.0) * 0.06 - 0.02 * fract(t * 0.25), cos(t * 1.3) * 0.05);
         float d = length(p - aCenter.xyz) / aCenter.w;
         float twinkle = 0.55 + 0.45 * sin(uTime * (0.8 + aSeed.z * 1.6) + aSeed.x * 7.0);
-        vA = pow(clamp(1.0 - d, 0.0, 1.0), 2.4) * twinkle * 1.2;   // denser right at the light, gone quickly
+        float on = uOn[int(aSrc + 0.5)];
+        vA = pow(clamp(1.0 - d, 0.0, 1.0), 2.4) * twinkle * 1.4 * on;   // denser right at the light, gone quickly
         vec4 mv = modelViewMatrix * vec4(p, 1.0);
-        gl_PointSize = (0.0035 + aSeed.z * 0.004) * uScale * projectionMatrix[1][1] / -mv.z;
+        // minuscule: about a millimetre across, never below a pixel
+        gl_PointSize = max(1.0, (0.0009 + aSeed.z * 0.0011) * uScale * projectionMatrix[1][1] / -mv.z);
         gl_Position = projectionMatrix * mv;
       }`,
     fragmentShader: /* glsl */`
@@ -180,5 +185,9 @@ export function liveDust(scene, sources, count = 900) {
   pts.frustumCulled = false;
   scene.add(pts);
   addEventListener('resize', () => { mat.uniforms.uScale.value = innerHeight / 2; });
-  return (dt) => { mat.uniforms.uTime.value += dt; };
+  return (dt) => {
+    pts.visible = !document.documentElement.classList.contains('reduce-motion');
+    mat.uniforms.uTime.value += dt;
+    sources.forEach((s, k) => { if (k < 8) mat.uniforms.uOn.value[k] = s.level ? s.level() : 1; });
+  };
 }

@@ -10,10 +10,14 @@ import { initBooks } from './books.js';
 import { initReader } from './reader.js';
 import { initMonitor } from './monitor.js';
 import { initMusic } from './music.js';
+import { initFixtures } from './fixtures.js';
+import { initFocus } from './focus.js';
 import { liveCalendar, liveClock, liveDust } from './live.js';
 
 const liveUpdates = [];
 let musicApi = null;
+let fixturesApi = null;
+let tipCleared = false;
 let bookApi = null;
 const notebookMeshes = {};   // "Notebook1".. -> [Mesh], handed to initBooks
 
@@ -392,11 +396,15 @@ const infoHitTargets = [];   // infoMeshes + infoProxies, filled after load
 const INFO = [
   // Blender room (checked first)
   { re: /(^| )Headphones__1_1( |$)/, title: 'Headphones', body: 'Wear them.', music: true },
-  { re: /(^| )Group6( |$)/, title: 'Floor lamp',
-    body: 'Made this floor lamp in 2 days during my bachelors for the thin niche beside my bed in my hostel.' },
-  { re: /(^| )Group5( |$)/, title: 'Table lamp',
-    body: 'Made this table lamp out of plastic bag waste. Again, during my bachelors. (You can tell I love being in the workshop).' },
-  { re: /(^| )calendar( |$)/, title: 'Calendar',
+  { re: /(^| )Group6( |$)/, title: 'Floor lamp', light: 'floor',
+    text: 'Made this floor lamp in 2 days during my bachelors for the thin niche beside my bed in my hostel.' },
+  { re: /(^| )Group5( |$)/, title: 'Table lamp', light: 'table',
+    text: 'Made this table lamp out of plastic bag waste. Again, during my bachelors. (You can tell I love being in the workshop).' },
+  { re: /(^| )Group307( |$)/, title: 'Bedside lamp', light: 'bedside' },
+  { re: /FAIRY_LIGHT\d|Star_Lights19/, mat: '_Translucent_Glass_Gray_2', title: 'Fairy lights', light: 'fairy' },
+  { re: /(^| )Tube_Light1( |$)/, title: 'Tube light', light: 'tube' },
+  // the calendar and the photos pinned under it: the "Wall of Always"
+  { re: /(^| )calendar( |$)|^WhatsApp_Image|^(amol|bhuv|suddi|thris)\b/, title: 'Wall of Always', wall: true,
     body: 'Look closer into the \u201cWall of Always\u201d.' },
   { mat: 'Screenshot_2026_08_29_022137', title: 'Ocean research paper',
     body: 'Research experiement conducted on car preferences of OCEAN personalities with eye tracking. Submitted to HWWE 2026 conference. The paper will be published soon!' },
@@ -408,7 +416,7 @@ const INFO = [
     body: 'Gives a soft touch to my arms when I place them on this for too long.' },
   { re: /(^|\s)(Pencil_1_\d|Lapices_en_bote1)(\s|$)/, title: 'Pencils & stationery',
     body: 'Having a 10B, 2B and 2H pencil are a must.' },
-  { re: /(^|\s)M_JLIGHET1(\s|$)/, proxy: true, title: 'Headphone stand',
+  { re: /(^|\s)M_JLIGHET1(\s|$)/, proxy: true, title: 'Headphone stand', stand: true,
     body: 'MÖJLIGHET Headset/tablet stand by IKEA. My professor Anand Belhe taught me that good product design always has character, and this product is a testament to that.' },
   { mat: 'Concrete_Aggregate_Smoke', title: 'Flooring',
     body: 'I have vivid spatial memories of the flat I grew up in. Maybe it was the budding space designer in me. Mosaic flooring was one of it.' },
@@ -592,6 +600,11 @@ addEventListener('click', () => {
     const posterKey = hoverPoster && posterFocus > 0.4
       ? ({ 'poster-left': 'book1', 'poster-center': 'book2', 'A4_-_2': 'book3' })[hoverPoster.name] : null;
     const bookKey = curInfo && ({ 'Book 1': 'book1', 'Book 2': 'book2', 'Book 3': 'book3', 'Book 4': 'book4' })[curInfo.title];
+    if (curInfo && curInfo.wall && bookApi.readers.wall) { bookApi.readers.wall.open(); return; }
+    if (curInfo && curInfo.light && fixturesApi && fixturesApi.has(curInfo.light)) {   // light switch
+      fixturesApi.toggle(curInfo.light); refreshInfo(); return;
+    }
+    if (curInfo && curInfo.stand && musicApi && musicApi.worn) { musicApi.takeOff(); refreshInfo(); return; }
     if (curInfo && curInfo.music && musicApi) { musicApi.wear(); return; }   // headphones -> music menu
     if (!posterKey && !bookKey && bookApi.tryOpenFromView()) return;   // the monitor
     const key = posterKey || bookKey;
@@ -655,6 +668,34 @@ let hudPinned = false;
 let hudTimer = 0;
 
 let curInfo = null;
+// Some cards change with the room: light switches say off/on, the stand
+// offers to take the headphones off while they're on.
+function infoBody(info) {
+  if (info.light) {
+    const off = fixturesApi && fixturesApi.has(info.light) && !fixturesApi.isOn(info.light);
+    const sw = off ? 'Click to turn it back on.' : 'Click to turn it off.';
+    return info.text ? `${info.text} ${sw}` : sw;
+  }
+  if (info.stand && musicApi && musicApi.worn) return 'Take off headphones.';
+  return info.body;
+}
+// What a click on the thing under the reticle will do, shown right by it.
+function clickLabel() {
+  if (posterFocus > 0.35 && hoverPoster) return 'Click to know more';
+  const i = curInfo;
+  if (i) {
+    if (i.light && fixturesApi && fixturesApi.has(i.light)) return fixturesApi.isOn(i.light) ? 'Click to turn it off' : 'Click to turn it on';
+    if (i.wall) return 'Click to look closer';
+    if (i.music) return musicApi && musicApi.worn ? 'Click to change the music' : 'Click to wear them';
+    if (i.stand && musicApi && musicApi.worn) return 'Click to take off headphones';
+    if (/^Book \d$/.test(i.title)) return 'Click to read';
+  }
+  const mon = bookApi && bookApi.readers && bookApi.readers.monitor;
+  if (mon && mon.aimed && mon.aimed()) return 'Click to watch';
+  return null;
+}
+const setClickTip = (label, x, y) => window.__clickTip && window.__clickTip(label, x, y);
+function refreshInfo() { if (curInfo && objinfoMsgEl) objinfoMsgEl.textContent = infoBody(curInfo); }
 function updateObjInfo(obj) {
   const info = (obj && obj.userData.info) || null;
   if (info === curInfo) return;
@@ -662,7 +703,7 @@ function updateObjInfo(obj) {
   if (!objinfoEl) return;
   if (info) {
     objinfoTitleEl.textContent = info.title;
-    objinfoMsgEl.textContent = info.body;
+    objinfoMsgEl.textContent = infoBody(info);
     objinfoEl.classList.add('show');
     hudEl && hudEl.classList.remove('show');   // don't stack in the same corner
   } else {
@@ -1324,6 +1365,25 @@ const paint = () => new Promise((r) => requestAnimationFrame(() => requestAnimat
         liveUpdates.push((dt) => musicApi.update(dt));
       }
     }
+    // Wall of Always: the calendar plus the photos near it (photos elsewhere
+    // in the room keep their own cards)
+    const cal = root.getObjectByName('calendar');
+    if (cal) {
+      const calBox = new THREE.Box3().setFromObject(cal);
+      const calC = calBox.getCenter(new THREE.Vector3());
+      const wallBox = calBox.clone();
+      for (let i = infoMeshes.length - 1; i >= 0; i--) {
+        const o = infoMeshes[i];
+        if (!o.userData.info || !o.userData.info.wall) continue;
+        const b = new THREE.Box3().setFromObject(o);
+        if (b.getCenter(new THREE.Vector3()).distanceTo(calC) > 0.75) {
+          o.userData.info = null; infoMeshes.splice(i, 1);
+          const k = infoHitTargets.indexOf(o); if (k >= 0) infoHitTargets.splice(k, 1);
+        } else wallBox.union(b);
+      }
+      wallBox.expandByScalar(0.06);
+      readers.wall = initFocus({ camera, box: wallBox, normal: new THREE.Vector3(1, 0, 0), onExit });
+    }
     const list = Object.values(readers);
     bookApi = {
       readers,
@@ -1374,19 +1434,38 @@ const paint = () => new Promise((r) => requestAnimationFrame(() => requestAnimat
     // visitor's own date and time on the wall calendar and alarm clock
     liveUpdates.push(liveCalendar(root.getObjectByName('calendar'), renderer));
     liveUpdates.push(liveClock(root.getObjectByName('Mesh1100'), renderer));   // alarm clock face
-    // dust floating in the warm lamp light (the red fairy strip is skipped)
-    const sources = [];
-    scene.traverse((o) => {
-      if (!o.isPointLight || o.intensity <= 0.02) return;
-      const c = o.color;
-      if (c.g < 0.55 * c.r) return;
-      const p = o.getWorldPosition(new THREE.Vector3());
-      const near = sources.find((s) => s.pos.distanceTo(p) < 0.5);
-      if (near) near.weight += o.intensity;
-      else sources.push({ pos: p, radius: 0.5, weight: o.intensity });
+    // light switches for every fixture
+    const fairy = [];
+    root.traverse((o) => {
+      if (/^FAIRY_LIGHT\d/.test(o.name)) fairy.push(o);
+      else if (o.isMesh && [].concat(o.material).some((mt) => mt && mt.name === '_Translucent_Glass_Gray_2')) fairy.push(o);
     });
-    sources.forEach((s) => { s.weight = Math.sqrt(s.weight); });
-    liveUpdates.push(liveDust(scene, sources, 380));
+    const warm = 0xffc27a;
+    fixturesApi = initFixtures(scene, [
+      { key: 'floor', node: root.getObjectByName('Group6'), adopt: true },
+      { key: 'table', node: root.getObjectByName('Group5'),
+        light: { color: warm, intensity: 0.05, distance: 1.6, offset: new THREE.Vector3(0.04, 0.06, 0) } },
+      { key: 'bedside', node: root.getObjectByName('Group307'),
+        light: { color: warm, intensity: 0.06, distance: 2.2, offset: new THREE.Vector3(0, 0.08, 0) } },
+      { key: 'fairy', node: fairy },
+      { key: 'tube', node: root.getObjectByName('Tube_Light1'), on: false,
+        glow: { color: 0xf4f8ff, intensity: 1.4 },
+        light: { color: 0xe8f0ff, intensity: 0.14, distance: 6, offset: new THREE.Vector3(-0.25, 0, 0) } },
+    ]);
+    liveUpdates.push((dt) => fixturesApi.update(dt));
+    // dust: only in the light of the lamps (not the room fill under the fan),
+    // and it settles when a lamp is switched off
+    const ctr = (n, dy = 0) => {
+      const o = root.getObjectByName(n);
+      return o ? new THREE.Box3().setFromObject(o).getCenter(new THREE.Vector3()).add(new THREE.Vector3(0, dy, 0)) : null;
+    };
+    const sources = [
+      { pos: ctr('Group10'), radius: 0.55, weight: 1.0, level: () => fixturesApi.level('floor') },   // floor lamp shade
+      { pos: ctr('Group5', 0.08), radius: 0.32, weight: 0.55, level: () => fixturesApi.level('table') },
+      { pos: ctr('Group307', 0.1), radius: 0.38, weight: 0.6, level: () => fixturesApi.level('bedside') },
+      { pos: ctr('Tube_Light1'), radius: 0.6, weight: 0.5, level: () => fixturesApi.level('tube') },
+    ].filter((s) => s.pos);
+    liveUpdates.push(liveDust(scene, sources, 340));
   }
   setProgress(1);
   if (loadText) loadText.className = 'goes';
@@ -1526,9 +1605,14 @@ function animate() {
       if (real && real.distance - ihit.distance < 0.35) ihit = real;
     }
     updateObjInfo(ihit && ihit.distance < 7 ? ihit.object : null);
-  } else if (curInfo) {
-    updateObjInfo(null);
+    setClickTip(clickLabel(), innerWidth / 2, innerHeight / 2);
+  } else {
+    if (curInfo) updateObjInfo(null);
+    // entering a close-up view: drop the reticle's tip once (overlays may
+    // then show their own tip at the mouse)
+    if (!tipCleared) { setClickTip(null); tipCleared = true; }
   }
+  if (!reading) tipCleared = false;
 
   if (bookApi) bookApi.update(dt);
   for (const u of liveUpdates) u(dt);

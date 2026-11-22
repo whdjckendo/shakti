@@ -14,6 +14,7 @@ import * as THREE from 'three';
 
 const FILL = 0.85;           // book covers 85% of the screen
 const CAM_DUR = 1.1;
+const camDur = () => (document.documentElement.classList.contains('reduce-motion') ? 0.05 : CAM_DUR);
 const FLIP_DUR = 0.8;
 const SEGS = 32;             // flip leaf resolution (for the curl)
 const BLANK = 0xf3efe6;
@@ -440,7 +441,7 @@ export function initReader(opts) {
 
   function update(dt) {
     if (mode === 'in' || mode === 'out') {
-      t = Math.min(1, t + dt / CAM_DUR);
+      t = Math.min(1, t + dt / camDur());
       const e = ease(t);
       const b = mode === 'in' ? target : home;
       camera.position.lerpVectors(from.p, b.p, e);
@@ -462,7 +463,7 @@ export function initReader(opts) {
       }
     }
     if (flip) {
-      flip.t = Math.min(1, flip.t + dt / FLIP_DUR);
+      flip.t = Math.min(1, flip.t + dt / (document.documentElement.classList.contains('reduce-motion') ? 0.05 : FLIP_DUR));
       const e = ease(flip.t);
       bendLeaf(flip.dir > 0 ? e : 1 - e, flip.dir);
       if (flip.t >= 1) {

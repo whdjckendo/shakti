@@ -26,6 +26,7 @@ const BUTTONS = [
 ];
 const KEY_PASSWORD = null;     // set the 'my heart' password here
 const CAM_DUR = 1.1;
+const camDur = () => (document.documentElement.classList.contains('reduce-motion') ? 0.05 : CAM_DUR);
 const ease = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
 
 export function initMonitor(opts) {
@@ -211,12 +212,19 @@ export function initMonitor(opts) {
   };
   let hover = null;
   ui.addEventListener('pointermove', (e) => {
-    if (mode !== 'on' || cardOpen()) { hover = null; ui.classList.remove('hot'); return; }
+    if (mode !== 'on' || cardOpen()) { hover = null; ui.classList.remove('hot'); window.__clickTip && window.__clickTip(null); return; }
     const vuv = pick(e);
     const b = buttonAt(vuv);
-    if (content) { content.hover(b); ui.classList.toggle('hot', b != null); return; }
+    const tip = window.__clickTip;
+    if (content) {
+      content.hover(b); ui.classList.toggle('hot', b != null);
+      tip && tip(b == null ? null : (b === 'stop' ? 'Click to take them off' : 'Click to play'), e.clientX, e.clientY);
+      return;
+    }
     hover = b;
     ui.classList.toggle('hot', !!b);
+    tip && tip(b ? ({ work: 'Click to see my work', heart: 'Click to enter the key', contact: 'Click for contact',
+      explore: 'Click to explore the room' })[b.id] : null, e.clientX, e.clientY);
     if (b) mat.uniforms.uHover.value.set(b.x / 1920, 1 - b.y / 1080, mat.uniforms.uHover.value.z);
   });
   ui.addEventListener('click', (e) => {
@@ -265,6 +273,7 @@ export function initMonitor(opts) {
     if (mode !== 'on') return;
     closeCards();
     ui.classList.remove('show', 'hot');
+    window.__clickTip && window.__clickTip(null);
     hover = null;
     if (lookAt) {               // come back out facing this point instead
       dummy.position.copy(home.p); dummy.up.set(0, 1, 0); dummy.lookAt(lookAt);
@@ -275,6 +284,13 @@ export function initMonitor(opts) {
   }
   addEventListener('resize', () => { if (mode === 'on') { computeTarget(); camera.position.copy(target.p); } });
 
+  // is the centre reticle on the screen? (cheap: the screen plane only)
+  function aimed() {
+    if (mode !== 'off') return false;
+    rc.setFromCamera(new THREE.Vector2(0, 0), camera);
+    const h = rc.intersectObject(plane, false)[0];
+    return !!(h && h.distance < 3);
+  }
   // clicked straight at the screen (the centre reticle)?
   function tryOpenFromView() {
     rc.setFromCamera(new THREE.Vector2(0, 0), camera);
@@ -293,7 +309,7 @@ export function initMonitor(opts) {
     const hz = mat.uniforms.uHover.value;
     hz.z += ((hover ? 1 : 0) - hz.z) * Math.min(1, dt * 10);
     if (mode === 'in' || mode === 'out') {
-      t = Math.min(1, t + dt / CAM_DUR);
+      t = Math.min(1, t + dt / camDur());
       const e = ease(t);
       const b = mode === 'in' ? target : home;
       camera.position.lerpVectors(from.p, b.p, e);
@@ -313,7 +329,7 @@ export function initMonitor(opts) {
   }
 
   return {
-    open, close, update, tryOpenFromView,
+    open, close, update, tryOpenFromView, aimed,
     get active() { return mode !== 'off'; },
     plane, video,
   };
