@@ -860,6 +860,13 @@ const paint = () => new Promise((r) => requestAnimationFrame(() => requestAnimat
         child.geometry.computeVertexNormals();
       }
     }
+    if (isGlb) {
+      // Blender exported the laptop body with a white emission, so the whole
+      // MacBook glowed. Only screens should glow.
+      for (const mt of [].concat(child.material)) {
+        if (mt && mt.name === 'macbook_aluminium') { mt.emissive.set(0x000000); mt.emissiveMap = null; }
+      }
+    }
     child.castShadow = false;
     child.receiveShadow = false;
 
@@ -998,6 +1005,12 @@ const paint = () => new Promise((r) => requestAnimationFrame(() => requestAnimat
     area.getCenter(seatPos);
     seatPos.y = floorY;
   }
+  if (isGlb) {
+    // In the new model the desk runs along the x = 0 wall. The chair mesh
+    // sits under the desk, so pull it out and face the wall/monitor.
+    seatPos.set(1.0, floorY, -1.3);
+    seatedEye = 1.1;
+  }
   eyeHeight = seatedEye;
   camera.position.set(seatPos.x, floorY + seatedEye, seatPos.z);
 
@@ -1023,7 +1036,9 @@ const paint = () => new Promise((r) => requestAnimationFrame(() => requestAnimat
 
   // A seated person faces their desk, so aim at the laptop rather than at
   // whichever direction happens to have the most clear floor.
-  if (!focusBox.isEmpty()) {
+  if (isGlb) {
+    baseYaw = Math.PI / 2;   // facing -x, toward the desk wall
+  } else if (!focusBox.isEmpty()) {
     const f = new THREE.Vector3();
     focusBox.getCenter(f);
     baseYaw = Math.atan2(-(f.x - camera.position.x), -(f.z - camera.position.z));
