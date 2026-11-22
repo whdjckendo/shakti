@@ -388,6 +388,7 @@ const INFO = [
   { mat: 'Screenshot_2026_08_29_022137', title: 'Ocean research paper',
     body: 'Research experiement conducted on car preferences of OCEAN personalities with eye tracking. Submitted to HWWE 2026 conference. The paper will be published soon!' },
   { re: /Notebook4/, title: 'Book 1', body: 'Click to flip through it.' },
+  { re: /Notebook1/, title: 'Book 2', body: 'Click to flip through it.' },
   { mat: '_White_', title: 'Table cloth',
     body: 'Gives a soft touch to my arms when I place them on this for too long.' },
   { re: /(^|\s)(Pencil_1_\d|Lapices_en_bote1)(\s|$)/, title: 'Pencils & stationery',
@@ -572,9 +573,12 @@ addEventListener('click', () => {
   if (bookApi && bookApi.active) return;
   // Blender room: the toilets poster or the open book itself opens Book 1.
   if (isGlb && bookApi && bookApi.open) {
-    const onPoster = hoverPoster && posterFocus > 0.4 && hoverPoster.name === 'poster-left';
-    const onBook = curInfo && curInfo.title === 'Book 1';
-    if (onPoster || onBook) { posterCta?.classList.remove('show'); bookApi.open(); return; }
+    // toilets poster -> Book 1, IKEA (ETT LYCKLIG) poster -> Book 2
+    const posterKey = hoverPoster && posterFocus > 0.4
+      ? ({ 'poster-left': 'book1', 'poster-center': 'book2' })[hoverPoster.name] : null;
+    const bookKey = curInfo && ({ 'Book 1': 'book1', 'Book 2': 'book2' })[curInfo.title];
+    const key = posterKey || bookKey;
+    if (key && bookApi.readers[key]) { posterCta?.classList.remove('show'); bookApi.open(key); return; }
   }
   if (curInfo && curInfo.pdf) { openPdf(curInfo); return; }
   if (bookApi && bookApi.tryOpenFromView()) return;
@@ -1269,12 +1273,24 @@ const paint = () => new Promise((r) => requestAnimationFrame(() => requestAnimat
   // The four desk books now open as full-screen PDFs (see openPdf), so the old
   // flip-book rig that hid them is switched off.
   if (isGlb) {
-    const nb = root.getObjectByName('Notebook4');
-    if (nb) bookApi = initReader({
-      scene, camera, renderer, bloomPass, bookObject: nb,
-      pagesDir: 'books/book1',
-      onExit: () => { targetYaw = camera.rotation.y; targetPitch = camera.rotation.x; },
-    });
+    const onExit = () => { targetYaw = camera.rotation.y; targetPitch = camera.rotation.x; };
+    const readers = {};
+    const nb1 = root.getObjectByName('Notebook4');
+    if (nb1) readers.book1 = initReader({
+      scene, camera, renderer, bloomPass, bookObject: nb1, pagesDir: 'books/book1', onExit });
+    // Book 2 keeps the model book's curved shape; the slides are printed on its paper.
+    const nb2 = root.getObjectByName('Notebook1');
+    if (nb2) readers.book2 = initReader({
+      scene, camera, renderer, bloomPass, bookObject: nb2, pagesDir: 'books/book2',
+      surface: 'model', paperMaterial: '_10', onExit });
+    const list = Object.values(readers);
+    bookApi = {
+      readers,
+      get active() { return list.some((r) => r.active); },
+      update(dt) { list.forEach((r) => r.update(dt)); },
+      tryOpenFromView: () => false,
+      open: (k) => readers[k] && readers[k].open(),
+    };
   }
   if (false) bookApi = initBooks({
     THREE, scene, camera, renderer, bloomPass,
