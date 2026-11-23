@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Shakthi Nanda Kumar — Hey.</title>
+<meta name="description" content="Industrial designer. Research that drives decisions, reframing the real problem, and a clear design process — shown through five projects.">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="icon" href="favicon-32.png" sizes="32x32">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --blue: #002fa7; --ink: #141416; --soft: #55565c; --line: #e4e4e8; --paper: #ffffff; --tint: #f3f5fb;
+    --ui-zoom: 1;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; background: var(--paper); color: var(--ink); font: 300 17px/1.6 'Lexend', system-ui, sans-serif; zoom: var(--ui-zoom); -webkit-font-smoothing: antialiased; }
+  a { color: var(--blue); }
+  img { display: block; max-width: 100%; height: auto; }
+  .wrap { width: min(1120px, 100% - 48px); margin: 0 auto; }
+
+  /* top bar */
+  .bar { position: sticky; top: 0; z-index: 10; background: rgba(255,255,255,.88); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border-bottom: 1px solid var(--line); }
+  .bar .wrap { display: flex; align-items: center; justify-content: space-between; height: 58px; gap: 16px; }
+  .bar .me { font-weight: 500; font-size: 15px; letter-spacing: .01em; }
+  .bar nav { display: flex; gap: 6px; align-items: center; }
+  .pill { display: inline-flex; align-items: center; gap: 8px; padding: 9px 15px; border-radius: 999px; font: 400 14px/1 'Lexend', sans-serif; text-decoration: none; border: 1px solid var(--line); color: var(--ink); background: #fff; }
+  .pill:hover { border-color: var(--blue); color: var(--blue); }
+  .pill.solid { background: var(--blue); border-color: var(--blue); color: #fff; }
+  .pill.solid:hover { background: #0638c4; color: #fff; }
+  .pill:focus-visible, a:focus-visible { outline: 2px solid var(--blue); outline-offset: 3px; }
+  @media (max-width: 640px) { .bar .hide-s { display: none; } }
+
+  /* hero */
+  .hero { padding: 96px 0 72px; }
+  .eyebrow { font: 500 12px/1 'Lexend', sans-serif; letter-spacing: .16em; text-transform: uppercase; color: var(--blue); margin: 0 0 22px; }
+  h1 { font: 300 clamp(44px, 7vw, 84px)/1.02 'Lexend', sans-serif; letter-spacing: -.03em; margin: 0 0 26px; }
+  .lede { font-size: clamp(18px, 2vw, 21px); color: var(--soft); max-width: 680px; margin: 0 0 40px; }
+  .three { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin: 0; padding: 0; list-style: none; }
+  .three a { display: block; height: 100%; padding: 20px 20px 22px; border-radius: 18px; background: var(--tint); text-decoration: none; color: var(--ink); transition: background .2s, transform .2s; }
+  .three a:hover { background: #e7ecf8; transform: translateY(-2px); }
+  .three .n { font: 500 13px/1 'Lexend', sans-serif; color: var(--blue); margin-bottom: 12px; display: block; }
+  .three b { font-weight: 500; font-size: 18px; line-height: 1.3; }
+  @media (max-width: 760px) { .three { grid-template-columns: 1fr; } }
+
+  /* sections */
+  section.claim { padding: 84px 0 24px; border-top: 1px solid var(--line); }
+  .claim-head { display: grid; grid-template-columns: 120px 1fr; gap: 24px; margin-bottom: 48px; }
+  .claim-head .num { font: 300 64px/1 'Lexend', sans-serif; color: var(--blue); letter-spacing: -.04em; }
+  .claim-head h2 { font: 400 clamp(30px, 4vw, 44px)/1.12 'Lexend', sans-serif; letter-spacing: -.02em; margin: 4px 0 14px; }
+  .claim-head p { color: var(--soft); margin: 0; max-width: 640px; }
+  @media (max-width: 760px) { .claim-head { grid-template-columns: 1fr; gap: 6px; } .claim-head .num { font-size: 44px; } }
+
+  .case { display: grid; grid-template-columns: 1fr 1.15fr; gap: 44px; align-items: start; padding: 0 0 64px; }
+  .case.flip { grid-template-columns: 1.15fr 1fr; }
+  .case.flip .txt { order: 2; }
+  @media (max-width: 900px) { .case, .case.flip { grid-template-columns: 1fr; gap: 24px; } .case.flip .txt { order: 0; } }
+  .tag { display: inline-block; font: 500 11px/1 'Lexend', sans-serif; letter-spacing: .12em; text-transform: uppercase; color: var(--soft); margin-bottom: 12px; }
+  .case h3 { font: 500 24px/1.25 'Lexend', sans-serif; margin: 0 0 16px; letter-spacing: -.01em; }
+  .case p { margin: 0 0 14px; }
+  .case ul { margin: 0 0 16px; padding-left: 18px; }
+  .case li { margin-bottom: 6px; }
+  .k { font-weight: 500; }
+  .decision { margin-top: 18px; padding: 16px 18px; border-left: 3px solid var(--blue); background: var(--tint); border-radius: 0 12px 12px 0; }
+  .decision .lbl { display: block; font: 500 11px/1 'Lexend', sans-serif; letter-spacing: .14em; text-transform: uppercase; color: var(--blue); margin-bottom: 8px; }
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 18px 0; }
+  .stat { padding: 14px 14px 12px; border: 1px solid var(--line); border-radius: 14px; }
+  .stat .v { display: block; font: 400 26px/1.1 'Lexend', sans-serif; color: var(--blue); letter-spacing: -.02em; }
+  .stat .d { display: block; font-size: 13px; line-height: 1.35; color: var(--soft); margin-top: 6px; }
+  @media (max-width: 480px) { .stats { grid-template-columns: 1fr; } }
+  figure { margin: 0; }
+  figure img { border-radius: 16px; border: 1px solid var(--line); background: #fafafa; }
+  figcaption { font-size: 13px; color: var(--soft); margin-top: 9px; }
+  .duo { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .stack { display: grid; gap: 14px; }
+
+  /* reframe */
+  .reframe { display: grid; grid-template-columns: 1fr auto 1fr; gap: 16px; align-items: stretch; margin: 20px 0 6px; }
+  .reframe .box { padding: 18px 18px 16px; border-radius: 16px; border: 1px solid var(--line); }
+  .reframe .box.to { border-color: var(--blue); background: var(--tint); }
+  .reframe .lbl { display: block; font: 500 11px/1 'Lexend', sans-serif; letter-spacing: .14em; text-transform: uppercase; color: var(--soft); margin-bottom: 10px; }
+  .reframe .to .lbl { color: var(--blue); }
+  .reframe .q { font: 400 17px/1.45 'Lexend', sans-serif; margin: 0; }
+  .reframe .arrow { align-self: center; font-size: 24px; color: var(--blue); }
+  @media (max-width: 640px) { .reframe { grid-template-columns: 1fr; } .reframe .arrow { transform: rotate(90deg); justify-self: center; } }
+  blockquote { margin: 18px 0; font: 400 20px/1.4 'Lexend', sans-serif; letter-spacing: -.01em; }
+  blockquote cite { display: block; margin-top: 6px; font: 300 13px/1.4 'Lexend', sans-serif; color: var(--soft); font-style: normal; }
+
+  /* process strip */
+  .process { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; counter-reset: step; }
+  .process li { counter-increment: step; border: 1px solid var(--line); border-radius: 18px; overflow: hidden; display: flex; flex-direction: column; background: #fff; }
+  .process li .img { aspect-ratio: 4 / 3; background: #f6f6f7; display: grid; place-items: center; overflow: hidden; border-bottom: 1px solid var(--line); }
+  .process li .img img { width: 100%; height: 100%; object-fit: cover; }
+  .process li .img.contain img { object-fit: contain; padding: 10px; }
+  .process li .img.text { padding: 22px; text-align: left; place-items: start; background: var(--tint); }
+  .process li .img.text p { margin: 0; font: 400 16px/1.5 'Lexend', sans-serif; }
+  .process li .img.text .big { font: 300 34px/1.1 'Lexend', sans-serif; color: var(--blue); letter-spacing: -.02em; display: block; margin-bottom: 8px; }
+  .process .cap { padding: 14px 16px 16px; }
+  .process .cap b { display: block; font-weight: 500; margin-bottom: 4px; }
+  .process .cap b::before { content: counter(step, decimal-leading-zero) "  "; color: var(--blue); font-weight: 500; }
+  .process .cap span { font-size: 14px; color: var(--soft); line-height: 1.45; }
+  @media (max-width: 600px) { .process li .img.text { aspect-ratio: auto; } }   /* phones: text tiles only as tall as their words */
+  @media (max-width: 900px) { .process { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 560px) { .process { grid-template-columns: 1fr; } }
+  .pattern { margin: 36px 0 0; padding: 20px 22px; border-radius: 16px; background: var(--tint); }
+  .pattern p { margin: 0; }
+
+  /* close */
+  .close { padding: 88px 0 110px; border-top: 1px solid var(--line); text-align: left; }
+  .close h2 { font: 300 clamp(32px, 4.6vw, 52px)/1.1 'Lexend', sans-serif; letter-spacing: -.02em; margin: 0 0 18px; }
+  .close p { color: var(--soft); margin: 0 0 30px; max-width: 620px; }
+  .close .row { display: flex; flex-wrap: wrap; gap: 10px; }
+  footer { padding: 26px 0 40px; color: var(--soft); font-size: 13px; border-top: 1px solid var(--line); }
+
+  /* gentle reveal on scroll */
+  .reveal { opacity: 0; transform: translateY(18px); transition: opacity .7s ease, transform .7s cubic-bezier(.2,.7,.2,1); }
+  .reveal.in { opacity: 1; transform: none; }
+
+  /* accessibility settings shared with the room (saved by the room's panel) */
+  html.cb-protan body { filter: url(#cb-protan); }
+  html.cb-deutan body { filter: url(#cb-deutan); }
+  html.cb-tritan body { filter: url(#cb-tritan); }
+  html.cb-grey body { filter: grayscale(1) contrast(1.08); }
+  html.hi-con body { --soft: #222; --line: #111; --tint: #eef1fb; font-weight: 400; }
+  html.hi-con figure img { border-color: #111; }
+  html.reduce-motion { scroll-behavior: auto; }
+  html.reduce-motion .reveal { opacity: 1; transform: none; transition: none; }
+  @media (prefers-reduced-motion: reduce) { .reveal { opacity: 1; transform: none; transition: none; } html { scroll-behavior: auto; } }
+
+  /* animated icons */
+  .claim-head .num { width: 64px; height: 64px; display: block; margin-top: 2px; }
+  .three .ic { width: 26px; height: 26px; display: block; margin-bottom: 14px; }
+  .spin { transform-box: fill-box; transform-origin: center; animation: spin 9s linear infinite; }
+  .pop { transform-box: fill-box; transform-origin: center; animation: pop 3.4s cubic-bezier(.45,0,.2,1) infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes pop { 0% { transform: scale(0); } 35%, 65% { transform: scale(1); } 100% { transform: scale(0); } }
+  html.reduce-motion .spin, html.reduce-motion .pop { animation: none; }
+  @media (prefers-reduced-motion: reduce) { .spin, .pop { animation: none; } }
+  @media (max-width: 760px) { .claim-head .num { width: 48px; height: 48px; } }
+  h1 { margin-bottom: 22px; }
+
+  /* the little monkey that walks along as you scroll */
+  #monkey { position: fixed; left: 0; bottom: 6px; width: 96px; height: 62px; z-index: 30; pointer-events: none; will-change: transform; }
+  #monkey svg { width: 100%; height: 100%; overflow: visible; }
+  #monkey .flip { transform-origin: 70px 45px; transform-box: view-box; transition: transform .25s ease; }
+  #monkey.left .flip { transform: scaleX(-1); }
+  html.reduce-motion #monkey * { animation: none !important; transition: none !important; }
+  @media (prefers-reduced-motion: reduce) { #monkey * { animation: none !important; transition: none !important; } }
+  @media print { #monkey { display: none; } }
+  .close .monkey-note { margin: 96px 0 0; font-size: 13px; color: var(--soft); }
+  #monkeys-word { display: inline-block; }
+  /* tap the monkey and it talks */
+  #monkey svg .flip { pointer-events: visiblePainted; cursor: pointer; }
+  #monkey svg:focus { outline: none; }
+  #monkey svg:focus-visible .flip { filter: drop-shadow(0 0 2px #fff) drop-shadow(0 0 3px var(--blue)); }
+  #monkey .say {
+    position: absolute; bottom: 70%; left: 62%; transform: translate(-10%, -4px) scale(.85); transform-origin: 0 100%;
+    padding: 6px 11px; border-radius: 12px 12px 12px 3px; white-space: nowrap;
+    background: #fff; color: var(--ink); border: 1.5px solid var(--blue);
+    font: 500 13px/1.1 'Lexend', sans-serif; box-shadow: 0 4px 14px rgba(0,47,167,.15);
+    opacity: 0; pointer-events: none; transition: opacity .18s ease, transform .22s cubic-bezier(.3,1.6,.5,1);
+  }
+  #monkey .say.show { opacity: 1; transform: translate(-10%, -4px) scale(1); }
+  #monkey.left .say { left: auto; right: 62%; transform-origin: 100% 100%; border-radius: 12px 12px 3px 12px; transform: translate(10%, -4px) scale(.85); }
+  #monkey.left .say.show { transform: translate(10%, -4px) scale(1); }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <filter id="cb-protan" color-interpolation-filters="linearRGB"><feColorMatrix type="matrix" values="1 0 0 0 0  -0.255 1.255 0 0 0  0.303 -0.545 1.242 0 0  0 0 0 1 0"/></filter>
+  <filter id="cb-deutan" color-interpolation-filters="linearRGB"><feColorMatrix type="matrix" values="1 0 0 0 0  -0.438 1.438 0 0 0  0.262 -0.562 1.300 0 0  0 0 0 1 0"/></filter>
+  <filter id="cb-tritan" color-interpolation-filters="linearRGB"><feColorMatrix type="matrix" values="1.050 -0.382 0.332 0 0  0 1.234 -0.234 0 0  0 0 1 0 0  0 0 0 1 0"/></filter>
+</svg>
+
+<header class="bar">
+  <div class="wrap">
+    <span class="me">Shakthi Nanda Kumar</span>
+    <nav aria-label="Page">
+      <a class="pill hide-s" href="media/resume.pdf" target="_blank" rel="noopener">Resume</a>
+      <a class="pill hide-s" href="mailto:whdjckendo@gmail.com">Email</a>
+      <a class="pill solid" href="./">Back to the room</a>
+    </nav>
+  </div>
+</header>
+
+<!-- the three icons, drawn once and reused -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-hex" viewBox="0 0 64 64"><g class="spin"><polygon points="32,4 56.2,18 56.2,46 32,60 7.8,46 7.8,18" fill="#002fa7"/></g></symbol>
+  <symbol id="i-star" viewBox="0 0 64 64"><g class="pop"><polygon points="32,3 40.2,22.8 61.5,24.6 45.3,38.6 50.2,59.4 32,48.3 13.8,59.4 18.7,38.6 2.5,24.6 23.8,22.8" fill="#002fa7"/></g></symbol>
+  <symbol id="i-blob" viewBox="0 0 64 64"><path id="blob-path" fill="#002fa7" d="M32 10 C44 10 54 20 54 32 C54 44 44 54 32 54 C20 54 10 44 10 32 C10 20 20 10 32 10 Z"/></symbol>
+</svg>
+
+<main>
+  <div class="wrap hero">
+    <h1>Hey.</h1>
+    <p class="lede">This is Shakthi. B.Des in Interior Space and Furniture Design, currently pursuing an M.Des in Industrial Design at IIT Roorkee. Here's the short version of the work: three strengths, and the projects that prove them.</p>
+    <ul class="three">
+      <li><a href="#research"><svg class="ic" aria-hidden="true"><use href="#i-hex"/></svg><b>Decisions backed by user research</b></a></li>
+      <li><a href="#reframe"><svg class="ic" aria-hidden="true"><use href="#i-star"/></svg><b>Infer the root cause</b></a></li>
+      <li><a href="#process"><svg class="ic" aria-hidden="true"><use href="#i-blob"/></svg><b>Structured or organic design process, depending on the problem</b></a></li>
+    </ul>
+  </div>
+
+  <!-- 01 ------------------------------------------------------------ -->
+  <section class="claim" id="research" aria-labelledby="h-research">
+    <div class="wrap">
+      <div class="claim-head reveal">
+        <svg class="num" aria-hidden="true"><use href="#i-hex"/></svg>
+        <div>
+          <h2 id="h-research">Decisions backed by user research</h2>
+          <p>Users are the heart of a design process. What we do is for them. Therefore, every decision is guided by their action.</p>
+        </div>
+      </div>
+
+      <article class="case reveal">
+        <div class="txt">
+          <span class="tag">Research paper · Emotional Design, IIT Roorkee</span>
+          <h3>Do different personalities like different car interiors?</h3>
+          <p>In the middle and upper middle class segment of India, car interiors are never custom made for the user. An eye tracking experiment was conducted to find out if personality changes what people are drawn to.</p>
+          <ul>
+            <li><span class="k">16 participants</span> with a driving license, categorised into OCEAN personalities using the Big 10 Inventory.</li>
+            <li><span class="k">4 themes</span> of car interiors, Comfort, Concise, Hard and Technological, derived from Kansei words.</li>
+            <li>Fixation duration was analysed in JASP with a <span class="k">2-way ANOVA</span>, followed by post hoc tests.</li>
+          </ul>
+          <div class="stats" role="list">
+            <div class="stat" role="listitem"><span class="v">p &lt; .001</span><span class="d">Personality affected fixation duration (F = 14.93)</span></div>
+            <div class="stat" role="listitem"><span class="v">p &lt; .001</span><span class="d">Theme affected fixation duration (F = 11.25)</span></div>
+            <div class="stat" role="listitem"><span class="v">p = .039</span><span class="d">Personality and theme interact</span></div>
+          </div>
+          <div class="decision"><span class="lbl">Inference</span>Different personalities favour distinct car interior themes. Minor changes through modularity, suited to the personality of the driver, could boost sales and make driving more pleasurable. The themes weren't randomised, which affected what people looked at most, so that's noted for next time.</div>
+        </div>
+        <div class="stack">
+          <figure><img src="work/img/ocean-heatmaps.jpg" alt="Eye-tracking heatmaps and gaze plots over four car dashboards" loading="lazy" width="647" height="712"><figcaption>Heatmaps and gaze plots from the pilot.</figcaption></figure>
+          <figure><img src="work/img/ocean-anova.jpg" alt="Slide with the personality split of participants and the ANOVA table" loading="lazy" width="1400" height="788"><figcaption>Participant split and the ANOVA.</figcaption></figure>
+        </div>
+      </article>
+
+      <article class="case flip reveal">
+        <div class="txt">
+          <span class="tag">ETT LYCKLIG · IKEA Studio, B.Des</span>
+          <h3>A laptop stand, measured on real people.</h3>
+          <p>Different heights and angles were tested with 15 users, working on the floor, table and bed, and the findings were validated with them.</p>
+          <ul>
+            <li>Users needed a change in angle while shifting from browsing to typing.</li>
+            <li>Typing was comfortable at <span class="k">10°</span>. Watching content and browsing needed <span class="k">45°</span>, with a minimum <span class="k">9 cm</span> lift.</li>
+            <li>The inclination angle of the mouse was received well by all the users.</li>
+          </ul>
+          <div class="decision"><span class="lbl">Therefore…</span>One wooden stand that lets the user easily change between the angle needed for typing, and the angle and height needed to watch content.</div>
+        </div>
+        <figure><img src="work/img/stand-users.jpg" alt="Users working on laptops with their postures sketched over the photos" loading="lazy" width="1400" height="599"><figcaption>Validating postures with users.</figcaption></figure>
+      </article>
+
+      <article class="case reveal">
+        <div class="txt">
+          <span class="tag">Navigation &amp; transportation · M.Des, Sem 1</span>
+          <h3>Asking before assuming.</h3>
+          <p>Before designing anything, a pilot survey with <span class="k">28 people</span>, semi structured and telephonic interviews, and an ethnographic study around stations, bus stops and auto stops were conducted.</p>
+          <ul>
+            <li><span class="k">60.7%</span> used autos, the most of any mode.</li>
+            <li>60% of tourists overpay for autos, like ₹50 instead of ₹20 for 2 km.</li>
+          </ul>
+          <div class="decision"><span class="lbl">Gaps exist</span>The existing ways people navigate don't fulfil their needs. The solution had to focus on the informal transport people actually use.</div>
+        </div>
+        <figure><img src="work/img/nav-pilot.jpg" alt="Bar chart: which public transport modes do you use — autos highest at 17 of 28" loading="lazy" width="1400" height="541"><figcaption>Pilot study: “Which public transport modes do you use?”</figcaption></figure>
+      </article>
+    </div>
+  </section>
+
+  <!-- 02 ------------------------------------------------------------ -->
+  <section class="claim" id="reframe" aria-labelledby="h-reframe">
+    <div class="wrap">
+      <div class="claim-head reveal">
+        <svg class="num" aria-hidden="true"><use href="#i-star"/></svg>
+        <div>
+          <h2 id="h-reframe">Infer the root cause</h2>
+          <p>The problem given is rarely the problem that needs solving. Going to the site, asking the right questions, and digging deeper reveals the root cause.</p>
+        </div>
+      </div>
+
+      <article class="case reveal">
+        <div class="txt">
+          <span class="tag">Urban public toilets · Laboratory of Inclusive Design, IIT Roorkee</span>
+          <h3>It wasn't an architectural problem. It was a management problem.</h3>
+          <div class="reframe">
+            <div class="box"><span class="lbl">The question</span><p class="q">Why do public toilets look like this?</p></div>
+            <span class="arrow" aria-hidden="true">→</span>
+            <div class="box to"><span class="lbl">The root cause</span><p class="q">There is a lack of ground management in public toilets.</p></div>
+          </div>
+          <p>The aim was to, if not solve, at least acknowledge and address the problem of sanitation. Instead of jumping to form, the questions asked were: are the public toilets in Roorkee usable, functional and accessible? When do people use, and not use them? Is sanitation a behavioural or architectural problem?</p>
+          <p><span class="k">6 public toilets</span> were analysed across Roorkee. The so called accessible stalls were either poorly maintained or closed, since caretakers kept them shut to avoid the extra maintenance. In others, the accessible stall was used as a store room.</p>
+          <blockquote>“No, no, I cannot go outside. I won't find a good, clean toilet!”<cite>Heard during the field study</cite></blockquote>
+          <div class="decision"><span class="lbl">So</span>No checklist exists to keep a public toilet functioning, accessible and usable for long periods of time. The people who own, build, run and monitor these toilets were mapped, and an accessible public toilet was designed, down to the construction drawings.</div>
+        </div>
+        <div class="stack">
+          <div class="duo">
+            <figure><img src="work/img/toilet-field.jpg" alt="Three public toilets on busy streets in Roorkee" loading="lazy" width="882" height="408"></figure>
+            <figure><img src="work/img/toilet-inside.jpg" alt="Three toilet stalls in poor condition" loading="lazy" width="865" height="455"></figure>
+          </div>
+          <figure><img src="work/img/toilet-design.jpg" alt="Isometric render of the proposed accessible public toilet on a street" loading="lazy" width="1400" height="991"><figcaption>On field observations in Roorkee, and the proposed accessible toilet.</figcaption></figure>
+        </div>
+      </article>
+
+      <article class="case flip reveal">
+        <div class="txt">
+          <span class="tag">Navigation &amp; transportation · M.Des, Sem 1</span>
+          <h3>From metro cities to tier 2 cities.</h3>
+          <div class="reframe">
+            <div class="box"><span class="lbl">The starting brief</span><p class="q">Access to all public transport means, to navigate a metro city.</p></div>
+            <span class="arrow" aria-hidden="true">→</span>
+            <div class="box to"><span class="lbl">The reframed brief</span><p class="q">Help the floating population navigate tier 2 cities, where informal transport is the most prevalent.</p></div>
+          </div>
+          <p>The research changed the brief. There is no signage for auto, bus or rickshaw stops, fares are negotiated verbally, and one must heavily rely on locals to get around. The ones struggling the most weren't metro commuters, but the floating population of a city like Roorkee: students, tourists and seasonal workers.</p>
+          <div class="decision"><span class="lbl">So</span>The solution became a service, not just an app. A transit card, taking example from the RuPay card used for metro transit and the Suica card used in Tokyo, that solves fare standardisation outside campus.</div>
+        </div>
+        <div class="stack">
+          <figure><img src="work/img/nav-journey.jpg" alt="Journey map with stages from recognition to delivery" loading="lazy" width="1400" height="788"><figcaption>Journey map of someone new to the city.</figcaption></figure>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <!-- 03 ------------------------------------------------------------ -->
+  <section class="claim" id="process" aria-labelledby="h-process">
+    <div class="wrap">
+      <div class="claim-head reveal">
+        <svg class="num" aria-hidden="true"><use href="#i-blob"/></svg>
+        <div>
+          <h2 id="h-process">Structured or organic design process, depending on the problem</h2>
+          <p>Some problems need a step by step process, some need going back and forth. Either way, every decision leaves a trail. Here's the ETT LYCKLIG laptop stand, from the brief to the desk.</p>
+        </div>
+      </div>
+
+      <ol class="process reveal">
+        <li><div class="img text"><p><span class="big">Brief</span>To design an ergonomic support for the laptop that enables its usage on a table, with special emphasis on the neck.</p></div>
+          <div class="cap"><b>Define</b><span>Who, where, when, why and how. Written down before sketching anything.</span></div></li>
+        <li><div class="img"><img src="work/img/stand-tests.jpg" alt="Testing laptop heights on stacks of books in different postures" loading="lazy"></div>
+          <div class="cap"><b>Test with users</b><span>Users tried different heights, in traditional and western sitting postures.</span></div></li>
+        <li><div class="img text"><p><span class="big">15 users</span>Desk workers and hostel students, working on tables, beds and floors.</p></div>
+          <div class="cap"><b>Validate with users</b><span>Simultaneously, people were working on the floor and beds as well.</span></div></li>
+        <li><div class="img text"><p><span class="big">10° / 45°</span>Typing needs a slight tilt. Browsing and watching content need 45° and a minimum 9 cm lift.</p></div>
+          <div class="cap"><b>Inference</b><span>Different activities demand different ergonomic requirements.</span></div></li>
+        <li><div class="img contain"><img src="work/img/stand-sketches.jpg" alt="Pencil sketches of stand concepts" loading="lazy"></div>
+          <div class="cap"><b>Sketch</b><span>Lots of ways to hold two angles.</span></div></li>
+        <li><div class="img"><img src="work/img/stand-mockups.jpg" alt="Wooden mock-ups holding a laptop" loading="lazy"></div>
+          <div class="cap"><b>Mock up</b><span>Three mock ups, each with its pros and cons.</span></div></li>
+        <li><div class="img contain"><img src="work/img/stand-refine.jpg" alt="Renders of the refined stand and its flat-pack parts" loading="lazy"></div>
+          <div class="cap"><b>Refine</b><span>The simplicity of 4 lines coming together, packed in a jute pouch.</span></div></li>
+        <li><div class="img contain"><img src="work/img/stand-drawing.jpg" alt="Technical drawing of the stand components" loading="lazy"></div>
+          <div class="cap"><b>Draw</b><span>Technical drawings, ready for making.</span></div></li>
+        <li><div class="img"><img src="work/img/stand-final.jpg" alt="Shakthi using the finished wooden laptop stand at a desk" loading="lazy"></div>
+          <div class="cap"><b>In use</b><span>The final product, in use at a desk.</span></div></li>
+      </ol>
+
+      <div class="pattern reveal"><p><span class="k">The process changes with the problem.</span> The toilets project was organic: on field observations, secondary research, then ideation into a buildable design. The navigation project was more structured: survey, interviews and ethnography, then personas, a journey map, user flows and a site map.</p></div>
+    </div>
+  </section>
+
+  <section class="close" aria-labelledby="h-close">
+    <div class="wrap reveal">
+      <h2 id="h-close">For the longer version,<br>step back into the room.</h2>
+      <p>Every book on the desk opens, the posters lead to their projects, and the monitor has a few surprises.</p>
+      <div class="row">
+        <a class="pill solid" href="./">Back to the room</a>
+        <a class="pill" href="media/resume.pdf" target="_blank" rel="noopener">Open resume</a>
+        <a class="pill" href="mailto:whdjckendo@gmail.com">whdjckendo@gmail.com</a>
+      </div>
+      <p class="monkey-note">Yes, I love <span id="monkeys-word">monkeys</span>.</p>
+    </div>
+  </section>
+</main>
+
+<div id="monkey">
+  <span class="say" role="status" aria-live="polite"></span>
+  <svg viewBox="0 0 140 90" role="button" tabindex="0" aria-label="Talk to the monkey">
+    <g class="flip" fill="#002fa7" stroke="#002fa7" stroke-linecap="round" stroke-linejoin="round">
+      <g class="farF" fill="none"><path class="u" stroke-width="5.5"/><path class="l" stroke-width="3.6"/></g>
+      <g class="farH" fill="none"><path class="u" stroke-width="7"/><path class="l" stroke-width="3.6"/></g>
+      <path class="tail" fill="none" stroke-width="3.4"/>
+      <path class="body" fill="none" stroke-width="17"/>
+      <path class="neck" fill="none" stroke-width="8"/>
+      <circle class="head" r="6.6" stroke="none"/>
+      <ellipse class="muzzle" rx="3.6" ry="3.2" stroke="none"/>
+      <path class="brow" stroke="none"/>
+      <g class="nearH" fill="none"><path class="u" stroke-width="7.5"/><path class="l" stroke-width="3.8"/></g>
+      <g class="nearF" fill="none"><path class="u" stroke-width="5.8"/><path class="l" stroke-width="3.8"/></g>
+    </g>
+  </svg>
+</div>
+<footer><div class="wrap">Shakthi Nanda Kumar · Department of Design, IIT Roorkee</div></footer>
+
+<script>
+  // use the accessibility settings chosen in the room, if any
+  (function () {
+    var p = null; try { p = JSON.parse(localStorage.getItem('shakthi-a11y') || 'null'); } catch (e) {}
+    var root = document.documentElement;
+    if (p) {
+      if (p.text) root.style.setProperty('--ui-zoom', p.text);
+      if (p.cb) root.classList.add('cb-' + p.cb);
+      if (p['hi-con']) root.classList.add('hi-con');
+      if (p['reduce-motion']) root.classList.add('reduce-motion');
+    }
+    if (root.classList.contains('reduce-motion') || matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      document.querySelectorAll('svg').forEach(function (s) { s.pauseAnimations && s.pauseAnimations(); });
+    }
+    var els = document.querySelectorAll('.reveal');
+    if (!('IntersectionObserver' in window) || root.classList.contains('reduce-motion')) { els.forEach(function (e) { e.classList.add('in'); }); return; }
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) { if (en.isIntersecting) { en.target.classList.add('in'); io.unobserve(en.target); } });
+    }, { rootMargin: '0px 0px -8% 0px', threshold: 0.08 });
+    els.forEach(function (e) { io.observe(e); });
+  })();
+
+  // The monkey: a langur, drawn as one solid blue silhouette. Its run is built
+  // from key poses (reach, plant, gather, fly, land, reach again) blended into
+  // each other; it stands when you stop, sits if you linger, and at the end
+  // climbs onto the word "monkeys".
+  (function () {
+    var m = document.getElementById('monkey'); if (!m) return;
+    var Q = function (sel) { return m.querySelector(sel); };
+    var parts = {
+      nF: [Q('.nearF .u'), Q('.nearF .l')], fF: [Q('.farF .u'), Q('.farF .l')],
+      nH: [Q('.nearH .u'), Q('.nearH .l')], fH: [Q('.farH .u'), Q('.farH .l')],
+      tail: Q('.tail'), body: Q('.body'), neck: Q('.neck'), head: Q('.head'), muzzle: Q('.muzzle'), brow: Q('.brow')
+    };
+    var word = document.getElementById('monkeys-word');
+    var W = 96, H = 62, FEET = 62 * 84 / 90, BOTTOM = 6, PX = W / 140;
+    var reduce = function () { return document.documentElement.classList.contains('reduce-motion') || matchMedia('(prefers-reduced-motion: reduce)').matches; };
+
+    // pose = { S: shoulder, H: hip, A: arch, D: head, nF/fF/nH/fH: [joint, joint, foot] , T: tail [c1,c2,p,c3,c4,end] relative to hip }
+    var P = function (o) { return o; };
+    var tailUp = function (sw) { return [[-10, -6], [-14, -28], [-22, -38], [-29 + sw, -47], [-41 + sw, -45], [-40 + sw, -31]]; };
+    var RUN = [
+      P({ S: [92, 52], H: [54, 48], A: 3, D: [103, 45], nF: [[98, 66], [104, 80], [110, 84]], fF: [[95, 67], [99, 81], [104, 84]],
+          nH: [[44, 61], [35, 67], [30, 77]], fH: [[46, 63], [39, 71], [36, 80]], T: tailUp(0) }),            // reach and land
+      P({ S: [86, 51], H: [50, 45], A: 4, D: [97, 44], nF: [[86, 66], [86, 80], [91, 84]], fF: [[83, 66], [82, 80], [87, 84]],
+          nH: [[57, 61], [47, 66], [45, 76]], fH: [[55, 62], [45, 70], [43, 79]], T: tailUp(2) }),             // plant, hind lift
+      P({ S: [82, 52], H: [54, 43], A: 7, D: [93, 46], nF: [[78, 66], [73, 80], [67, 84]], fF: [[80, 66], [77, 80], [72, 84]],
+          nH: [[65, 58], [63, 71], [68, 80]], fH: [[63, 59], [59, 71], [62, 80]], T: tailUp(3) }),             // gather
+      P({ S: [86, 46], H: [57, 40], A: 9, D: [97, 40], nF: [[82, 60], [72, 69], [65, 73]], fF: [[84, 60], [76, 69], [70, 72]],
+          nH: [[69, 55], [75, 65], [83, 71]], fH: [[67, 56], [71, 66], [79, 71]], T: tailUp(1) }),             // fly, legs crossed
+      P({ S: [86, 47], H: [57, 41], A: 7, D: [97, 42], nF: [[93, 59], [99, 69], [96, 74]], fF: [[91, 60], [96, 71], [100, 77]],
+          nH: [[63, 57], [65, 71], [69, 84]], fH: [[61, 57], [59, 71], [61, 84]], T: tailUp(-1) }),            // land on hind legs
+      P({ S: [90, 52], H: [54, 50], A: 2, D: [101, 48], nF: [[100, 63], [112, 75], [120, 81]], fF: [[98, 65], [108, 77], [114, 84]],
+          nH: [[48, 66], [44, 78], [40, 84]], fH: [[56, 66], [58, 78], [54, 84]], T: tailUp(-2) })             // reach forward
+    ];
+    var STAND = P({ S: [86, 52], H: [50, 48], A: 3, D: [97, 46], nF: [[87, 66], [87, 80], [92, 84]], fF: [[84, 66], [83, 80], [88, 84]],
+      nH: [[58, 63], [50, 75], [56, 84]], fH: [[55, 64], [47, 75], [52, 84]], T: tailUp(0) });
+    var SIT = P({ S: [68, 47], H: [56, 73], A: -2, D: [75, 36], nF: [[74, 60], [78, 73], [81, 82]], fF: [[72, 60], [75, 74], [77, 83]],
+      nH: [[73, 64], [75, 79], [81, 84]], fH: [[70, 66], [70, 80], [76, 84]],
+      T: [[-8, 10], [-22, 12], [-30, 10], [-38, 8], [-42, 2], [-38, -4]] });
+
+    var lerp = function (a, b, k) { return a + (b - a) * k; };
+    var mixP = function (a, b, k) {
+      var o = {};
+      for (var key in b) {
+        var A = a[key], B = b[key];
+        if (typeof B === 'number') o[key] = lerp(A, B, k);
+        else if (typeof B[0] === 'number') o[key] = [lerp(A[0], B[0], k), lerp(A[1], B[1], k)];
+        else o[key] = B.map(function (pt, i) { return [lerp(A[i][0], pt[0], k), lerp(A[i][1], pt[1], k)]; });
+      }
+      return o;
+    };
+    var smooth = function (u) { return u * u * (3 - 2 * u); };
+    var runAt = function (ph) {
+      var n = RUN.length, f = ((ph % n) + n) % n, i = Math.floor(f);
+      return mixP(RUN[i], RUN[(i + 1) % n], smooth(f - i));
+    };
+    var n = function (v) { return v.toFixed(1); };
+    var pt = function (p) { return n(p[0]) + ' ' + n(p[1]); };
+    function limb(el, root, j) {
+      el[0].setAttribute('d', 'M' + pt(root) + 'L' + pt(j[0]));
+      el[1].setAttribute('d', 'M' + pt(j[0]) + 'L' + pt(j[1]) + 'L' + pt(j[2]));
+    }
+    function draw(p, sway) {
+      limb(parts.fF, [p.S[0] - 2, p.S[1] + 1], p.fF);
+      limb(parts.fH, [p.H[0] + 2, p.H[1] + 1], p.fH);
+      limb(parts.nH, p.H, p.nH);
+      limb(parts.nF, p.S, p.nF);
+      var mx = (p.H[0] + p.S[0]) / 2, my = (p.H[1] + p.S[1]) / 2 - p.A;
+      parts.body.setAttribute('d', 'M' + pt([p.H[0] - 3, p.H[1]]) + 'Q' + pt([mx, my]) + ' ' + pt(p.S));
+      parts.neck.setAttribute('d', 'M' + pt(p.S) + 'L' + pt(p.D));
+      parts.head.setAttribute('cx', n(p.D[0])); parts.head.setAttribute('cy', n(p.D[1]));
+      parts.muzzle.setAttribute('cx', n(p.D[0] + 5)); parts.muzzle.setAttribute('cy', n(p.D[1] + 2.4));
+      parts.brow.setAttribute('d', 'M' + pt([p.D[0] - 2, p.D[1] - 6]) + 'L' + pt([p.D[0] + 6, p.D[1] - 4]) + 'L' + pt([p.D[0] + 1, p.D[1] - 2]) + 'Z');
+      var b = [p.H[0] - 4, p.H[1] - 3], T = p.T.map(function (q, i) { return [b[0] + q[0] + (i > 2 ? sway : 0), b[1] + q[1]]; });
+      parts.tail.setAttribute('d', 'M' + pt(b) + 'C' + pt(T[0]) + ' ' + pt(T[1]) + ' ' + pt(T[2]) + 'C' + pt(T[3]) + ' ' + pt(T[4]) + ' ' + pt(T[5]));
+    }
+
+    var lastMove = performance.now(), phase = 0, t0 = performance.now(), cur = null;
+    var pageRect = function (el, text) {
+      var r;
+      if (text) { var rg = document.createRange(); rg.selectNodeContents(el); r = rg.getBoundingClientRect(); }   // the words, not the full-width box
+      else r = el.getBoundingClientRect();
+      return { l: r.left, t: r.top + scrollY, w: r.width, h: r.height };
+    };
+    // The drawn path: every perch it lands on, top to bottom. [selector, across (0-1), words only?, down (0-1)]
+    var PERCH = [
+      ['.hero h1', 0.42, 1, 0.2],
+      ['.three li:nth-child(2)', 0.18],
+      ['#h-research', 0.10, 1, 0.26],
+      ['#research article:nth-of-type(1) .stack figure:nth-child(1) img', 0.02],
+      ['#research article:nth-of-type(1) .stat:nth-child(1)', 0.10],
+      ['#research article:nth-of-type(1) .stack figure:nth-child(2) img', 0.03],
+      ['#research article:nth-of-type(2) .tag', 0.06],
+      ['#research article:nth-of-type(3) figure img', 0.04],
+      ['#research article:nth-of-type(3) .decision', 0.06],
+      ['#h-reframe', 0.03, 1, 0.26],
+      ['#reframe article:nth-of-type(1) .stack > figure img', 0.01],
+      ['#reframe article:nth-of-type(1) .decision', 0.47],
+      ['#reframe article:nth-of-type(2) .tag', 0.06],
+      ['#reframe article:nth-of-type(2) .decision', 0.57],
+      ['#h-process', 0.04, 1, 0.26],
+      ['.process li:nth-child(3)', 0.12],
+      ['.process li:nth-child(4)', 0.62],
+      ['.process li:nth-child(9)', 0.10],
+      ['.pattern', 0.55],
+      ['#h-close', 0.06, 1, 0.2],
+      ['#monkeys-word', 0.5, 1, 0.12]
+    ].map(function (d) { return { el: document.querySelector(d[0]), fx: d[1], text: !!d[2], fy: d[3] || 0 }; })
+     .filter(function (d) { return d.el; });
+    var quad = function (a, c, b, u) { var v = 1 - u; return [v * v * a[0] + 2 * v * u * c[0] + u * u * b[0], v * v * a[1] + 2 * v * u * c[1] + u * u * b[1]]; };
+    var ease = function (u) { return u * u * (3 - 2 * u); };
+    // Scroll only decides WHICH perch it should be on. Once a jump starts it is
+    // always finished on its own clock, so it never hangs mid-air between perches.
+    var perchPts = function () { return PERCH.map(function (d) { var r = pageRect(d.el, d.text); return [r.l + r.w * d.fx, r.t + r.h * d.fy]; }); };
+    var want = 0;
+    var calc = function () {
+      var max = Math.max(0, document.documentElement.scrollHeight - innerHeight), n = PERCH.length;
+      if (!n) return;
+      var P = perchPts();
+      var S = P.map(function (p) { return p[1] - innerHeight * 0.5; }), G = Math.min(160, innerHeight * 0.2), i;
+      S[0] = Math.max(0, S[0]);
+      for (i = 1; i < n; i++) S[i] = Math.max(S[i], S[i - 1] + G);
+      S[n - 1] = Math.min(S[n - 1], max);
+      for (i = n - 2; i >= 0; i--) S[i] = Math.min(S[i], S[i + 1] - G * 0.6);
+      for (i = 0; i < n; i++) S[i] = Math.max(0, S[i]);
+      // halfway between two perches' scroll points, it commits to the next one
+      var y = scrollY; want = 0;
+      for (i = 1; i < n; i++) if (y >= (S[i - 1] + S[i]) / 2) want = i;
+      if (y >= max - 2) want = n - 1;
+    };
+    addEventListener('scroll', calc, { passive: true }); addEventListener('resize', calc);
+    calc();
+    var at = want, hop = null, x = 0, y = 0, px = 0, py = 0;
+    var arc = function (A, B) { var dx = B[0] - A[0]; return [B[0] - dx * 0.2, Math.min(A[1], B[1]) - (30 + Math.abs(dx) * 0.12)]; };
+    (function tick(now) {
+      calc();
+      var t = (now - t0) / 1000, moving = false, dx = 0;
+      var P = PERCH.length ? perchPts() : [[60, scrollY + innerHeight]];
+      if (!hop && want !== at) {
+        var to = at + (want > at ? 1 : -1), A = P[at], B = P[to];
+        var backlog = Math.abs(want - at);
+        var dur = Math.min(1300, Math.max(650, 450 + Math.hypot(B[0] - A[0], B[1] - A[1]) * 0.45)) / Math.min(3, backlog);
+        hop = { from: at, to: to, t0: now, dur: dur };
+      }
+      var ox = px, oy = py;
+      if (hop) {
+        var u = Math.min(1, (now - hop.t0) / hop.dur), A2 = P[hop.from], B2 = P[hop.to];
+        var pt = quad(A2, arc(A2, B2), B2, ease(u));
+        px = pt[0]; py = pt[1];
+        if (u >= 1) { at = hop.to; hop = null; }
+        moving = true; lastMove = now;
+      } else { px = P[at][0]; py = P[at][1]; }   // sitting on its perch, riding along with the page
+      dx = px - ox;
+      if (moving && Math.abs(dx) > 0.15) m.classList.toggle('left', dx < 0);
+      x = px - W / 2; y = py - scrollY - (innerHeight - BOTTOM - H + FEET);
+      var dy = py - oy;
+    var idle = now - lastMove, mode = moving ? 'run' : idle > 700 ? 'sit' : 'stand';
+      if (reduce()) mode = 'stand';
+      var target, k = 0.14;
+      if (mode === 'run') {
+        // one full bound (6 poses) per ~34 units travelled, never slower than a trot
+        phase += Math.min(0.34, Math.max(Math.hypot(dx, dy) / (34 * PX) * 6, 0.12));
+        target = runAt(phase); k = 0.6;
+      } else target = mode === 'sit' ? SIT : STAND;
+      cur = cur ? mixP(cur, target, k) : target;
+      var breathe = mode === 'run' ? 0 : Math.sin(t * 2) * 0.4;
+      var c = mixP(cur, cur, 0); c.S = [c.S[0], c.S[1] - breathe];
+      draw(c, mode === 'run' ? 0 : Math.sin(t * 1.2) * 2);
+      m.style.transform = 'translate(' + x.toFixed(1) + 'px,' + y.toFixed(1) + 'px)';
+      requestAnimationFrame(tick);
+    })(performance.now());
+  })();
+
+  // The organic blob: always flowing, flattens into a straight line, then
+  // swells back as a brand new blob, never the same shape twice.
+  (function () {
+    var path = document.getElementById('blob-path'); if (!path) return;
+    var N = 9, CYCLE = 9, waves = [];
+    var fresh = function () {
+      waves = [];
+      for (var i = 0; i < 3; i++) waves.push({ k: i + 2, amp: 0.10 + Math.random() * 0.16 / (i + 1), ph: Math.random() * 6.28, sp: (Math.random() - 0.5) * 1.4 });
+    };
+    fresh();
+    var ease = function (u) { return u < 0.5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2; };
+    // 0..1 how flat it is across the cycle: blob, melt, line, swell back
+    var flat = function (u) {
+      if (u < 0.32) return 0;
+      if (u < 0.55) return ease((u - 0.32) / 0.23);
+      if (u < 0.68) return 1;
+      if (u < 0.92) return 1 - ease((u - 0.68) / 0.24);
+      return 0;
+    };
+    var lastCycle = -1, still = false;
+    (function tick(now) {
+      var t = now / 1000, c = Math.floor(t / CYCLE), u = (t % CYCLE) / CYCLE;
+      still = document.documentElement.classList.contains('reduce-motion') || matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (still) { t = 0; u = 0; }
+      if (c !== lastCycle && u > 0.6) { fresh(); lastCycle = c; }   // swap shape while it's a line
+      var f = flat(u), pts = [];
+      for (var i = 0; i < N; i++) {
+        var a = i / N * Math.PI * 2, r = 1;
+        waves.forEach(function (w) { r += w.amp * Math.sin(w.k * a + w.ph + t * w.sp); });
+        var rx = 20 * r, ry = 20 * r;
+        pts.push([32 + Math.cos(a) * rx * (1 + 0.42 * f), 32 + Math.sin(a) * ry * (1 - 0.92 * f)]);
+      }
+      // smooth closed curve through the points (Catmull-Rom as cubic Béziers)
+      var d = 'M' + pts[0][0].toFixed(2) + ' ' + pts[0][1].toFixed(2);
+      for (var j = 0; j < N; j++) {
+        var p0 = pts[(j - 1 + N) % N], p1 = pts[j], p2 = pts[(j + 1) % N], p3 = pts[(j + 2) % N];
+        d += 'C' + (p1[0] + (p2[0] - p0[0]) / 6).toFixed(2) + ' ' + (p1[1] + (p2[1] - p0[1]) / 6).toFixed(2) + ' ' +
+             (p2[0] - (p3[0] - p1[0]) / 6).toFixed(2) + ' ' + (p2[1] - (p3[1] - p1[1]) / 6).toFixed(2) + ' ' +
+             p2[0].toFixed(2) + ' ' + p2[1].toFixed(2);
+      }
+      path.setAttribute('d', d + 'Z');
+      requestAnimationFrame(tick);
+    })(performance.now());
+  })();
+
+  // tap the monkey: it says the next line
+  (function () {
+    var m = document.getElementById('monkey'); if (!m) return;
+    var svg = m.querySelector('svg'), say = m.querySelector('.say'), i = 0, hide = null;
+    var LINES = ['Yo.', 'Read.', 'Focus.', 'C\u2019mon man.', 'Should I say it?', 'Imma say it.', 'Get ready.',
+      'Ooh-ooh aah-aah.', 'Now give banana.', 'Shak\u2019s good.', 'So is her work.', 'You can trust her.', 'Lol.'];
+    var talk = function () {
+      say.textContent = LINES[i]; i = (i + 1) % LINES.length;
+      say.classList.remove('show'); void say.offsetWidth; say.classList.add('show');
+      clearTimeout(hide); hide = setTimeout(function () { say.classList.remove('show'); }, 2600);
+    };
+    svg.addEventListener('click', talk);
+    svg.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); talk(); } });
+  })();
+</script>
+</body>
+</html>

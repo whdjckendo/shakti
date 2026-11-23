@@ -26,7 +26,8 @@ const canvas = document.getElementById('scene');
 const loadingEl = document.getElementById('loading');
 
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+const COARSE = matchMedia('(pointer: coarse)').matches;   // phones and tablets
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, COARSE ? 1.5 : 2));
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -394,7 +395,7 @@ let bedBox = null;
 
 const posterMeshes = [];
 const raycaster = new THREE.Raycaster();
-const ndcCenter = new THREE.Vector2(0, 0);
+const ndcCenter = window.__ptrNdc || (window.__ptrNdc = new THREE.Vector2(0, 0));   // the mouse pointer, set by the look controls
 let posterFocus = 0;
 let hoverPoster = null;
 
@@ -518,49 +519,70 @@ const clock = new THREE.Clock();
    • free  — pointer position maps to a bounded look direction (works instantly
              on page load, cursor stays visible)
    • lock  — click the page for pointer lock and unlimited 360° mouse-look */
-// The reticle stays pinned to the centre of the screen and the pointer steers
-// the view under it. The view is unlocked: a full sweep of the pointer turns
-// the camera a full circle on yaw and almost straight up/down on pitch, so the
-// character can look anywhere in the room, including behind the desk.
-const HALF_YAW = Math.PI;                          // full 360° turn, no limit
-const HALF_PITCH = THREE.MathUtils.degToRad(88);   // just shy of vertical
+// Seated at the desk, like a desk-view portfolio: click and drag to turn and
+// look around. The view swings left and right to the side walls and up/down a
+// little, but never round to the wall behind. Hover and clicks follow the
+// mouse pointer itself, not the centre of the screen.
+const HALF_YAW = THREE.MathUtils.degToRad(100);    // left/right of the desk, no behind
+const PITCH_UP = THREE.MathUtils.degToRad(35);
+const PITCH_DOWN = THREE.MathUtils.degToRad(60);
 let baseYaw = 0;
 let targetYaw = 0, targetPitch = 0;
+const wrapPi = (a) => Math.atan2(Math.sin(a), Math.cos(a));
+const clampYaw = (y) => baseYaw + THREE.MathUtils.clamp(wrapPi(y - baseYaw), -HALF_YAW, HALF_YAW);
+const clampPitch = (p) => THREE.MathUtils.clamp(p, -PITCH_DOWN, PITCH_UP);
 
 let pointerX = window.innerWidth * 0.5;
 let pointerY = window.innerHeight * 0.5;
-
-window.addEventListener('mousemove', (e) => {
-  pointerX = e.clientX;
-  pointerY = e.clientY;
-  const nx = e.clientX / window.innerWidth - 0.5;
-  const ny = e.clientY / window.innerHeight - 0.5;
-  targetYaw = baseYaw - THREE.MathUtils.clamp(nx * 2, -1, 1) * HALF_YAW;
-  targetPitch = -THREE.MathUtils.clamp(ny * 2, -1, 1) * HALF_PITCH;
-});
-
-let touchId = null, touchLast = { x: 0, y: 0 };
-window.addEventListener('touchstart', (e) => {
-  const t = e.changedTouches[0];
-  touchId = t.identifier; touchLast = { x: t.clientX, y: t.clientY };
-}, { passive: true });
-window.addEventListener('touchmove', (e) => {
-  for (const t of e.changedTouches) {
-    if (t.identifier !== touchId) continue;
-    targetYaw = THREE.MathUtils.clamp(
-      targetYaw + (t.clientX - touchLast.x) * 0.005, baseYaw - HALF_YAW, baseYaw + HALF_YAW);
-    targetPitch = THREE.MathUtils.clamp(
-      targetPitch - (t.clientY - touchLast.y) * 0.005, -HALF_PITCH, HALF_PITCH);
-    touchLast = { x: t.clientX, y: t.clientY };
+const ptrNdc = window.__ptrNdc || (window.__ptrNdc = new THREE.Vector2(0, 0));   // the same object the hover raycasts read
+const setPtr = (x, y) => {
+  pointerX = x; pointerY = y;
+  ptrNdc.set((x / innerWidth) * 2 - 1, -(y / innerHeight) * 2 + 1);
+};
+let drag = null, dragMoved = false, lastPointerType = 'mouse';
+const DRAG_SPEED = 0.0042;
+window.addEventListener('pointermove', (e) => {
+  setPtr(e.clientX, e.clientY);
+  if (!drag || e.pointerId !== drag.id) return;
+  const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+  if (!dragMoved && Math.hypot(e.clientX - drag.x0, e.clientY - drag.y0) > 6) {
+    dragMoved = true; document.body.classList.add('dragging');
   }
-}, { passive: true });
+  if (dragMoved) {
+    targetYaw = clampYaw(targetYaw + dx * DRAG_SPEED);       // grab the room and swing it
+    targetPitch = clampPitch(targetPitch + dy * DRAG_SPEED);
+  }
+  drag.x = e.clientX; drag.y = e.clientY;
+});
+window.addEventListener('pointerdown', (e) => {
+  setPtr(e.clientX, e.clientY);
+  lastPointerType = e.pointerType || 'mouse';
+  if (e.button !== 0 || e.target !== renderer.domElement) return;   // UI buttons are not drags
+  drag = { id: e.pointerId, x: e.clientX, y: e.clientY, x0: e.clientX, y0: e.clientY };
+  dragMoved = false;
+});
+const endDrag = (e) => {
+  if (!drag || (e && e.pointerId !== drag.id)) return;
+  drag = null; document.body.classList.remove('dragging');
+};
+window.addEventListener('pointerup', endDrag);
+window.addEventListener('pointercancel', endDrag);
+// a drag is not a click: swallow the click that ends it
+window.addEventListener('click', (e) => {
+  if (dragMoved) { dragMoved = false; e.stopImmediatePropagation(); e.preventDefault(); }
+}, true);
 
-const DEFAULT_FOV = 60;
+// Landscape screens use 60°. A tall phone screen is narrow, so open the view up
+// until about 56° fits across it (capped, so the edges don't stretch).
+const fovFor = (aspect) => aspect >= 1.2 ? 60
+  : THREE.MathUtils.clamp(THREE.MathUtils.radToDeg(2 * Math.atan(Math.tan(THREE.MathUtils.degToRad(28)) / aspect)), 60, 92);
+let DEFAULT_FOV = fovFor(innerWidth / innerHeight);
+camera.fov = DEFAULT_FOV; camera.updateProjectionMatrix();
 let targetFov = DEFAULT_FOV;
 window.addEventListener('wheel', (e) => {
   if (pdfOpen) return;
   if (bookApi && bookApi.active) return;
-  targetFov = THREE.MathUtils.clamp(targetFov + e.deltaY * 0.02, 28, 78);
+  targetFov = THREE.MathUtils.clamp(targetFov + e.deltaY * 0.02, 28, Math.max(78, DEFAULT_FOV));
 }, { passive: true });
 
 const keyMap = {
@@ -586,21 +608,17 @@ addEventListener('keydown', (e) => {
   if (e.repeat) return;
   if (pdfOpen) return;
   if (bookApi && bookApi.active) return;   // reading: books.js owns the keyboard
-  if (keyMap[e.code]) {
-    move[keyMap[e.code]] = true;
-    // Any walk input gets you on your feet.
-    if (pose !== 'stand' && pose !== 'crouch') setPose('stand');
+  // Seated at the desk: no walking. The arrow keys turn the view instead.
+  const turn = { ArrowLeft: [1, 0], KeyA: [1, 0], ArrowRight: [-1, 0], KeyD: [-1, 0],
+    ArrowUp: [0, 1], KeyW: [0, 1], ArrowDown: [0, -1], KeyS: [0, -1] }[e.code];
+  if (turn) {
+    e.preventDefault();
+    targetYaw = clampYaw(targetYaw + turn[0] * 0.35);
+    targetPitch = clampPitch(targetPitch + turn[1] * 0.25);
   }
-  if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') move.run = true;
-  if (e.code === 'KeyE') setPose('sit');
-  if (e.code === 'KeyF' && liePos) setPose('lie');
-  if (e.code === 'KeyC') setPose(pose === 'crouch' ? 'stand' : 'crouch');
-  if (e.code === 'Space') { e.preventDefault(); setPose('stand'); }
   if (e.code === 'KeyH') toggleHud();
 });
 addEventListener('keyup', (e) => {
-  if (keyMap[e.code]) move[keyMap[e.code]] = false;
-  if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') move.run = false;
 });
 addEventListener('blur', () => { move.f = move.b = move.l = move.r = move.run = false; });
 
@@ -610,7 +628,9 @@ addEventListener('click', () => {
   // Blender room: the toilets poster or the open book itself opens Book 1.
   if (isGlb && bookApi && bookApi.open) {
     // toilets poster -> Book 1, IKEA (ETT LYCKLIG) poster -> Book 2, Navigation poster -> Book 3
-    const posterKey = hoverPoster && posterFocus > 0.4
+    const tap = lastPointerType === 'touch';
+    if (tap && ready) pickUnderPointer();   // a finger has no hover: look under the tap now
+    const posterKey = hoverPoster && (tap || posterFocus > 0.4)
       ? ({ 'poster-left': 'book1', 'poster-center': 'book2', 'A4_-_2': 'book3' })[hoverPoster.name] : null;
     const bookKey = curInfo && ({ 'Book 1': 'book1', 'Book 2': 'book2', 'Book 3': 'book3', 'Book 4': 'book4' })[curInfo.title];
     if (curInfo && curInfo.wall && bookApi.readers.wall) { bookApi.readers.wall.open(); return; }
@@ -867,6 +887,31 @@ const paint = () => new Promise((r) => requestAnimationFrame(() => requestAnimat
 
   root.scale.setScalar(SCALE);
   root.updateMatrixWorld(true);
+
+  // Close the room door. In the model it stands ~36° open (Mesh285 is the
+  // slab, Mesh286/287 the lever handle). Swing all three shut about the hinge
+  // edge so the slab lies along its wall. Points are in the model's own units.
+  {
+    const slab = root.getObjectByName('Mesh285');
+    if (slab) {
+      const H = root.localToWorld(new THREE.Vector3(0.555, 0, 5.615));   // hinge edge
+      const F = root.localToWorld(new THREE.Vector3(7.865, 0, 0.355));   // free edge (handle side)
+      const C = root.localToWorld(new THREE.Vector3(0.555 + 1, 0, 5.615)); // closed: along +x
+      const ang = (v) => Math.atan2(-v.z, v.x);
+      const phi = ang(C.clone().sub(H)) - ang(F.clone().sub(H));
+      const R = new THREE.Matrix4().makeTranslation(H.x, 0, H.z)
+        .multiply(new THREE.Matrix4().makeRotationY(phi))
+        .multiply(new THREE.Matrix4().makeTranslation(-H.x, 0, -H.z));
+      for (const name of ['Mesh285', 'Mesh286', 'Mesh287']) {
+        const o = root.getObjectByName(name);
+        if (!o || !o.parent) continue;
+        o.updateWorldMatrix(true, false);
+        const P = o.parent.matrixWorld, Pi = P.clone().invert();
+        o.applyMatrix4(Pi.multiply(R).multiply(P));   // world-space swing, kept in the parent's frame
+      }
+      root.updateMatrixWorld(true);
+    }
+  }
 
   // The seated figure is our body: its meshes sit under the "Group19" /
   // "Sitting_colored_man" SketchUp groups. Hide them (we're looking out
@@ -1395,9 +1440,8 @@ const paint = () => new Promise((r) => requestAnimationFrame(() => requestAnimat
         } else wallBox.union(b);
       }
       wallBox.expandByScalar(0.06);
-      // The open door stands in front of this wall, so look at it from an angle,
-      // from the desk side, where nothing is in the way (nothing gets cut).
-      readers.wall = initFocus({ camera, box: wallBox, normal: new THREE.Vector3(0.78, 0, -0.62), clear: 0, fill: 0.86, onExit });
+      // The door is closed now, so look at the wall straight on.
+      readers.wall = initFocus({ camera, box: wallBox, normal: new THREE.Vector3(1, 0, 0), clear: 0.08, fill: 0.86, onExit });
     }
     const list = Object.values(readers);
     bookApi = {
@@ -1491,7 +1535,14 @@ const paint = () => new Promise((r) => requestAnimationFrame(() => requestAnimat
       { pos: ctr('Group307', 0.1), radius: 0.38, weight: 0.6, level: () => fixturesApi.level('bedside') },
       { pos: ctr('Tube_Light1'), radius: 0.6, weight: 0.5, level: () => fixturesApi.level('tube') },
     ].filter((s) => s.pos);
-    liveUpdates.push(liveDust(scene, sources, 560));
+    // keep every speck well away from where the visitor sits: a dust cloud can
+    // never reach within 1 m of the camera, however the lamps are placed
+    const SEAT_CLEAR = 1.0;
+    for (const src of sources) {
+      const room = src.pos.distanceTo(camera.position) - SEAT_CLEAR;
+      src.radius = Math.max(0.08, Math.min(src.radius * 0.85, room));   // a little tighter around each light
+    }
+    liveUpdates.push(liveDust(scene, sources, 560, camera.position.clone(), SEAT_CLEAR));
     // dhoop on the desk: a thin thread of smoke from its tip
     const dhoop = root.getObjectByName('dhoop');
     if (dhoop) {
@@ -1561,6 +1612,9 @@ function step(dx, dz) {
 
 addEventListener('resize', () => {
   camera.aspect = window.innerWidth / window.innerHeight;
+  const nf = fovFor(camera.aspect);
+  if (Math.abs(targetFov - DEFAULT_FOV) < 0.5) targetFov = nf;   // keep a zoom the visitor chose
+  DEFAULT_FOV = nf;
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
   composer.setSize(window.innerWidth, window.innerHeight);
@@ -1569,6 +1623,22 @@ addEventListener('resize', () => {
 });
 
 /* ---------------- Frame loop ---------------- */
+// What's under the pointer (or the finger): poster and documented object.
+function pickUnderPointer() {
+  raycaster.setFromCamera(ndcCenter, camera);
+  const hit = raycaster.intersectObjects(posterMeshes, false)[0];
+  hoverPoster = hit && hit.distance < 6.5 ? hit.object : null;
+  // Pointer resting on a documented object -> bottom-left info card.
+  // A proxy box wraps its object loosely; if a real documented mesh sits just
+  // inside it (the headphones inside the stand's box), that one wins.
+  const ihits = raycaster.intersectObjects(infoHitTargets, false);
+  let ihit = ihits[0];
+  if (ihit && ihit.object.userData.isProxy) {
+    const real = ihits.find((h) => !h.object.userData.isProxy);
+    if (real && real.distance - ihit.distance < 0.35) ihit = real;
+  }
+  updateObjInfo(ihit && ihit.distance < 7 ? ihit.object : null);
+}
 const fwd = new THREE.Vector3(), right = new THREE.Vector3();
 let bob = 0;
 
@@ -1579,6 +1649,11 @@ function animate() {
 
   const reading = !!(bookApi && bookApi.active);
   if (!reading) {
+    if (ready) {
+      // keep the view facing the desk side of the room, never round the back
+      targetYaw = clampYaw(targetYaw); targetPitch = clampPitch(targetPitch);
+      camera.rotation.y = baseYaw + wrapPi(camera.rotation.y - baseYaw);
+    }
     camera.rotation.y += (targetYaw - camera.rotation.y) * ease;
     camera.rotation.x += (targetPitch - camera.rotation.x) * ease;
     if (Math.abs(camera.fov - targetFov) > 0.01) {
@@ -1617,9 +1692,7 @@ function animate() {
     camera.position.y = floorY + eyeHeight +
       (moving ? Math.sin(bob) * (move.run ? 0.045 : 0.028) : 0);
 
-    raycaster.setFromCamera(ndcCenter, camera);
-    const hit = raycaster.intersectObjects(posterMeshes, false)[0];
-    hoverPoster = hit && hit.distance < 6.5 ? hit.object : null;
+    pickUnderPointer();
     const wantFocus = hoverPoster ? 1 : 0;
     if (wantFocus || posterFocus > 0) {
       posterFocus += (wantFocus - posterFocus) * (1 - Math.pow(0.0004, dt));
@@ -1631,14 +1704,7 @@ function animate() {
     // Reticle resting on a documented object -> bottom-left info card.
     // A proxy box wraps its object loosely; if a real documented mesh sits just
     // inside it (the headphones inside the stand's box), that one wins.
-    const ihits = raycaster.intersectObjects(infoHitTargets, false);
-    let ihit = ihits[0];
-    if (ihit && ihit.object.userData.isProxy) {
-      const real = ihits.find((h) => !h.object.userData.isProxy);
-      if (real && real.distance - ihit.distance < 0.35) ihit = real;
-    }
-    updateObjInfo(ihit && ihit.distance < 7 ? ihit.object : null);
-    setClickTip(clickLabel(), innerWidth / 2, innerHeight / 2);
+    setClickTip(lastPointerType === 'touch' ? null : clickLabel(), pointerX, pointerY);
   } else {
     if (curInfo) updateObjInfo(null);
     // entering a close-up view: drop the reticle's tip once (overlays may

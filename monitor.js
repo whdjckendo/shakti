@@ -289,13 +289,13 @@ export function initMonitor(opts) {
   // is the centre reticle on the screen? (cheap: the screen plane only)
   function aimed() {
     if (mode !== 'off') return false;
-    rc.setFromCamera(new THREE.Vector2(0, 0), camera);
+    rc.setFromCamera(window.__ptrNdc || new THREE.Vector2(0, 0), camera);
     const h = rc.intersectObject(plane, false)[0];
     return !!(h && h.distance < 3);
   }
   // clicked straight at the screen (the centre reticle)?
   function tryOpenFromView() {
-    rc.setFromCamera(new THREE.Vector2(0, 0), camera);
+    rc.setFromCamera(window.__ptrNdc || new THREE.Vector2(0, 0), camera);
     const h = rc.intersectObject(plane, false)[0];
     if (!h || h.distance > 3) return false;
     const hits = rc.intersectObjects(scene.children, true).filter((x) => x.object.visible && x.object.isMesh);

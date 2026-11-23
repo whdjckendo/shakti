@@ -177,7 +177,7 @@ export function initBooks(opts) {
   });
 
   const raycaster = new THREE.Raycaster();
-  const centerNDC = new THREE.Vector2(0, 0);
+  const centerNDC = window.__ptrNdc || (window.__ptrNdc = new THREE.Vector2(0, 0));   // the mouse pointer
   const dummy = new THREE.PerspectiveCamera();
   const proxies = [];
   const bookTargets = [];

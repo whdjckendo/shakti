@@ -15,7 +15,7 @@
   * { box-sizing: border-box; }
   html, body, button { font-family: var(--ui-font); }
   html, body { margin: 0; padding: 0; width: 100%; height: 100%; background: #140e08; overflow: hidden; }
-  canvas { display: block; cursor: none; }
+  canvas { display: block; touch-action: none; }   /* a finger drag turns the room, it doesn't scroll or zoom the page */
 
   #vignette {
     position: fixed; inset: 0; pointer-events: none;
@@ -120,6 +120,7 @@
   #hud .act { color: #aeb8c8; }
 
   /* Focus reticle — pinned dead centre; the pointer steers the view under it. */
+  #reticle { display: none !important; }
   #reticle {
     position: fixed; left: 50%; top: 50%; width: 26px; height: 26px;
     margin: -13px 0 0 -13px; pointer-events: none; z-index: 5;
@@ -150,7 +151,7 @@
     transition: opacity .35s ease;
   }
 
-  #hint.hide { opacity: 0; }
+  #hint.hide, body.reading #hint { opacity: 0; }
 
   #poster-cta {
     position: fixed; left: 50%; bottom: 28px; z-index: 6;
@@ -244,7 +245,11 @@
     #hud { transition: none }
     #poster-cta { transition: none }
   }
-  @media (max-width: 640px) { #hud { display: none } }
+  @media (max-width: 640px) {
+    #hud { display: none }
+    /* phones: info cards span the bottom edge instead of a fixed-width corner box */
+    #objinfo { left: 12px; right: 12px; bottom: 12px; max-width: none; font-size: 12.5px; }
+  }
 
   /* ---- full-screen PDF viewer ---- */
   #pdf-view {
@@ -324,8 +329,13 @@
   @media (prefers-reduced-motion: reduce) { #credits, #credits .card { transition: none } }
 
   /* the real mouse cursor (menus, monitor, books) matches the reticle */
-  html, body, button, a, input, .focus-ui, #monitor-ui, #reader-ui {
+  html, body, canvas, button, a, input, .focus-ui, #monitor-ui, #reader-ui, body.dragging canvas {
     cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24'%3E%3Ccircle cx='12' cy='12' r='11' fill='%23002fa7' stroke='white' stroke-opacity='.55' stroke-width='1'/%3E%3C/svg%3E") 12 12, auto !important;
+  }
+  /* over anything clickable, the circle turns a lighter blue */
+  body.hot, body.hot canvas, body.hot #monitor-ui, body.hot #reader-ui, body.hot .focus-ui,
+  button:not(:disabled):hover, a:hover, [role=button]:hover, label:hover {
+    cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24'%3E%3Ccircle cx='12' cy='12' r='11' fill='%236f95f2' stroke='white' stroke-opacity='.55' stroke-width='1'/%3E%3C/svg%3E") 12 12, auto !important;
   }
   input[type=password], input[type=text] { cursor: text !important; }
   /* the old bottom "click to know more" bar is now the tip by the cursor */
@@ -350,7 +360,7 @@
   #a11y-btn:hover { background: rgba(22, 14, 10, 0.62); }
   #a11y-btn svg { width: 17px; height: 17px; }
   #a11y-panel {
-    position: fixed; top: 56px; right: 18px; z-index: 45; width: 270px; padding: 16px 16px 14px;
+    position: fixed; top: 96px; right: 18px; z-index: 45; width: 270px; padding: 16px 16px 14px;
     border-radius: 16px; background: rgba(22, 14, 10, 0.82); color: #f6e6cc;
     border: 1px solid rgba(255, 214, 176, 0.3); box-shadow: 0 14px 40px rgba(0,0,0,.4);
     backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
@@ -385,6 +395,19 @@
   html.hi-con #objinfo .t, html.hi-con #credits h2, html.hi-con #credits a { color: #ffe066 !important; }
   html.hi-con #reticle::after { box-shadow: 0 0 0 3px #fff; }
   html.reduce-motion *, html.reduce-motion *::before, html.reduce-motion *::after { transition: none !important; animation-duration: .01ms !important; }
+
+  /* "Skip the room": the short, scrolling version of the portfolio */
+  #skip-room {
+    position: fixed; top: 56px; right: 18px; z-index: 20;
+    padding: 8px 14px; border-radius: 14px; text-decoration: none;
+    background: #002fa7; color: #fff; border: 1px solid rgba(255, 255, 255, 0.25);
+    font: 400 12px/1 var(--ui-font); letter-spacing: .04em; zoom: var(--ui-zoom, 1);
+    transition: opacity .3s ease, background .2s ease;
+  }
+  #skip-room:hover { background: #0638c4; }
+  #skip-room:focus-visible { outline: 2px solid #ffd9b0; outline-offset: 2px; }
+  body.reading #skip-room { opacity: 0; pointer-events: none; }
+  html.hi-con #skip-room { background: #000 !important; border: 2px solid #fff !important; }
 </style>
 </head>
 <body>
@@ -395,15 +418,15 @@
   <div id="pose"></div>
   <div id="hud">
     <table>
-      <tr><td><span class="k">W</span><span class="k">A</span><span class="k">S</span><span class="k">D</span></td><td class="act">move</td></tr>
-      <tr><td><span class="k">Mouse</span></td><td class="act">steer the focus point</td></tr>
-      <tr><td><span class="k">E</span></td><td class="act">sit at the desk</td></tr>
-      <tr data-needs="bed"><td><span class="k">F</span></td><td class="act">lie on the bed</td></tr>
-      <tr><td><span class="k">Space</span></td><td class="act">stand up</td></tr>
+      <tr><td><span class="k">Drag</span></td><td class="act">look around the room</td></tr>
+      <tr><td><span class="k">Click</span></td><td class="act">open what you point at</td></tr>
+      <tr><td><span class="k">Scroll</span></td><td class="act">zoom in and out</td></tr>
+      <tr><td><span class="k">&larr;</span><span class="k">&rarr;</span></td><td class="act">turn with the keys</td></tr>
       <tr><td><span class="k">H</span></td><td class="act">keep this open</td></tr>
     </table>
   </div>
-  <div id="hint">press H for controls</div>
+  <div id="hint">click and drag to look around</div>
+  <script>if (matchMedia('(pointer: coarse)').matches) document.getElementById('hint').textContent = 'drag to look around, tap to open';</script>
   <div id="poster-cta">click to know more.</div>
   <div id="topbar">
     <button id="sound-btn" type="button" aria-label="Sound off" title="Sound">
@@ -416,6 +439,7 @@
     </button>
     <button id="credits-tab" type="button">Credits</button>
   </div>
+  <a id="skip-room" href="work.html" onclick="event.stopPropagation()">Skip the room <span aria-hidden="true">&rarr;</span></a>
   <div id="a11y-panel" role="dialog" aria-label="Accessibility settings">
     <h3>Accessibility</h3>
     <div class="grp"><span class="lbl" id="a-ts">Text size</span>
@@ -443,6 +467,7 @@
       // click prompt that follows the cursor (or sits by the reticle)
       var tip = document.getElementById('click-tip'), last = null;
       window.__clickTip = function (label, x, y) {
+        document.body.classList.toggle('hot', !!label);   // lighter cursor over clickable things
         if (!label) { tip.classList.remove('show'); last = null; return; }
         if (label !== last) { tip.textContent = label; last = label; }
         tip.style.left = (x || 0) + 'px'; tip.style.top = (y || 0) + 'px';
@@ -481,7 +506,7 @@
       apply();
     })();
   </script>
-  <audio id="ambient" src="media/ambient.mp3" loop preload="auto"></audio>
+  <audio id="ambient" src="media/ambient.mp3?v=2" loop preload="auto"></audio>
   <script>
     (function () {
       // Ambient sound: on by default; browsers only allow it after the

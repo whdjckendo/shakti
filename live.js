@@ -128,7 +128,7 @@ export function liveClock(mesh, renderer) {
 
 // ---- dust motes floating in the lamp light ----
 // sources: [{ pos: Vector3, radius, weight, level?: () => 0..1 }]  (max 8)
-export function liveDust(scene, sources, count = 900) {
+export function liveDust(scene, sources, count = 900, avoid = null, avoidR = 0) {
   if (!sources.length) return () => {};
   const total = sources.reduce((s, x) => s + x.weight, 0);
   const pos = new Float32Array(count * 3);
@@ -140,12 +140,17 @@ export function liveDust(scene, sources, count = 900) {
     for (let k = 0; k < sources.length; k++) { if ((r -= sources[k].weight) <= 0) { src = sources[k]; si = k; break; } }
     srcIdx[i] = si;
     // uniform inside a sphere
-    const u = Math.random(), v = Math.random(), w = Math.pow(Math.random(), 0.8);   // more motes near the source
-    const th = u * Math.PI * 2, ph = Math.acos(2 * v - 1);
-    const d = src.radius * w;
-    pos[i * 3] = src.pos.x + d * Math.sin(ph) * Math.cos(th);
-    pos[i * 3 + 1] = src.pos.y + d * Math.cos(ph);
-    pos[i * 3 + 2] = src.pos.z + d * Math.sin(ph) * Math.sin(th);
+    // a point near the light, never close to the visitor's eyes
+    for (let tries = 0; tries < 12; tries++) {
+      const u = Math.random(), v = Math.random(), w = Math.pow(Math.random(), 0.8);   // more motes near the source
+      const th = u * Math.PI * 2, ph = Math.acos(2 * v - 1);
+      const d = src.radius * w;
+      pos[i * 3] = src.pos.x + d * Math.sin(ph) * Math.cos(th);
+      pos[i * 3 + 1] = src.pos.y + d * Math.cos(ph);
+      pos[i * 3 + 2] = src.pos.z + d * Math.sin(ph) * Math.sin(th);
+      if (!avoid || Math.hypot(pos[i * 3] - avoid.x, pos[i * 3 + 1] - avoid.y, pos[i * 3 + 2] - avoid.z) > avoidR) break;
+      if (tries === 11) { pos[i * 3] = src.pos.x; pos[i * 3 + 1] = src.pos.y; pos[i * 3 + 2] = src.pos.z; }
+    }
     ctr.set([src.pos.x, src.pos.y, src.pos.z, src.radius], i * 4);
     seed.set([Math.random() * 100, 0.4 + Math.random() * 0.9, Math.random()], i * 3);
   }
@@ -170,7 +175,11 @@ export function liveDust(scene, sources, count = 900) {
         vA = pow(clamp(1.0 - d, 0.0, 1.0), 1.7) * twinkle * 1.4 * on;   // denser right at the light, gone quickly
         vec4 mv = modelViewMatrix * vec4(p, 1.0);
         // minuscule: about a millimetre across, never below a pixel
-        gl_PointSize = max(2.0, (0.0026 + aSeed.z * 0.003) * uScale * projectionMatrix[1][1] / -mv.z);
+        // a speck right in front of the lens would be drawn huge and the bloom
+        // smears it into a white cloud: fade those out and cap the size
+        float z = -mv.z;
+        vA *= smoothstep(0.35, 0.8, z);
+        gl_PointSize = clamp((0.0026 + aSeed.z * 0.003) * uScale * projectionMatrix[1][1] / max(z, 0.05), 2.0, 6.0);
         gl_Position = projectionMatrix * mv;
       }`,
     fragmentShader: /* glsl */`
@@ -226,7 +235,9 @@ export function liveSmoke(scene, origin, light = () => 1, count = 260) {
         p.xz += (aSeed.yz - 0.5) * age * age * 0.05;
         vA = smoothstep(0.0, 0.06, age) * pow(max(1.0 - age, 0.0), 1.8);
         vec4 mv = modelViewMatrix * vec4(p, 1.0);
-        gl_PointSize = max(1.0, (0.006 + age * 0.03) * uScale * projectionMatrix[1][1] / -mv.z);
+        float z = -mv.z;
+        vA *= smoothstep(0.2, 0.5, z);                 // never a puff right on the lens
+        gl_PointSize = clamp((0.006 + age * 0.03) * uScale * projectionMatrix[1][1] / max(z, 0.05), 1.0, 64.0);
         gl_Position = projectionMatrix * mv;
       }`,
     fragmentShader: /* glsl */`
