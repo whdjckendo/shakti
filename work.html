@@ -142,9 +142,9 @@
   h1 { margin-bottom: 22px; }
 
   /* the little monkey that walks along as you scroll */
-  #monkey { position: fixed; left: 0; bottom: 6px; width: 78px; height: 52px; z-index: 30; pointer-events: none; will-change: transform; }
+  #monkey { position: fixed; left: 0; bottom: 6px; width: 96px; height: 62px; z-index: 30; pointer-events: none; will-change: transform; }
   #monkey svg { width: 100%; height: 100%; overflow: visible; }
-  #monkey .flip { transform-origin: 60px 40px; transform-box: view-box; transition: transform .25s ease; }
+  #monkey .flip { transform-origin: 70px 45px; transform-box: view-box; transition: transform .25s ease; }
   #monkey.left .flip { transform: scaleX(-1); }
   html.reduce-motion #monkey * { animation: none !important; transition: none !important; }
   @media (prefers-reduced-motion: reduce) { #monkey * { animation: none !important; transition: none !important; } }
@@ -175,10 +175,7 @@
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
   <symbol id="i-hex" viewBox="0 0 64 64"><g class="spin"><polygon points="32,4 56.2,18 56.2,46 32,60 7.8,46 7.8,18" fill="#002fa7"/></g></symbol>
   <symbol id="i-star" viewBox="0 0 64 64"><g class="pop"><polygon points="32,3 40.2,22.8 61.5,24.6 45.3,38.6 50.2,59.4 32,48.3 13.8,59.4 18.7,38.6 2.5,24.6 23.8,22.8" fill="#002fa7"/></g></symbol>
-  <symbol id="i-blob" viewBox="0 0 64 64"><path fill="#002fa7" d="M27 5 C41 0 51 11 45 20 C40 28 62 23 58 40 C55 55 41 49 34 57 C26 65 3 59 8 43 C11 32 0 27 6 16 C10 9 18 8 27 5 Z">
-    <animate class="morph" attributeName="d" dur="9s" repeatCount="indefinite" calcMode="spline"
-      keyTimes="0;0.1;0.3;0.45;0.55;0.7;0.9;1" keySplines="0 0 1 1;0.42 0 0.58 1;0.42 0 0.58 1;0 0 1 1;0.42 0 0.58 1;0.42 0 0.58 1;0 0 1 1"
-      values="M27 5 C41 0 51 11 45 20 C40 28 62 23 58 40 C55 55 41 49 34 57 C26 65 3 59 8 43 C11 32 0 27 6 16 C10 9 18 8 27 5 Z;M27 5 C41 0 51 11 45 20 C40 28 62 23 58 40 C55 55 41 49 34 57 C26 65 3 59 8 43 C11 32 0 27 6 16 C10 9 18 8 27 5 Z;M28.5 17.5 C43.0 15.0 55.5 20.5 52.5 26.0 C50.0 31.0 57.0 28.5 52.0 37.0 C46.0 44.5 34.0 41.5 26.0 45.5 C18.0 49.5 3.5 46.5 6.0 37.5 C7.5 31.0 4.5 28.5 10.0 23.0 C14.5 19.5 21.5 19.0 28.5 17.5 Z;M30 30 C45 30 60 30 60 32 C60 34 52 34 46 34 C37 34 27 34 18 34 C10 34 4 34 4 32 C4 30 9 30 14 30 C19 30 25 30 30 30 Z;M30 30 C45 30 60 30 60 32 C60 34 52 34 46 34 C37 34 27 34 18 34 C10 34 4 34 4 32 C4 30 9 30 14 30 C19 30 25 30 30 30 Z;M28.5 17.5 C43.0 15.0 55.5 20.5 52.5 26.0 C50.0 31.0 57.0 28.5 52.0 37.0 C46.0 44.5 34.0 41.5 26.0 45.5 C18.0 49.5 3.5 46.5 6.0 37.5 C7.5 31.0 4.5 28.5 10.0 23.0 C14.5 19.5 21.5 19.0 28.5 17.5 Z;M27 5 C41 0 51 11 45 20 C40 28 62 23 58 40 C55 55 41 49 34 57 C26 65 3 59 8 43 C11 32 0 27 6 16 C10 9 18 8 27 5 Z;M27 5 C41 0 51 11 45 20 C40 28 62 23 58 40 C55 55 41 49 34 57 C26 65 3 59 8 43 C11 32 0 27 6 16 C10 9 18 8 27 5 Z"/></path></symbol>
+  <symbol id="i-blob" viewBox="0 0 64 64"><path id="blob-path" fill="#002fa7" d="M32 10 C44 10 54 20 54 32 C54 44 44 54 32 54 C20 54 10 44 10 32 C10 20 20 10 32 10 Z"/></symbol>
 </svg>
 
 <main>
@@ -361,20 +358,18 @@
 </main>
 
 <div id="monkey" aria-hidden="true">
-  <svg viewBox="0 0 120 80">
-    <g class="flip" fill="none" stroke="#002fa7" stroke-linecap="round" stroke-linejoin="round">
-      <path class="farH" stroke-width="5.5" opacity=".62"/>
-      <path class="farF" stroke-width="5" opacity=".62"/>
-      <path class="tail" stroke-width="3.6"/>
-      <path class="body" stroke-width="19"/>
-      <path class="nearH" stroke-width="6.5"/>
-      <path class="nearF" stroke-width="5.8"/>
-      <g class="headg" stroke="none" fill="#002fa7">
-        <circle class="head" r="8.6"/>
-        <ellipse class="muzzle" rx="5.2" ry="4.2"/>
-        <path class="ear" fill="none" stroke="#fff" stroke-width="1.2" opacity=".85"/>
-        <circle class="eye" r="1.15" fill="#fff"/>
-      </g>
+  <svg viewBox="0 0 140 90">
+    <g class="flip" fill="#002fa7" stroke="#002fa7" stroke-linecap="round" stroke-linejoin="round">
+      <g class="farF" fill="none"><path class="u" stroke-width="5.5"/><path class="l" stroke-width="3.6"/></g>
+      <g class="farH" fill="none"><path class="u" stroke-width="7"/><path class="l" stroke-width="3.6"/></g>
+      <path class="tail" fill="none" stroke-width="3.4"/>
+      <path class="body" fill="none" stroke-width="17"/>
+      <path class="neck" fill="none" stroke-width="8"/>
+      <circle class="head" r="6.6" stroke="none"/>
+      <ellipse class="muzzle" rx="3.6" ry="3.2" stroke="none"/>
+      <path class="brow" stroke="none"/>
+      <g class="nearH" fill="none"><path class="u" stroke-width="7.5"/><path class="l" stroke-width="3.8"/></g>
+      <g class="nearF" fill="none"><path class="u" stroke-width="5.8"/><path class="l" stroke-width="3.8"/></g>
     </g>
   </svg>
 </div>
@@ -402,18 +397,83 @@
     els.forEach(function (e) { io.observe(e); });
   })();
 
-  // The monkey: a small jointed figure (two-bone legs). It walks with real
-  // steps while you scroll (feet stay planted, no sliding), stands when you
-  // stop, sits if you linger, and at the very end climbs onto "monkeys".
+  // The monkey: a langur, drawn as one solid blue silhouette. Its run is built
+  // from key poses (reach, plant, gather, fly, land, reach again) blended into
+  // each other; it stands when you stop, sits if you linger, and at the end
+  // climbs onto the word "monkeys".
   (function () {
     var m = document.getElementById('monkey'); if (!m) return;
-    var q = function (c) { return m.querySelector('.' + c); };
-    var el = { nearH: q('nearH'), farH: q('farH'), nearF: q('nearF'), farF: q('farF'), tail: q('tail'), body: q('body'),
-      head: q('head'), muzzle: q('muzzle'), ear: q('ear'), eye: q('eye') };
+    var Q = function (sel) { return m.querySelector(sel); };
+    var parts = {
+      nF: [Q('.nearF .u'), Q('.nearF .l')], fF: [Q('.farF .u'), Q('.farF .l')],
+      nH: [Q('.nearH .u'), Q('.nearH .l')], fH: [Q('.farH .u'), Q('.farH .l')],
+      tail: Q('.tail'), body: Q('.body'), neck: Q('.neck'), head: Q('.head'), muzzle: Q('.muzzle'), brow: Q('.brow')
+    };
     var word = document.getElementById('monkeys-word');
-    var W = 78, H = 52, FEET = 47, BOTTOM = 6, PX = W / 120, GROUND = 72;
+    var W = 96, H = 62, FEET = 62 * 84 / 90, BOTTOM = 6, PX = W / 140;
     var reduce = function () { return document.documentElement.classList.contains('reduce-motion') || matchMedia('(prefers-reduced-motion: reduce)').matches; };
-    var x = 16, y = 0, tx = 16, ty = 0, lastMove = performance.now(), mode = 'stand', phase = 0, t0 = performance.now();
+
+    // pose = { S: shoulder, H: hip, A: arch, D: head, nF/fF/nH/fH: [joint, joint, foot] , T: tail [c1,c2,p,c3,c4,end] relative to hip }
+    var P = function (o) { return o; };
+    var tailUp = function (sw) { return [[-10, -6], [-14, -28], [-22, -38], [-29 + sw, -47], [-41 + sw, -45], [-40 + sw, -31]]; };
+    var RUN = [
+      P({ S: [92, 52], H: [54, 48], A: 3, D: [103, 45], nF: [[98, 66], [104, 80], [110, 84]], fF: [[95, 67], [99, 81], [104, 84]],
+          nH: [[44, 61], [35, 67], [30, 77]], fH: [[46, 63], [39, 71], [36, 80]], T: tailUp(0) }),            // reach and land
+      P({ S: [86, 51], H: [50, 45], A: 4, D: [97, 44], nF: [[86, 66], [86, 80], [91, 84]], fF: [[83, 66], [82, 80], [87, 84]],
+          nH: [[57, 61], [47, 66], [45, 76]], fH: [[55, 62], [45, 70], [43, 79]], T: tailUp(2) }),             // plant, hind lift
+      P({ S: [82, 52], H: [54, 43], A: 7, D: [93, 46], nF: [[78, 66], [73, 80], [67, 84]], fF: [[80, 66], [77, 80], [72, 84]],
+          nH: [[65, 58], [63, 71], [68, 80]], fH: [[63, 59], [59, 71], [62, 80]], T: tailUp(3) }),             // gather
+      P({ S: [86, 46], H: [57, 40], A: 9, D: [97, 40], nF: [[82, 60], [72, 69], [65, 73]], fF: [[84, 60], [76, 69], [70, 72]],
+          nH: [[69, 55], [75, 65], [83, 71]], fH: [[67, 56], [71, 66], [79, 71]], T: tailUp(1) }),             // fly, legs crossed
+      P({ S: [86, 47], H: [57, 41], A: 7, D: [97, 42], nF: [[93, 59], [99, 69], [96, 74]], fF: [[91, 60], [96, 71], [100, 77]],
+          nH: [[63, 57], [65, 71], [69, 84]], fH: [[61, 57], [59, 71], [61, 84]], T: tailUp(-1) }),            // land on hind legs
+      P({ S: [90, 52], H: [54, 50], A: 2, D: [101, 48], nF: [[100, 63], [112, 75], [120, 81]], fF: [[98, 65], [108, 77], [114, 84]],
+          nH: [[48, 66], [44, 78], [40, 84]], fH: [[56, 66], [58, 78], [54, 84]], T: tailUp(-2) })             // reach forward
+    ];
+    var STAND = P({ S: [86, 52], H: [50, 48], A: 3, D: [97, 46], nF: [[87, 66], [87, 80], [92, 84]], fF: [[84, 66], [83, 80], [88, 84]],
+      nH: [[58, 63], [50, 75], [56, 84]], fH: [[55, 64], [47, 75], [52, 84]], T: tailUp(0) });
+    var SIT = P({ S: [68, 47], H: [56, 73], A: -2, D: [75, 36], nF: [[74, 60], [78, 73], [81, 82]], fF: [[72, 60], [75, 74], [77, 83]],
+      nH: [[73, 64], [75, 79], [81, 84]], fH: [[70, 66], [70, 80], [76, 84]],
+      T: [[-8, 10], [-22, 12], [-30, 10], [-38, 8], [-42, 2], [-38, -4]] });
+
+    var lerp = function (a, b, k) { return a + (b - a) * k; };
+    var mixP = function (a, b, k) {
+      var o = {};
+      for (var key in b) {
+        var A = a[key], B = b[key];
+        if (typeof B === 'number') o[key] = lerp(A, B, k);
+        else if (typeof B[0] === 'number') o[key] = [lerp(A[0], B[0], k), lerp(A[1], B[1], k)];
+        else o[key] = B.map(function (pt, i) { return [lerp(A[i][0], pt[0], k), lerp(A[i][1], pt[1], k)]; });
+      }
+      return o;
+    };
+    var smooth = function (u) { return u * u * (3 - 2 * u); };
+    var runAt = function (ph) {
+      var n = RUN.length, f = ((ph % n) + n) % n, i = Math.floor(f);
+      return mixP(RUN[i], RUN[(i + 1) % n], smooth(f - i));
+    };
+    var n = function (v) { return v.toFixed(1); };
+    var pt = function (p) { return n(p[0]) + ' ' + n(p[1]); };
+    function limb(el, root, j) {
+      el[0].setAttribute('d', 'M' + pt(root) + 'L' + pt(j[0]));
+      el[1].setAttribute('d', 'M' + pt(j[0]) + 'L' + pt(j[1]) + 'L' + pt(j[2]));
+    }
+    function draw(p, sway) {
+      limb(parts.fF, [p.S[0] - 2, p.S[1] + 1], p.fF);
+      limb(parts.fH, [p.H[0] + 2, p.H[1] + 1], p.fH);
+      limb(parts.nH, p.H, p.nH);
+      limb(parts.nF, p.S, p.nF);
+      var mx = (p.H[0] + p.S[0]) / 2, my = (p.H[1] + p.S[1]) / 2 - p.A;
+      parts.body.setAttribute('d', 'M' + pt([p.H[0] - 3, p.H[1]]) + 'Q' + pt([mx, my]) + ' ' + pt(p.S));
+      parts.neck.setAttribute('d', 'M' + pt(p.S) + 'L' + pt(p.D));
+      parts.head.setAttribute('cx', n(p.D[0])); parts.head.setAttribute('cy', n(p.D[1]));
+      parts.muzzle.setAttribute('cx', n(p.D[0] + 5)); parts.muzzle.setAttribute('cy', n(p.D[1] + 2.4));
+      parts.brow.setAttribute('d', 'M' + pt([p.D[0] - 2, p.D[1] - 6]) + 'L' + pt([p.D[0] + 6, p.D[1] - 4]) + 'L' + pt([p.D[0] + 1, p.D[1] - 2]) + 'Z');
+      var b = [p.H[0] - 4, p.H[1] - 3], T = p.T.map(function (q, i) { return [b[0] + q[0] + (i > 2 ? sway : 0), b[1] + q[1]]; });
+      parts.tail.setAttribute('d', 'M' + pt(b) + 'C' + pt(T[0]) + ' ' + pt(T[1]) + ' ' + pt(T[2]) + 'C' + pt(T[3]) + ' ' + pt(T[4]) + ' ' + pt(T[5]));
+    }
+
+    var x = 16, y = 0, tx = 16, ty = 0, lastMove = performance.now(), phase = 0, t0 = performance.now(), cur = null;
     var calc = function () {
       var max = document.documentElement.scrollHeight - innerHeight;
       var p = max > 0 ? scrollY / max : 0;
@@ -421,85 +481,12 @@
       if (word && p > 0.97) {
         var r = word.getBoundingClientRect();
         if (r.top > 0 && r.top < innerHeight) {
-          tx = r.left + r.width / 2 - W / 2 + 4;
+          tx = r.left + r.width / 2 - W / 2 + 2;
           ty = (r.top + 6) - (innerHeight - BOTTOM - H + FEET);
         }
       }
     };
     addEventListener('scroll', calc, { passive: true }); addEventListener('resize', calc);
-
-    var V = function (a, b) { return { x: a, y: b }; };
-    var lerp = function (a, b, k) { return a + (b - a) * k; };
-    // two-bone IK: joint bends forward (+1) for hind knees, backward (-1) for front elbows
-    var ik = function (A, F, l1, l2, bend) {
-      var dx = F.x - A.x, dy = F.y - A.y, d = Math.min(Math.hypot(dx, dy), l1 + l2 - 0.01);
-      var th = Math.atan2(dy, dx), al = Math.acos((l1 * l1 + d * d - l2 * l2) / (2 * l1 * d)) || 0;
-      var a = th - bend * al;
-      return V(A.x + l1 * Math.cos(a), A.y + l1 * Math.sin(a));
-    };
-    // foot path over one gait cycle: 62% planted and moving back, 38% swinging forward
-    var foot = function (bx, p, S) {
-      p = ((p % 1) + 1) % 1;
-      if (p < 0.62) { var u = p / 0.62; return V(bx + S / 2 - S * u, GROUND); }
-      var w = (p - 0.62) / 0.38, e = w * w * (3 - 2 * w);
-      return V(bx - S / 2 + S * e, GROUND - 6 * Math.sin(Math.PI * w));
-    };
-    // ---- poses: each returns hip, shoulder, the four feet, head centre, tail
-    function walkPose(p, run) {
-      var S = 17 + run * 6, bob = Math.sin(p * 4 * Math.PI);
-      var hip = V(43, 42 - bob * 1.2 - run * 2), sh = V(77, 48 - Math.sin((p + 0.25) * 4 * Math.PI) * 1.1);
-      return { hip: hip, sh: sh,
-        nH: foot(45, p, S), fH: foot(45, p + 0.5, S), nF: foot(80, p + 0.25, S), fF: foot(80, p + 0.75, S),
-        head: V(sh.x + 13, sh.y - 7 + bob * 0.6), tilt: 0,
-        tail: [V(hip.x - 8, hip.y - 3), V(hip.x - 20, hip.y - 10 + bob), V(hip.x - 18, hip.y - 30), V(hip.x - 7, hip.y - 29 + Math.sin(p * 2 * Math.PI) * 2)] };
-    }
-    function standPose(t) {
-      var br = Math.sin(t * 2.2) * 0.5;
-      var hip = V(43, 41.5 - br), sh = V(77, 48 - br);
-      return { hip: hip, sh: sh, nH: V(48, GROUND), fH: V(41, GROUND), nF: V(82, GROUND), fF: V(76, GROUND),
-        head: V(sh.x + 13, sh.y - 8), tilt: 0,
-        tail: [V(hip.x - 8, hip.y - 3), V(hip.x - 21, hip.y - 8), V(hip.x - 19, hip.y - 29), V(hip.x - 8, hip.y - 28 + Math.sin(t * 1.3) * 2)] };
-    }
-    function sitPose(t) {
-      var br = Math.sin(t * 2) * 0.4;
-      var hip = V(46, 60), sh = V(56, 37 - br);
-      return { hip: hip, sh: sh, nH: V(68, GROUND), fH: V(64, GROUND), nF: V(63, GROUND), fF: V(59, GROUND),
-        head: V(61, 25 - br), tilt: 0.12,
-        tail: [V(hip.x - 6, hip.y + 4), V(hip.x - 22, hip.y + 12), V(hip.x - 30, hip.y + 4), V(hip.x - 27, hip.y - 6 + Math.sin(t * 1.1) * 1.5)] };
-    }
-    var cur = null;
-    var mix = function (a, b, k) {
-      if (!a) return b;
-      var o = {};
-      for (var key in b) {
-        if (key === 'tail') o.tail = b.tail.map(function (pt, i) { return V(lerp(a.tail[i].x, pt.x, k), lerp(a.tail[i].y, pt.y, k)); });
-        else if (typeof b[key] === 'number') o[key] = lerp(a[key], b[key], k);
-        else o[key] = V(lerp(a[key].x, b[key].x, k), lerp(a[key].y, b[key].y, k));
-      }
-      return o;
-    };
-    var f = function (n) { return n.toFixed(1); };
-    var leg = function (A, F, l1, l2, bend, toe) {
-      var K = ik(A, F, l1, l2, bend);
-      return 'M' + f(A.x) + ' ' + f(A.y) + 'L' + f(K.x) + ' ' + f(K.y) + 'L' + f(F.x) + ' ' + f(F.y) + 'l' + toe + ' 0';
-    };
-    function draw(P) {
-      el.nearH.setAttribute('d', leg(P.hip, P.nH, 17, 17, 1, 3.5));
-      el.farH.setAttribute('d', leg(V(P.hip.x + 2, P.hip.y + 1), P.fH, 17, 17, 1, 3.5));
-      el.nearF.setAttribute('d', leg(P.sh, P.nF, 15, 15, -1, 3));
-      el.farF.setAttribute('d', leg(V(P.sh.x - 2, P.sh.y + 1), P.fF, 15, 15, -1, 3));
-      var T = P.tail;
-      el.tail.setAttribute('d', 'M' + f(T[0].x) + ' ' + f(T[0].y) + 'C' + f(T[1].x) + ' ' + f(T[1].y) + ' ' + f(T[2].x) + ' ' + f(T[2].y) + ' ' + f(T[3].x) + ' ' + f(T[3].y));
-      // torso: rump, belly sag, chest
-      var mx = (P.hip.x + P.sh.x) / 2, my = (P.hip.y + P.sh.y) / 2 + 2.5;
-      el.body.setAttribute('d', 'M' + f(P.hip.x) + ' ' + f(P.hip.y) + 'Q' + f(mx) + ' ' + f(my) + ' ' + f(P.sh.x) + ' ' + f(P.sh.y));
-      var h = P.head, dx = Math.cos(P.tilt), dy = Math.sin(P.tilt);
-      el.head.setAttribute('cx', f(h.x)); el.head.setAttribute('cy', f(h.y));
-      el.muzzle.setAttribute('cx', f(h.x + 8 * dx - 1 * dy)); el.muzzle.setAttribute('cy', f(h.y + 3.5 + 1 * dx));
-      el.eye.setAttribute('cx', f(h.x + 4.5)); el.eye.setAttribute('cy', f(h.y - 2));
-      el.ear.setAttribute('d', 'M' + f(h.x - 4) + ' ' + f(h.y - 4) + 'a3.4 3.4 0 0 1 0 6.4');
-    }
-
     calc(); x = tx; y = ty;
     (function tick(now) {
       calc();
@@ -507,18 +494,64 @@
       var dx = (tx - x) * 0.06, dy = (ty - y) * 0.09;
       var moving = Math.abs(dx) > 0.12 || Math.abs(dy) > 0.12;
       if (moving) { x += dx; y += dy; lastMove = now; if (Math.abs(dx) > 0.12) m.classList.toggle('left', dx < 0); }
-      var idle = now - lastMove;
-      mode = moving ? 'walk' : idle > (ty < -1 ? 700 : 3800) ? 'sit' : 'stand';
+      var idle = now - lastMove, mode = moving ? 'run' : idle > (ty < -1 ? 700 : 3800) ? 'sit' : 'stand';
       if (reduce()) mode = 'stand';
-      var target;
-      if (mode === 'walk') {
-        var speed = Math.hypot(dx, dy);
-        phase += Math.max(speed / (17 * PX), 0.012);   // one stride per stride-length moved: no foot sliding
-        target = walkPose(phase, Math.min(1, speed / 6));
-      } else target = mode === 'sit' ? sitPose(t) : standPose(t);
-      cur = mix(cur, target, mode === 'walk' ? 0.55 : 0.12);
-      draw(cur);
+      var target, k = 0.14;
+      if (mode === 'run') {
+        // one full bound (6 poses) per ~34 units travelled, never slower than a trot
+        phase += Math.min(0.34, Math.max(Math.hypot(dx, dy) / (34 * PX) * 6, 0.12));
+        target = runAt(phase); k = 0.6;
+      } else target = mode === 'sit' ? SIT : STAND;
+      cur = cur ? mixP(cur, target, k) : target;
+      var breathe = mode === 'run' ? 0 : Math.sin(t * 2) * 0.4;
+      var c = mixP(cur, cur, 0); c.S = [c.S[0], c.S[1] - breathe];
+      draw(c, mode === 'run' ? 0 : Math.sin(t * 1.2) * 2);
       m.style.transform = 'translate(' + x.toFixed(1) + 'px,' + y.toFixed(1) + 'px)';
+      requestAnimationFrame(tick);
+    })(performance.now());
+  })();
+
+  // The organic blob: always flowing, flattens into a straight line, then
+  // swells back as a brand new blob, never the same shape twice.
+  (function () {
+    var path = document.getElementById('blob-path'); if (!path) return;
+    var N = 9, CYCLE = 9, waves = [];
+    var fresh = function () {
+      waves = [];
+      for (var i = 0; i < 3; i++) waves.push({ k: i + 2, amp: 0.10 + Math.random() * 0.16 / (i + 1), ph: Math.random() * 6.28, sp: (Math.random() - 0.5) * 1.4 });
+    };
+    fresh();
+    var ease = function (u) { return u < 0.5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2; };
+    // 0..1 how flat it is across the cycle: blob, melt, line, swell back
+    var flat = function (u) {
+      if (u < 0.32) return 0;
+      if (u < 0.55) return ease((u - 0.32) / 0.23);
+      if (u < 0.68) return 1;
+      if (u < 0.92) return 1 - ease((u - 0.68) / 0.24);
+      return 0;
+    };
+    var lastCycle = -1, still = false;
+    (function tick(now) {
+      var t = now / 1000, c = Math.floor(t / CYCLE), u = (t % CYCLE) / CYCLE;
+      still = document.documentElement.classList.contains('reduce-motion') || matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (still) { t = 0; u = 0; }
+      if (c !== lastCycle && u > 0.6) { fresh(); lastCycle = c; }   // swap shape while it's a line
+      var f = flat(u), pts = [];
+      for (var i = 0; i < N; i++) {
+        var a = i / N * Math.PI * 2, r = 1;
+        waves.forEach(function (w) { r += w.amp * Math.sin(w.k * a + w.ph + t * w.sp); });
+        var rx = 20 * r, ry = 20 * r;
+        pts.push([32 + Math.cos(a) * rx * (1 + 0.42 * f), 32 + Math.sin(a) * ry * (1 - 0.92 * f)]);
+      }
+      // smooth closed curve through the points (Catmull-Rom as cubic Béziers)
+      var d = 'M' + pts[0][0].toFixed(2) + ' ' + pts[0][1].toFixed(2);
+      for (var j = 0; j < N; j++) {
+        var p0 = pts[(j - 1 + N) % N], p1 = pts[j], p2 = pts[(j + 1) % N], p3 = pts[(j + 2) % N];
+        d += 'C' + (p1[0] + (p2[0] - p0[0]) / 6).toFixed(2) + ' ' + (p1[1] + (p2[1] - p0[1]) / 6).toFixed(2) + ' ' +
+             (p2[0] - (p3[0] - p1[0]) / 6).toFixed(2) + ' ' + (p2[1] - (p3[1] - p1[1]) / 6).toFixed(2) + ' ' +
+             p2[0].toFixed(2) + ' ' + p2[1].toFixed(2);
+      }
+      path.setAttribute('d', d + 'Z');
       requestAnimationFrame(tick);
     })(performance.now());
   })();
