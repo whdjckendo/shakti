@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Shakthi Nanda Kumar — The short version</title>
+<title>Shakthi Nanda Kumar — Hey.</title>
 <meta name="description" content="Industrial designer. Research that drives decisions, reframing the real problem, and a clear design process — shown through five projects.">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="icon" href="favicon-32.png" sizes="32x32">
@@ -128,6 +128,18 @@
   html.reduce-motion { scroll-behavior: auto; }
   html.reduce-motion .reveal { opacity: 1; transform: none; transition: none; }
   @media (prefers-reduced-motion: reduce) { .reveal { opacity: 1; transform: none; transition: none; } html { scroll-behavior: auto; } }
+
+  /* animated icons */
+  .claim-head .num { width: 64px; height: 64px; display: block; margin-top: 2px; }
+  .three .ic { width: 26px; height: 26px; display: block; margin-bottom: 14px; }
+  .spin { transform-box: fill-box; transform-origin: center; animation: spin 9s linear infinite; }
+  .pop { transform-box: fill-box; transform-origin: center; animation: pop 3.4s cubic-bezier(.45,0,.2,1) infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes pop { 0% { transform: scale(0); } 35%, 65% { transform: scale(1); } 100% { transform: scale(0); } }
+  html.reduce-motion .spin, html.reduce-motion .pop { animation: none; }
+  @media (prefers-reduced-motion: reduce) { .spin, .pop { animation: none; } }
+  @media (max-width: 760px) { .claim-head .num { width: 48px; height: 48px; } }
+  h1 { margin-bottom: 22px; }
 </style>
 </head>
 <body>
@@ -148,15 +160,27 @@
   </div>
 </header>
 
+<!-- the three icons, drawn once and reused -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-hex" viewBox="0 0 64 64"><g class="spin"><polygon points="32,4 56.2,18 56.2,46 32,60 7.8,46 7.8,18" fill="#002fa7"/></g></symbol>
+  <symbol id="i-star" viewBox="0 0 64 64"><g class="pop"><polygon points="32,3 40.2,22.8 61.5,24.6 45.3,38.6 50.2,59.4 32,48.3 13.8,59.4 18.7,38.6 2.5,24.6 23.8,22.8" fill="#002fa7"/></g></symbol>
+  <symbol id="i-blob" viewBox="0 0 64 64"><path fill="#002fa7" d="M34 7 C49 9 58 20 55 34 C52 49 43 57 29 55 C15 53 6 44 9 29 C12 15 21 6 34 7 Z">
+    <animate class="morph" attributeName="d" dur="4.2s" repeatCount="indefinite" calcMode="spline"
+      keyTimes="0;0.4;0.7;1" keySplines="0.45 0 0.2 1;0 0 1 1;0.45 0 0.2 1"
+      values="M34 7 C49 9 58 20 55 34 C52 49 43 57 29 55 C15 53 6 44 9 29 C12 15 21 6 34 7 Z;
+              M32 30 C48 30 60 30 60 32 C60 34 48 34 32 34 C16 34 4 34 4 32 C4 30 16 30 32 30 Z;
+              M32 30 C48 30 60 30 60 32 C60 34 48 34 32 34 C16 34 4 34 4 32 C4 30 16 30 32 30 Z;
+              M34 7 C49 9 58 20 55 34 C52 49 43 57 29 55 C15 53 6 44 9 29 C12 15 21 6 34 7 Z"/></path></symbol>
+</svg>
+
 <main>
   <div class="wrap hero">
-    <p class="eyebrow">Industrial designer · M.Des, IIT Roorkee</p>
-    <h1>The short version.</h1>
-    <p class="lede">I'm a designer with a B.Des in Interior Space &amp; Furniture Design, now doing my Masters in Industrial Design at IIT Roorkee. Here is what I bring to a team, shown through five projects.</p>
+    <h1>Hey.</h1>
+    <p class="lede">I'm Shakthi. I did my B.Des in Interior Space and Furniture Design, and I'm now pursuing my Masters in Industrial Design at IIT Roorkee. This is the short version of my work: three things I can do, and the projects that prove it.</p>
     <ul class="three">
-      <li><a href="#research"><span class="n">01</span><b>I research first, and let the data decide.</b></a></li>
-      <li><a href="#reframe"><span class="n">02</span><b>I find what actually needs solving.</b></a></li>
-      <li><a href="#process"><span class="n">03</span><b>My process is clear and easy to follow.</b></a></li>
+      <li><a href="#research"><svg class="ic" aria-hidden="true"><use href="#i-hex"/></svg><b>Decisions backed by user research</b></a></li>
+      <li><a href="#reframe"><svg class="ic" aria-hidden="true"><use href="#i-star"/></svg><b>Infer the root cause</b></a></li>
+      <li><a href="#process"><svg class="ic" aria-hidden="true"><use href="#i-blob"/></svg><b>Structured or organic design process, depending on the problem</b></a></li>
     </ul>
   </div>
 
@@ -164,63 +188,63 @@
   <section class="claim" id="research" aria-labelledby="h-research">
     <div class="wrap">
       <div class="claim-head reveal">
-        <span class="num" aria-hidden="true">01</span>
+        <svg class="num" aria-hidden="true"><use href="#i-hex"/></svg>
         <div>
-          <h2 id="h-research">I research first, and let the data decide.</h2>
-          <p>Surveys, interviews, observation, eye tracking and statistics. I pick the method that fits the question, and then design from what it shows rather than from what I assumed.</p>
+          <h2 id="h-research">Decisions backed by user research</h2>
+          <p>I don't like guessing. I go to the users first, collect the data, and then let it tell me what to design.</p>
         </div>
       </div>
 
       <article class="case reveal">
         <div class="txt">
           <span class="tag">Research paper · Emotional Design, IIT Roorkee</span>
-          <h3>Do different personalities want different car interiors?</h3>
-          <p>Mid-segment cars in India get one interior for every buyer. I ran an eye-tracking study to test whether personality changes what people are drawn to.</p>
+          <h3>Do different personalities like different car interiors?</h3>
+          <p>In the middle and upper middle class segment of India, car interiors are never custom made for the user. I wanted to find out, through an eye tracking experiment, if personality changes what people are drawn to.</p>
           <ul>
-            <li><span class="k">16 drivers</span>, sorted into OCEAN personality types with the Big Five Inventory (BFI-10).</li>
-            <li>Shown car interiors across <span class="k">4 themes</span>: Comfort, Concise, Hard and Technological. The themes came from Kansei words.</li>
-            <li>Fixation time analysed with a <span class="k">two-way ANOVA</span> in JASP, plus post-hoc tests.</li>
+            <li><span class="k">16 participants</span> with a driving license, categorised into OCEAN personalities using the Big 10 Inventory.</li>
+            <li><span class="k">4 themes</span> of car interiors, Comfort, Concise, Hard and Technological, derived from Kansei words.</li>
+            <li>Fixation duration was analysed in JASP with a <span class="k">2-way ANOVA</span>, followed by post hoc tests.</li>
           </ul>
           <div class="stats" role="list">
-            <div class="stat" role="listitem"><span class="v">p &lt; .001</span><span class="d">Personality changed fixation time (F = 14.93)</span></div>
-            <div class="stat" role="listitem"><span class="v">p &lt; .001</span><span class="d">Theme changed fixation time (F = 11.25)</span></div>
-            <div class="stat" role="listitem"><span class="v">p = .039</span><span class="d">Personality × theme interact</span></div>
+            <div class="stat" role="listitem"><span class="v">p &lt; .001</span><span class="d">Personality affected fixation duration (F = 14.93)</span></div>
+            <div class="stat" role="listitem"><span class="v">p &lt; .001</span><span class="d">Theme affected fixation duration (F = 11.25)</span></div>
+            <div class="stat" role="listitem"><span class="v">p = .039</span><span class="d">Personality and theme interact</span></div>
           </div>
-          <div class="decision"><span class="lbl">What it led to</span>Different personalities favour different interior themes. That's evidence for small, modular, personality-tuned interior options instead of one interior for everyone. I also reported my own limitation: the themes were shown in a fixed order, which skewed attention.</div>
+          <div class="decision"><span class="lbl">I learnt that…</span>Different personalities favour distinct car interior themes. Minor changes through modularity, suited to the personality of the driver, could boost sales and make driving more pleasurable. The themes weren't randomised, which affected what people looked at most, so that's noted for next time.</div>
         </div>
         <div class="stack">
-          <figure><img src="work/img/ocean-heatmaps.jpg" alt="Eye-tracking heatmaps and gaze plots over four car dashboards" loading="lazy" width="647" height="712"><figcaption>Heatmaps and gaze paths from the pilot.</figcaption></figure>
-          <figure><img src="work/img/ocean-anova.jpg" alt="Slide with the personality split of participants and the ANOVA table" loading="lazy" width="1400" height="788"><figcaption>Participant split and the ANOVA result.</figcaption></figure>
+          <figure><img src="work/img/ocean-heatmaps.jpg" alt="Eye-tracking heatmaps and gaze plots over four car dashboards" loading="lazy" width="647" height="712"><figcaption>Heatmaps and gaze plots from the pilot.</figcaption></figure>
+          <figure><img src="work/img/ocean-anova.jpg" alt="Slide with the personality split of participants and the ANOVA table" loading="lazy" width="1400" height="788"><figcaption>Participant split and the ANOVA.</figcaption></figure>
         </div>
       </article>
 
       <article class="case flip reveal">
         <div class="txt">
           <span class="tag">ETT LYCKLIG · IKEA Studio, B.Des</span>
-          <h3>A laptop stand sized by real bodies, not guesses.</h3>
-          <p>I tested heights and angles on myself across floor, table and bed postures. Then I checked my conclusions with four people: a desk worker and three hostel students.</p>
+          <h3>A laptop stand, measured on real people.</h3>
+          <p>I tested out different heights and angles on myself, working on the floor, table and bed. I then had to validate my conclusions with other users, 15 of them.</p>
           <ul>
-            <li>Typing was comfortable at about <span class="k">10°</span>.</li>
-            <li>Browsing and watching needed about <span class="k">45°</span> and at least <span class="k">9 cm</span> of lift.</li>
-            <li>Everyone liked an inclined mouse surface.</li>
+            <li>Users needed a change in angle while shifting from browsing to typing.</li>
+            <li>Typing was comfortable at <span class="k">10°</span>. Watching content and browsing needed <span class="k">45°</span>, with a minimum <span class="k">9 cm</span> lift.</li>
+            <li>The inclination angle of the mouse was received well by all the users.</li>
           </ul>
-          <div class="decision"><span class="lbl">What it led to</span>One wooden stand that switches between exactly those two angles, instead of a fixed incline.</div>
+          <div class="decision"><span class="lbl">Therefore…</span>One wooden stand that lets the user easily change between the angle needed for typing, and the angle and height needed to watch content.</div>
         </div>
-        <figure><img src="work/img/stand-users.jpg" alt="Four users working on laptops with their postures sketched over the photos" loading="lazy" width="1400" height="599"><figcaption>Validating postures with four users.</figcaption></figure>
+        <figure><img src="work/img/stand-users.jpg" alt="Users working on laptops with their postures sketched over the photos" loading="lazy" width="1400" height="599"><figcaption>Validating postures with users.</figcaption></figure>
       </article>
 
       <article class="case reveal">
         <div class="txt">
           <span class="tag">Navigation &amp; transportation · M.Des, Sem 1</span>
           <h3>Asking before assuming.</h3>
-          <p>I ran a pilot survey of <span class="k">28 people</span>, semi-structured and telephone interviews, and observation at stations and auto stands.</p>
+          <p>Before designing anything, I did a pilot survey with <span class="k">28 people</span>, semi structured and telephonic interviews, and an ethnographic study around stations, bus stops and auto stops.</p>
           <ul>
-            <li><span class="k">61%</span> use autos, more than any other mode. Buses were 50% and cabs 46%.</li>
-            <li>Visitors regularly overpay, for example ₹50 instead of ₹20 for a 2 km auto ride.</li>
+            <li><span class="k">60.7%</span> used autos, the most of any mode.</li>
+            <li>60% of tourists overpay for autos, like ₹50 instead of ₹20 for 2 km.</li>
           </ul>
-          <div class="decision"><span class="lbl">What it led to</span>Design for the informal transport people actually ride, with fair, visible fares, rather than for the metro and bus systems apps already cover.</div>
+          <div class="decision"><span class="lbl">Gaps exist!</span>The existing ways people navigate don't fulfil their needs. The solution had to focus on the informal transport people actually use.</div>
         </div>
-        <figure><img src="work/img/nav-pilot.jpg" alt="Bar chart: which public transport modes do you use — autos highest at 17 of 28" loading="lazy" width="1400" height="541"><figcaption>Pilot survey: “Which public transport modes do you use?”</figcaption></figure>
+        <figure><img src="work/img/nav-pilot.jpg" alt="Bar chart: which public transport modes do you use — autos highest at 17 of 28" loading="lazy" width="1400" height="541"><figcaption>Pilot study: “Which public transport modes do you use?”</figcaption></figure>
       </article>
     </div>
   </section>
@@ -229,50 +253,50 @@
   <section class="claim" id="reframe" aria-labelledby="h-reframe">
     <div class="wrap">
       <div class="claim-head reveal">
-        <span class="num" aria-hidden="true">02</span>
+        <svg class="num" aria-hidden="true"><use href="#i-star"/></svg>
         <div>
-          <h2 id="h-reframe">I find what actually needs solving.</h2>
-          <p>Briefs usually start vague. I go to the field, ask sharper questions, and turn the vague ask into a problem a design can genuinely fix.</p>
+          <h2 id="h-reframe">Infer the root cause</h2>
+          <p>The problem I'm given is rarely the problem that needs solving. I go to the site, ask the right questions, and dig until I find the root cause.</p>
         </div>
       </div>
 
       <article class="case reveal">
         <div class="txt">
           <span class="tag">Urban public toilets · Laboratory of Inclusive Design, IIT Roorkee</span>
-          <h3>Not a building problem. A management problem.</h3>
+          <h3>It wasn't an architectural problem. It was a management problem.</h3>
           <div class="reframe">
-            <div class="box"><span class="lbl">The ask</span><p class="q">Why do public toilets look like this?</p></div>
+            <div class="box"><span class="lbl">The question</span><p class="q">Why do public toilets look like this?</p></div>
             <span class="arrow" aria-hidden="true">→</span>
-            <div class="box to"><span class="lbl">The real problem</span><p class="q">Nothing keeps a toilet working, accessible and usable after it's built.</p></div>
+            <div class="box to"><span class="lbl">The root cause</span><p class="q">There is a lack of ground management in public toilets.</p></div>
           </div>
-          <p>Instead of starting with form, I asked three questions. Are Roorkee's toilets usable, functional and accessible? When do people use them, and when do they avoid them? Is this a behaviour problem or an architecture problem?</p>
-          <p>I studied <span class="k">6 public toilets</span> across Roorkee. The accessible stalls were locked to save on cleaning, or used as store rooms. Users rushed in and out.</p>
+          <p>Being a person who gives precedence to social issues, I decided to, if not solve, at least acknowledge and address the problem of sanitation. Instead of jumping to form, I asked: are the public toilets in Roorkee usable, functional and accessible? When do people use, and not use them? Is sanitation a behavioural or architectural problem?</p>
+          <p><span class="k">6 public toilets</span> were analysed across Roorkee. The so called accessible stalls were either poorly maintained or closed, since caretakers kept them shut to avoid the extra maintenance. In others, the accessible stall was used as a store room.</p>
           <blockquote>“No, no, I cannot go outside. I won't find a good, clean toilet!”<cite>Heard during the field study</cite></blockquote>
-          <div class="decision"><span class="lbl">What it led to</span>I mapped who owns, builds, runs and monitors public toilets. Then I designed an accessible public toilet with a service corridor, grab bars, an emergency alarm and a durable corten-steel façade, detailed down to construction drawings.</div>
+          <div class="decision"><span class="lbl">So</span>No checklist exists to keep a public toilet functioning, accessible and usable for long periods of time. I mapped who owns, builds, runs and monitors these toilets, and designed an accessible public toilet, down to the construction drawings.</div>
         </div>
         <div class="stack">
           <div class="duo">
             <figure><img src="work/img/toilet-field.jpg" alt="Three public toilets on busy streets in Roorkee" loading="lazy" width="882" height="408"></figure>
             <figure><img src="work/img/toilet-inside.jpg" alt="Three toilet stalls in poor condition" loading="lazy" width="865" height="455"></figure>
           </div>
-          <figure><img src="work/img/toilet-design.jpg" alt="Isometric render of the proposed accessible public toilet on a street" loading="lazy" width="1400" height="991"><figcaption>Field study in Roorkee, and the proposed accessible toilet.</figcaption></figure>
+          <figure><img src="work/img/toilet-design.jpg" alt="Isometric render of the proposed accessible public toilet on a street" loading="lazy" width="1400" height="991"><figcaption>On field observations in Roorkee, and the proposed accessible toilet.</figcaption></figure>
         </div>
       </article>
 
       <article class="case flip reveal">
         <div class="txt">
           <span class="tag">Navigation &amp; transportation · M.Des, Sem 1</span>
-          <h3>From “all transport, big cities” to the people truly stuck.</h3>
+          <h3>From metro cities to tier 2 cities.</h3>
           <div class="reframe">
-            <div class="box"><span class="lbl">Where I started</span><p class="q">Give people access to every public transport option in a metro city.</p></div>
+            <div class="box"><span class="lbl">Where I started</span><p class="q">Access to all public transport means, to navigate a metro city.</p></div>
             <span class="arrow" aria-hidden="true">→</span>
-            <div class="box to"><span class="lbl">Where the research led</span><p class="q">Help the floating population of tier-2 cities use informal, unorganised transport.</p></div>
+            <div class="box to"><span class="lbl">Where I landed</span><p class="q">Help the floating population navigate tier 2 cities, where informal transport is the most prevalent.</p></div>
           </div>
-          <p>The research changed the brief. There are no signs for auto stops, fares are bargained out loud, and newcomers depend on locals. The people who struggle most are students, visitors and seasonal workers in a city like Roorkee, not metro commuters.</p>
-          <div class="decision"><span class="lbl">What it led to</span>A service, not just another app: a transit card, modelled on RuPay metro cards and Tokyo's Suica, that standardises fares outside campus. It's backed by personas, a journey map and user flows.</div>
+          <p>The research changed my brief. There is no signage for auto, bus or rickshaw stops, fares are negotiated verbally, and one must heavily rely on locals to get around. The ones struggling the most weren't metro commuters, but the floating population of a city like Roorkee: students, tourists and seasonal workers.</p>
+          <div class="decision"><span class="lbl">So</span>The solution became a service, not just an app. A transit card, taking example from the RuPay card used for metro transit and the Suica card used in Tokyo, that solves fare standardisation outside campus.</div>
         </div>
         <div class="stack">
-          <figure><img src="work/img/nav-journey.jpg" alt="Journey map with stages from recognition to delivery" loading="lazy" width="1400" height="788"><figcaption>Journey map of a newcomer getting around.</figcaption></figure>
+          <figure><img src="work/img/nav-journey.jpg" alt="Journey map with stages from recognition to delivery" loading="lazy" width="1400" height="788"><figcaption>Journey map of someone new to the city.</figcaption></figure>
         </div>
       </article>
     </div>
@@ -282,42 +306,42 @@
   <section class="claim" id="process" aria-labelledby="h-process">
     <div class="wrap">
       <div class="claim-head reveal">
-        <span class="num" aria-hidden="true">03</span>
+        <svg class="num" aria-hidden="true"><use href="#i-blob"/></svg>
         <div>
-          <h2 id="h-process">My process is clear and easy to follow.</h2>
-          <p>Every decision leaves a trail. Here's the ETT LYCKLIG laptop stand, from brief to the desk, in nine steps.</p>
+          <h2 id="h-process">Structured or organic design process, depending on the problem</h2>
+          <p>Some problems need a step by step process, some need me to go back and forth. Either way, every decision leaves a trail. Here's the ETT LYCKLIG laptop stand, from the brief to my own desk.</p>
         </div>
       </div>
 
       <ol class="process reveal">
-        <li><div class="img text"><p><span class="big">Brief</span>An ergonomic laptop support for desk workers, used at the table, to reduce neck and back pain.</p></div>
-          <div class="cap"><b>Define</b><span>Who, where, when, why and how, written down before any sketching.</span></div></li>
+        <li><div class="img text"><p><span class="big">Brief</span>To design an ergonomic support for the laptop that enables its usage on a table, with special emphasis on the neck.</p></div>
+          <div class="cap"><b>Define</b><span>Who, where, when, why and how. Written down before sketching anything.</span></div></li>
         <li><div class="img"><img src="work/img/stand-tests.jpg" alt="Testing laptop heights on stacks of books in different postures" loading="lazy"></div>
-          <div class="cap"><b>Test on myself</b><span>Heights and angles across Indian and western sitting postures.</span></div></li>
-        <li><div class="img text"><p><span class="big">4 users</span>A desk worker who wants a tilt, a student who drifts to bed, one who lives with back pain, one who works on the floor.</p></div>
-          <div class="cap"><b>Validate with users</b><span>Four people, four very different habits.</span></div></li>
-        <li><div class="img text"><p><span class="big">10° / 45°</span>Typing needs a slight tilt. Browsing needs a steep one, with at least 9 cm of lift.</p></div>
-          <div class="cap"><b>Insight</b><span>One stand, two angles: the whole design hangs on this.</span></div></li>
+          <div class="cap"><b>Test on myself</b><span>Different heights, in traditional and western sitting postures.</span></div></li>
+        <li><div class="img text"><p><span class="big">15 users</span>Desk workers and hostel students, working on tables, beds and floors.</p></div>
+          <div class="cap"><b>Validate with users</b><span>Simultaneously, people were working on the floor and beds as well.</span></div></li>
+        <li><div class="img text"><p><span class="big">10° / 45°</span>Typing needs a slight tilt. Browsing and watching content need 45° and a minimum 9 cm lift.</p></div>
+          <div class="cap"><b>I learnt that…</b><span>Different activities demand different ergonomic requirements.</span></div></li>
         <li><div class="img contain"><img src="work/img/stand-sketches.jpg" alt="Pencil sketches of stand concepts" loading="lazy"></div>
-          <div class="cap"><b>Sketch</b><span>Many ways to hold two angles.</span></div></li>
+          <div class="cap"><b>Sketch</b><span>Lots of ways to hold two angles.</span></div></li>
         <li><div class="img"><img src="work/img/stand-mockups.jpg" alt="Wooden mock-ups holding a laptop" loading="lazy"></div>
-          <div class="cap"><b>Mock up and critique</b><span>Three mock-ups, each with honest cons.</span></div></li>
+          <div class="cap"><b>Mock up</b><span>Three mock ups, each with its pros and cons.</span></div></li>
         <li><div class="img contain"><img src="work/img/stand-refine.jpg" alt="Renders of the refined stand and its flat-pack parts" loading="lazy"></div>
-          <div class="cap"><b>Refine and pack</b><span>Four lines of wood that flat-pack into a jute pouch.</span></div></li>
+          <div class="cap"><b>Refine</b><span>The simplicity of 4 lines coming together, packed in a jute pouch.</span></div></li>
         <li><div class="img contain"><img src="work/img/stand-drawing.jpg" alt="Technical drawing of the stand components" loading="lazy"></div>
-          <div class="cap"><b>Draw for making</b><span>Dimensioned drawings, ready for production.</span></div></li>
+          <div class="cap"><b>Draw</b><span>Technical drawings, ready for making.</span></div></li>
         <li><div class="img"><img src="work/img/stand-final.jpg" alt="Shakthi using the finished wooden laptop stand at a desk" loading="lazy"></div>
-          <div class="cap"><b>In use</b><span>The finished stand, at the desk.</span></div></li>
+          <div class="cap"><b>In use</b><span>The final product, on my desk.</span></div></li>
       </ol>
 
-      <div class="pattern reveal"><p><span class="k">The same rhythm runs through every project.</span> In the toilets project it was field observation, then secondary research, then ideation, then a buildable design. In the navigation project it was survey, interviews and ethnography, then personas, a journey map, user flows and a site map.</p></div>
+      <div class="pattern reveal"><p><span class="k">The process changes with the problem.</span> The toilets project was organic: on field observations, secondary research, ideation, and a surprise :). The navigation project was more structured: survey, interviews and ethnography, then personas, a journey map, user flows and a site map.</p></div>
     </div>
   </section>
 
   <section class="close" aria-labelledby="h-close">
     <div class="wrap reveal">
-      <h2 id="h-close">Want the long version?</h2>
-      <p>Step back into the room. Every book on the desk opens, the posters lead to their projects, and the monitor has a few surprises.</p>
+      <h2 id="h-close">For the longer version,<br>step back into the room.</h2>
+      <p>Every book on the desk opens, the posters lead to their projects, and the monitor has a few surprises.</p>
       <div class="row">
         <a class="pill solid" href="./">Back to the room</a>
         <a class="pill" href="media/resume.pdf" target="_blank" rel="noopener">Open my resume</a>
@@ -339,6 +363,9 @@
       if (p.cb) root.classList.add('cb-' + p.cb);
       if (p['hi-con']) root.classList.add('hi-con');
       if (p['reduce-motion']) root.classList.add('reduce-motion');
+    }
+    if (root.classList.contains('reduce-motion') || matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      document.querySelectorAll('svg').forEach(function (s) { s.pauseAnimations && s.pauseAnimations(); });
     }
     var els = document.querySelectorAll('.reveal');
     if (!('IntersectionObserver' in window) || root.classList.contains('reduce-motion')) { els.forEach(function (e) { e.classList.add('in'); }); return; }
