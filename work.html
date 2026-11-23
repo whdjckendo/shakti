@@ -488,62 +488,73 @@
       parts.tail.setAttribute('d', 'M' + pt(b) + 'C' + pt(T[0]) + ' ' + pt(T[1]) + ' ' + pt(T[2]) + 'C' + pt(T[3]) + ' ' + pt(T[4]) + ' ' + pt(T[5]));
     }
 
-    var x = 16, y = 0, tx = 16, ty = 0, lastMove = performance.now(), phase = 0, t0 = performance.now(), cur = null;
-    // Where its feet go, in page coordinates, turned into the fixed-position offset
-    var put = function (fx, fy) {
-      tx = fx - W / 2; ty = fy - scrollY - (innerHeight - BOTTOM - H + FEET);
-    };
+    var lastMove = performance.now(), phase = 0, t0 = performance.now(), cur = null;
     var pageRect = function (el, text) {
       var r;
       if (text) { var rg = document.createRange(); rg.selectNodeContents(el); r = rg.getBoundingClientRect(); }   // the words, not the full-width box
       else r = el.getBoundingClientRect();
       return { l: r.left, t: r.top + scrollY, w: r.width, h: r.height };
     };
-    var hey = document.querySelector('.hero h1'), card = document.querySelector('.three li:nth-child(2)'), h2 = document.getElementById('h-research');
+    // The drawn path: every perch it lands on, top to bottom. [selector, across (0-1), words only?, down (0-1)]
+    var PERCH = [
+      ['.hero h1', 0.42, 1, 0.2],
+      ['.three li:nth-child(2)', 0.18],
+      ['#h-research', 0.10, 1, 0.26],
+      ['#research article:nth-of-type(1) .stack figure:nth-child(1) img', 0.02],
+      ['#research article:nth-of-type(1) .stat:nth-child(1)', 0.10],
+      ['#research article:nth-of-type(1) .stack figure:nth-child(2) img', 0.03],
+      ['#research article:nth-of-type(2) .tag', 0.06],
+      ['#research article:nth-of-type(3) figure img', 0.04],
+      ['#research article:nth-of-type(3) .decision', 0.06],
+      ['#h-reframe', 0.03, 1, 0.26],
+      ['#reframe article:nth-of-type(1) .stack > figure img', 0.01],
+      ['#reframe article:nth-of-type(1) .decision', 0.47],
+      ['#reframe article:nth-of-type(2) .tag', 0.06],
+      ['#reframe article:nth-of-type(2) .decision', 0.57],
+      ['#h-process', 0.04, 1, 0.26],
+      ['.process li:nth-child(3)', 0.12],
+      ['.process li:nth-child(4)', 0.62],
+      ['.process li:nth-child(9)', 0.10],
+      ['.pattern', 0.55],
+      ['#h-close', 0.06, 1, 0.2],
+      ['#monkeys-word', 0.5, 1, 0.12]
+    ].map(function (d) { return { el: document.querySelector(d[0]), fx: d[1], text: !!d[2], fy: d[3] || 0 }; })
+     .filter(function (d) { return d.el; });
     var quad = function (a, c, b, u) { var v = 1 - u; return [v * v * a[0] + 2 * v * u * c[0] + u * u * b[0], v * v * a[1] + 2 * v * u * c[1] + u * u * b[1]]; };
     var ease = function (u) { return u * u * (3 - 2 * u); };
+    var gx = 0, gy = 0;                      // where its feet should be, in page coordinates
     var calc = function () {
-      var max = document.documentElement.scrollHeight - innerHeight;
-      // 1) the drawn path: on "Hey." -> arc over the intro -> top of the middle card -> down onto the first heading
-      if (hey && card && h2) {
-        var R1 = pageRect(hey, true), R2 = pageRect(card), R3 = pageRect(h2, true);
-        var A = [R1.l + R1.w * 0.42, R1.t + R1.h * 0.2];
-        var C = [R2.l + R2.w * 0.18, R2.t];
-        var D = [R3.l + R3.w * 0.12, R3.t + R3.h * 0.26];
-        var land = Math.max(1, R3.t - innerHeight * 0.55);       // scroll at which it reaches the heading
-        var leave = R3.t - innerHeight * 0.22;                    // ...and when it hops down to the bottom
-        if (scrollY < leave) {
-          var u = Math.min(1, scrollY / land), pt;
-          if (u < 0.55) { var k = ease(u / 0.55); pt = quad(A, [C[0] + 40, A[1] - 6], C, k); }
-          else { var k2 = ease((u - 0.55) / 0.45); pt = quad(C, [D[0] + (C[0] - D[0]) * 0.3, C[1] + (D[1] - C[1]) * 0.3], D, k2); }
-          put(pt[0], pt[1]);
-          return;
-        }
-        // 2) the rest of the page: along the bottom edge
-        var p = max > leave ? Math.min(1, (scrollY - leave) / (max - leave)) : 1;
-        tx = 16 + p * (innerWidth - W - 32); ty = 0;
-      } else {
-        var p0 = max > 0 ? scrollY / max : 0;
-        tx = 16 + p0 * (innerWidth - W - 32); ty = 0;
-      }
-      // 3) the very end: onto "monkeys"
-      if (word && scrollY / Math.max(1, max) > 0.97) {
-        var r = word.getBoundingClientRect();
-        if (r.top > 0 && r.top < innerHeight) {
-          tx = r.left + r.width / 2 - W / 2 + 2;
-          ty = (r.top + 6) - (innerHeight - BOTTOM - H + FEET);
-        }
-      }
+      var max = Math.max(0, document.documentElement.scrollHeight - innerHeight), n = PERCH.length;
+      if (!n) { gx = 60; gy = scrollY + innerHeight - BOTTOM; return; }
+      var P = PERCH.map(function (d) { var r = pageRect(d.el, d.text); return [r.l + r.w * d.fx, r.t + r.h * d.fy]; });
+      // the scroll at which it is sitting on each perch: perch about mid-screen, always in order, last one at the very bottom
+      var S = P.map(function (p) { return p[1] - innerHeight * 0.5; }), G = Math.min(160, innerHeight * 0.2), i;
+      S[0] = Math.max(0, S[0]);
+      for (i = 1; i < n; i++) S[i] = Math.max(S[i], S[i - 1] + G);
+      S[n - 1] = Math.min(S[n - 1], max);
+      for (i = n - 2; i >= 0; i--) S[i] = Math.min(S[i], S[i + 1] - G * 0.6);
+      for (i = 0; i < n; i++) S[i] = Math.max(0, S[i]);
+      var y = scrollY;
+      if (y <= S[0]) { gx = P[0][0]; gy = P[0][1]; return; }
+      if (y >= S[n - 1]) { gx = P[n - 1][0]; gy = P[n - 1][1]; return; }
+      for (i = 0; i < n - 1 && y >= S[i + 1]; i++);
+      var u = (y - S[i]) / Math.max(1, S[i + 1] - S[i]);
+      u = u < 0.3 ? 0 : ease((u - 0.3) / 0.7);     // sits a moment, then jumps
+      var A = P[i], B = P[i + 1], dx = B[0] - A[0];
+      var C = [B[0] - dx * 0.2, Math.min(A[1], B[1]) - (30 + Math.abs(dx) * 0.12)];   // up and over, then down onto it
+      var pt = quad(A, C, B, u); gx = pt[0]; gy = pt[1];
     };
     addEventListener('scroll', calc, { passive: true }); addEventListener('resize', calc);
-    calc(); x = tx; y = ty;
+    calc();
+    var px = gx, py = gy, x = 0, y = 0;
     (function tick(now) {
       calc();
       var t = (now - t0) / 1000;
-      var dx = (tx - x) * 0.14, dy = (ty - y) * 0.14;
+      var dx = (gx - px) * 0.14, dy = (gy - py) * 0.14;
       var moving = Math.abs(dx) > 0.15 || Math.abs(dy) > 0.15;
-      if (moving) { x += dx; y += dy; lastMove = now; if (Math.abs(dx) > 0.15) m.classList.toggle('left', dx < 0); }
-      var idle = now - lastMove, mode = moving ? 'run' : idle > (ty < -1 ? 700 : 3800) ? 'sit' : 'stand';
+      if (moving) { px += dx; py += dy; lastMove = now; if (Math.abs(dx) > 0.15) m.classList.toggle('left', dx < 0); }
+      x = px - W / 2; y = py - scrollY - (innerHeight - BOTTOM - H + FEET);
+      var idle = now - lastMove, mode = moving ? 'run' : idle > 700 ? 'sit' : 'stand';
       if (reduce()) mode = 'stand';
       var target, k = 0.14;
       if (mode === 'run') {
