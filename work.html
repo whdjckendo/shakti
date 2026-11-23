@@ -151,6 +151,20 @@
   @media print { #monkey { display: none; } }
   .close .monkey-note { margin: 96px 0 0; font-size: 13px; color: var(--soft); }
   #monkeys-word { display: inline-block; }
+  /* tap the monkey and it talks */
+  #monkey svg .flip { pointer-events: visiblePainted; cursor: pointer; }
+  #monkey svg:focus { outline: none; }
+  #monkey svg:focus-visible .flip { filter: drop-shadow(0 0 2px #fff) drop-shadow(0 0 3px var(--blue)); }
+  #monkey .say {
+    position: absolute; bottom: 70%; left: 62%; transform: translate(-10%, -4px) scale(.85); transform-origin: 0 100%;
+    padding: 6px 11px; border-radius: 12px 12px 12px 3px; white-space: nowrap;
+    background: #fff; color: var(--ink); border: 1.5px solid var(--blue);
+    font: 500 13px/1.1 'Lexend', sans-serif; box-shadow: 0 4px 14px rgba(0,47,167,.15);
+    opacity: 0; pointer-events: none; transition: opacity .18s ease, transform .22s cubic-bezier(.3,1.6,.5,1);
+  }
+  #monkey .say.show { opacity: 1; transform: translate(-10%, -4px) scale(1); }
+  #monkey.left .say { left: auto; right: 62%; transform-origin: 100% 100%; border-radius: 12px 12px 3px 12px; transform: translate(10%, -4px) scale(.85); }
+  #monkey.left .say.show { transform: translate(10%, -4px) scale(1); }
 </style>
 </head>
 <body>
@@ -357,8 +371,9 @@
   </section>
 </main>
 
-<div id="monkey" aria-hidden="true">
-  <svg viewBox="0 0 140 90">
+<div id="monkey">
+  <span class="say" role="status" aria-live="polite"></span>
+  <svg viewBox="0 0 140 90" role="button" tabindex="0" aria-label="Talk to the monkey">
     <g class="flip" fill="#002fa7" stroke="#002fa7" stroke-linecap="round" stroke-linejoin="round">
       <g class="farF" fill="none"><path class="u" stroke-width="5.5"/><path class="l" stroke-width="3.6"/></g>
       <g class="farH" fill="none"><path class="u" stroke-width="7"/><path class="l" stroke-width="3.6"/></g>
@@ -554,6 +569,21 @@
       path.setAttribute('d', d + 'Z');
       requestAnimationFrame(tick);
     })(performance.now());
+  })();
+
+  // tap the monkey: it says the next line
+  (function () {
+    var m = document.getElementById('monkey'); if (!m) return;
+    var svg = m.querySelector('svg'), say = m.querySelector('.say'), i = 0, hide = null;
+    var LINES = ['Yo.', 'Read.', 'Focus.', 'C\u2019mon man.', 'Should I say it?', 'Imma say it.', 'Get ready.',
+      'Ooh-ooh aah-aah.', 'Now give banana.', 'Shak\u2019s good.', 'So is her work.', 'You can trust her.', 'Lol.'];
+    var talk = function () {
+      say.textContent = LINES[i]; i = (i + 1) % LINES.length;
+      say.classList.remove('show'); void say.offsetWidth; say.classList.add('show');
+      clearTimeout(hide); hide = setTimeout(function () { say.classList.remove('show'); }, 2600);
+    };
+    svg.addEventListener('click', talk);
+    svg.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); talk(); } });
   })();
 </script>
 </body>
