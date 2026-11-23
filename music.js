@@ -17,6 +17,8 @@ const TRACKS = [
   { label: 'EDM', id: '6MAzUT1YhWE' },
   { label: 'Synth', id: 'vNwYtllyt3Q' },
   { label: 'Rap', id: '5OaGBXAzFY0' },
+  { label: 'Indian classical', id: '059QnVHmPxg' },
+  { label: 'Western classical', id: 'js6zXgxk0cQ' },
   { label: 'My award winning audio film about a hard of hearing, deaf girl', id: 'GTsDt9JVkqk', wide: true },
 ];
 const BLUE = '#002fa7';
@@ -25,12 +27,14 @@ const FONT = "'Lexend', system-ui, sans-serif";
 // layout in the 1920 x 1080 screen space
 const ROWS = (() => {
   const r = [];
-  const x0 = 250, x1 = 990, w = 680, h = 104, y0 = 270, gap = 22;
-  for (let i = 0; i < 7; i++) {
-    const col = i < 4 ? 0 : 1, row = i < 4 ? i : i - 4;
+  // every track but the last in two columns, the last (the audio film) full width below
+  const x0 = 250, x1 = 990, w = 680, h = 86, y0 = 250, gap = 16;
+  const n = TRACKS.length - 1, perCol = Math.ceil(n / 2);
+  for (let i = 0; i < n; i++) {
+    const col = i < perCol ? 0 : 1, row = col ? i - perCol : i;
     r.push({ i, x: col ? x1 : x0, y: y0 + row * (h + gap), w, h });
   }
-  r.push({ i: 7, x: x0, y: y0 + 4 * (h + gap) + 14, w: 1420, h: 120 });
+  r.push({ i: n, x: x0, y: y0 + perCol * (h + gap) + 14, w: 1420, h: 110 });
   return r;
 })();
 const STOP = { id: 'stop', x: 1430, y: 96, w: 240, h: 76 };
@@ -78,7 +82,8 @@ export function initMusic(opts) {
       g.font = `600 40px ${FONT}`;
       g.fillText(String(r.i + 1), r.x + 38, r.y + r.h / 2 + 2);
       g.fillStyle = on ? '#fff' : '#1b1b1f';
-      g.font = `${r.i === 7 ? 300 : 400} ${r.i === 7 ? 40 : 46}px ${FONT}`;
+      const wide = TRACKS[r.i].wide;
+      g.font = `${wide ? 300 : 400} ${wide ? 40 : 42}px ${FONT}`;
       g.fillText(TRACKS[r.i].label, r.x + 96, r.y + r.h / 2 + 2);
       if (on) {   // little equaliser
         g.fillStyle = '#fff';
@@ -199,6 +204,14 @@ export function initMusic(opts) {
     draw();
     monitor.open(content);
   }
+
+  // only make sound while this tab is the one being looked at
+  let pausedByTab = false;
+  document.addEventListener('visibilitychange', () => {
+    if (!player || playing < 0) return;
+    if (document.hidden) { if (player.pauseVideo) { player.pauseVideo(); pausedByTab = true; } }
+    else if (pausedByTab) { pausedByTab = false; if (player.playVideo) player.playVideo(); }
+  });
 
   // the top-right "take off headphones" button (index.html) fires this
   addEventListener('take-off-headphones', () => stop());
