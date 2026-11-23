@@ -146,32 +146,6 @@
   #monkey svg { width: 100%; height: 100%; overflow: visible; }
   #monkey .flip { transform-origin: 60px 40px; transform-box: view-box; transition: transform .25s ease; }
   #monkey.left .flip { transform: scaleX(-1); }
-  #monkey .p { transform-box: view-box; transition: transform .45s cubic-bezier(.4,0,.2,1); }
-  #monkey .bob   { transform-origin: 60px 60px; }
-  #monkey .torso { transform-origin: 42px 46px; }
-  #monkey .head  { transform-origin: 80px 36px; }
-  #monkey .fl1, #monkey .fl2 { transform-origin: 74px 44px; }
-  #monkey .bl1, #monkey .bl2 { transform-origin: 42px 45px; }
-  #monkey .tail  { transform-origin: 34px 40px; }
-  /* walk */
-  #monkey.walk .bob { animation: m-bob .5s ease-in-out infinite; }
-  #monkey.walk .fl1, #monkey.walk .bl2 { animation: m-leg .5s ease-in-out infinite; }
-  #monkey.walk .fl2, #monkey.walk .bl1 { animation: m-leg .5s ease-in-out infinite reverse; }
-  #monkey.walk .tail { animation: m-tail 1s ease-in-out infinite; }
-  @keyframes m-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-1.6px); } }
-  @keyframes m-leg { 0%, 100% { transform: rotate(-22deg); } 50% { transform: rotate(22deg); } }
-  @keyframes m-tail { 0%, 100% { transform: rotate(-6deg); } 50% { transform: rotate(6deg); } }
-  /* stand: still, slow breath and a lazy tail */
-  #monkey.stand .bob { animation: m-breath 2.4s ease-in-out infinite; }
-  #monkey.stand .tail { animation: m-tail 3s ease-in-out infinite; }
-  @keyframes m-breath { 0%, 100% { transform: scaleY(1); } 50% { transform: scaleY(1.025); } }
-  /* sit: torso upright on the haunches, back legs forward, arms down */
-  #monkey.sit .bob { transform: translateY(13px); }
-  #monkey.sit .torso { transform: rotate(-58deg); }
-  #monkey.sit .head  { transform: rotate(58deg) translate(-2px, 1px); }
-  #monkey.sit .fl1, #monkey.sit .fl2 { transform: rotate(50deg) scaleY(.75); }
-  #monkey.sit .bl1, #monkey.sit .bl2 { transform: rotate(-84deg) scaleY(.8); }
-  #monkey.sit .tail  { transform: rotate(28deg); }
   html.reduce-motion #monkey * { animation: none !important; transition: none !important; }
   @media (prefers-reduced-motion: reduce) { #monkey * { animation: none !important; transition: none !important; } }
   @media print { #monkey { display: none; } }
@@ -389,24 +363,20 @@
   </section>
 </main>
 
-<div id="monkey" class="stand" aria-hidden="true">
+<div id="monkey" aria-hidden="true">
   <svg viewBox="0 0 120 80">
-    <g class="flip" fill="#002fa7" stroke="#002fa7" stroke-linecap="round">
-      <g class="p bob">
-        <path class="p tail" d="M35 40 C22 36 14 46 15 60 C16 68 21 72 24 69" fill="none" stroke-width="4"/>
-        <g class="p bl2"><path d="M44 45 L41 70" stroke-width="6" opacity=".72"/></g>
-        <g class="p bl1"><path d="M40 45 L38 70" stroke-width="7"/></g>
-        <g class="p torso">
-          <g class="p fl2"><path d="M76 44 L80 70" stroke-width="5.5" opacity=".72"/></g>
-          <path d="M34 42 C34 30 48 27 62 28 C74 29 82 32 82 40 C82 49 70 52 56 52 C42 52 34 50 34 42 Z" stroke="none"/>
-          <g class="p fl1"><path d="M72 44 L75 70" stroke-width="6.5"/></g>
-          <g class="p head">
-            <circle cx="86" cy="30" r="11" stroke="none"/>
-            <ellipse cx="96" cy="34" rx="6.5" ry="5.2" stroke="none"/>
-            <path d="M81 25 a4 4 0 0 1 0 7" fill="none" stroke="#fff" stroke-width="1.3" opacity=".85"/>
-            <circle cx="92" cy="27" r="1.3" fill="#fff" stroke="none"/>
-          </g>
-        </g>
+    <g class="flip" fill="none" stroke="#002fa7" stroke-linecap="round" stroke-linejoin="round">
+      <path class="farH" stroke-width="5.5" opacity=".62"/>
+      <path class="farF" stroke-width="5" opacity=".62"/>
+      <path class="tail" stroke-width="3.6"/>
+      <path class="body" stroke-width="19"/>
+      <path class="nearH" stroke-width="6.5"/>
+      <path class="nearF" stroke-width="5.8"/>
+      <g class="headg" stroke="none" fill="#002fa7">
+        <circle class="head" r="8.6"/>
+        <ellipse class="muzzle" rx="5.2" ry="4.2"/>
+        <path class="ear" fill="none" stroke="#fff" stroke-width="1.2" opacity=".85"/>
+        <circle class="eye" r="1.15" fill="#fff"/>
       </g>
     </g>
   </svg>
@@ -435,13 +405,18 @@
     els.forEach(function (e) { io.observe(e); });
   })();
 
-  // the monkey: walks along the bottom with your scroll, stands when you stop,
-  // sits if you linger, and at the very end climbs onto the word "monkeys"
+  // The monkey: a small jointed figure (two-bone legs). It walks with real
+  // steps while you scroll (feet stay planted, no sliding), stands when you
+  // stop, sits if you linger, and at the very end climbs onto "monkeys".
   (function () {
     var m = document.getElementById('monkey'); if (!m) return;
+    var q = function (c) { return m.querySelector('.' + c); };
+    var el = { nearH: q('nearH'), farH: q('farH'), nearF: q('nearF'), farF: q('farF'), tail: q('tail'), body: q('body'),
+      head: q('head'), muzzle: q('muzzle'), ear: q('ear'), eye: q('eye') };
     var word = document.getElementById('monkeys-word');
-    var W = 78, H = 52, FEET = 45.5, BOTTOM = 6;
-    var x = 16, y = 0, tx = 16, ty = 0, lastMove = performance.now(), state = 'stand';
+    var W = 78, H = 52, FEET = 47, BOTTOM = 6, PX = W / 120, GROUND = 72;
+    var reduce = function () { return document.documentElement.classList.contains('reduce-motion') || matchMedia('(prefers-reduced-motion: reduce)').matches; };
+    var x = 16, y = 0, tx = 16, ty = 0, lastMove = performance.now(), mode = 'stand', phase = 0, t0 = performance.now();
     var calc = function () {
       var max = document.documentElement.scrollHeight - innerHeight;
       var p = max > 0 ? scrollY / max : 0;
@@ -450,22 +425,102 @@
         var r = word.getBoundingClientRect();
         if (r.top > 0 && r.top < innerHeight) {
           tx = r.left + r.width / 2 - W / 2 + 4;
-          ty = (r.top + 7) - (innerHeight - BOTTOM - H + FEET);   // feet on top of the word
+          ty = (r.top + 6) - (innerHeight - BOTTOM - H + FEET);
         }
       }
     };
-    var set = function (st) { if (st !== state) { m.classList.remove(state); m.classList.add(st); state = st; } };
     addEventListener('scroll', calc, { passive: true }); addEventListener('resize', calc);
+
+    var V = function (a, b) { return { x: a, y: b }; };
+    var lerp = function (a, b, k) { return a + (b - a) * k; };
+    // two-bone IK: joint bends forward (+1) for hind knees, backward (-1) for front elbows
+    var ik = function (A, F, l1, l2, bend) {
+      var dx = F.x - A.x, dy = F.y - A.y, d = Math.min(Math.hypot(dx, dy), l1 + l2 - 0.01);
+      var th = Math.atan2(dy, dx), al = Math.acos((l1 * l1 + d * d - l2 * l2) / (2 * l1 * d)) || 0;
+      var a = th - bend * al;
+      return V(A.x + l1 * Math.cos(a), A.y + l1 * Math.sin(a));
+    };
+    // foot path over one gait cycle: 62% planted and moving back, 38% swinging forward
+    var foot = function (bx, p, S) {
+      p = ((p % 1) + 1) % 1;
+      if (p < 0.62) { var u = p / 0.62; return V(bx + S / 2 - S * u, GROUND); }
+      var w = (p - 0.62) / 0.38, e = w * w * (3 - 2 * w);
+      return V(bx - S / 2 + S * e, GROUND - 6 * Math.sin(Math.PI * w));
+    };
+    // ---- poses: each returns hip, shoulder, the four feet, head centre, tail
+    function walkPose(p, run) {
+      var S = 17 + run * 6, bob = Math.sin(p * 4 * Math.PI);
+      var hip = V(43, 42 - bob * 1.2 - run * 2), sh = V(77, 48 - Math.sin((p + 0.25) * 4 * Math.PI) * 1.1);
+      return { hip: hip, sh: sh,
+        nH: foot(45, p, S), fH: foot(45, p + 0.5, S), nF: foot(80, p + 0.25, S), fF: foot(80, p + 0.75, S),
+        head: V(sh.x + 13, sh.y - 7 + bob * 0.6), tilt: 0,
+        tail: [V(hip.x - 8, hip.y - 3), V(hip.x - 20, hip.y - 10 + bob), V(hip.x - 18, hip.y - 30), V(hip.x - 7, hip.y - 29 + Math.sin(p * 2 * Math.PI) * 2)] };
+    }
+    function standPose(t) {
+      var br = Math.sin(t * 2.2) * 0.5;
+      var hip = V(43, 41.5 - br), sh = V(77, 48 - br);
+      return { hip: hip, sh: sh, nH: V(48, GROUND), fH: V(41, GROUND), nF: V(82, GROUND), fF: V(76, GROUND),
+        head: V(sh.x + 13, sh.y - 8), tilt: 0,
+        tail: [V(hip.x - 8, hip.y - 3), V(hip.x - 21, hip.y - 8), V(hip.x - 19, hip.y - 29), V(hip.x - 8, hip.y - 28 + Math.sin(t * 1.3) * 2)] };
+    }
+    function sitPose(t) {
+      var br = Math.sin(t * 2) * 0.4;
+      var hip = V(46, 60), sh = V(56, 37 - br);
+      return { hip: hip, sh: sh, nH: V(68, GROUND), fH: V(64, GROUND), nF: V(63, GROUND), fF: V(59, GROUND),
+        head: V(61, 25 - br), tilt: 0.12,
+        tail: [V(hip.x - 6, hip.y + 4), V(hip.x - 22, hip.y + 12), V(hip.x - 30, hip.y + 4), V(hip.x - 27, hip.y - 6 + Math.sin(t * 1.1) * 1.5)] };
+    }
+    var cur = null;
+    var mix = function (a, b, k) {
+      if (!a) return b;
+      var o = {};
+      for (var key in b) {
+        if (key === 'tail') o.tail = b.tail.map(function (pt, i) { return V(lerp(a.tail[i].x, pt.x, k), lerp(a.tail[i].y, pt.y, k)); });
+        else if (typeof b[key] === 'number') o[key] = lerp(a[key], b[key], k);
+        else o[key] = V(lerp(a[key].x, b[key].x, k), lerp(a[key].y, b[key].y, k));
+      }
+      return o;
+    };
+    var f = function (n) { return n.toFixed(1); };
+    var leg = function (A, F, l1, l2, bend, toe) {
+      var K = ik(A, F, l1, l2, bend);
+      return 'M' + f(A.x) + ' ' + f(A.y) + 'L' + f(K.x) + ' ' + f(K.y) + 'L' + f(F.x) + ' ' + f(F.y) + 'l' + toe + ' 0';
+    };
+    function draw(P) {
+      el.nearH.setAttribute('d', leg(P.hip, P.nH, 17, 17, 1, 3.5));
+      el.farH.setAttribute('d', leg(V(P.hip.x + 2, P.hip.y + 1), P.fH, 17, 17, 1, 3.5));
+      el.nearF.setAttribute('d', leg(P.sh, P.nF, 15, 15, -1, 3));
+      el.farF.setAttribute('d', leg(V(P.sh.x - 2, P.sh.y + 1), P.fF, 15, 15, -1, 3));
+      var T = P.tail;
+      el.tail.setAttribute('d', 'M' + f(T[0].x) + ' ' + f(T[0].y) + 'C' + f(T[1].x) + ' ' + f(T[1].y) + ' ' + f(T[2].x) + ' ' + f(T[2].y) + ' ' + f(T[3].x) + ' ' + f(T[3].y));
+      // torso: rump, belly sag, chest
+      var mx = (P.hip.x + P.sh.x) / 2, my = (P.hip.y + P.sh.y) / 2 + 2.5;
+      el.body.setAttribute('d', 'M' + f(P.hip.x) + ' ' + f(P.hip.y) + 'Q' + f(mx) + ' ' + f(my) + ' ' + f(P.sh.x) + ' ' + f(P.sh.y));
+      var h = P.head, dx = Math.cos(P.tilt), dy = Math.sin(P.tilt);
+      el.head.setAttribute('cx', f(h.x)); el.head.setAttribute('cy', f(h.y));
+      el.muzzle.setAttribute('cx', f(h.x + 8 * dx - 1 * dy)); el.muzzle.setAttribute('cy', f(h.y + 3.5 + 1 * dx));
+      el.eye.setAttribute('cx', f(h.x + 4.5)); el.eye.setAttribute('cy', f(h.y - 2));
+      el.ear.setAttribute('d', 'M' + f(h.x - 4) + ' ' + f(h.y - 4) + 'a3.4 3.4 0 0 1 0 6.4');
+    }
+
     calc(); x = tx; y = ty;
     (function tick(now) {
-      calc();   // the word moves while scrolling, keep tracking it
+      calc();
+      var t = (now - t0) / 1000;
       var dx = (tx - x) * 0.06, dy = (ty - y) * 0.09;
-      if (Math.abs(dx) > 0.12 || Math.abs(dy) > 0.12) {
-        x += dx; y += dy; lastMove = now;
-        set(Math.abs(dy) > 0.6 ? 'stand' : 'walk');   // a leap up/down, or walking
-        if (Math.abs(dx) > 0.12) m.classList.toggle('left', dx < 0);
-      } else if (now - lastMove > (ty < -1 ? 700 : 3800)) set('sit');   // quick to sit on the word
-      else if (now - lastMove > 250) set('stand');
+      var moving = Math.abs(dx) > 0.12 || Math.abs(dy) > 0.12;
+      if (moving) { x += dx; y += dy; lastMove = now; if (Math.abs(dx) > 0.12) m.classList.toggle('left', dx < 0); }
+      var idle = now - lastMove;
+      mode = moving ? 'walk' : idle > (ty < -1 ? 700 : 3800) ? 'sit' : 'stand';
+      if (reduce()) mode = 'stand';
+      var target;
+      if (mode === 'walk') {
+        var speed = Math.hypot(dx, dy);
+        phase += Math.max(speed / (17 * PX), 0.012);   // one stride per stride-length moved: no foot sliding
+        target = walkPose(phase, Math.min(1, speed / 6));
+      } else target = mode === 'sit' ? sitPose(t) : standPose(t);
+      cur = mix(cur, target, mode === 'walk' ? 0.55 : 0.12);
+      draw(cur);
       m.style.transform = 'translate(' + x.toFixed(1) + 'px,' + y.toFixed(1) + 'px)';
       requestAnimationFrame(tick);
     })(performance.now());
