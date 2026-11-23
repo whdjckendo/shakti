@@ -175,6 +175,8 @@
   html.reduce-motion #monkey * { animation: none !important; transition: none !important; }
   @media (prefers-reduced-motion: reduce) { #monkey * { animation: none !important; transition: none !important; } }
   @media print { #monkey { display: none; } }
+  .close .monkey-note { margin: 96px 0 0; font-size: 13px; color: var(--soft); }
+  #monkeys-word { display: inline-block; }
 </style>
 </head>
 <body>
@@ -382,6 +384,7 @@
         <a class="pill" href="media/resume.pdf" target="_blank" rel="noopener">Open resume</a>
         <a class="pill" href="mailto:whdjckendo@gmail.com">whdjckendo@gmail.com</a>
       </div>
+      <p class="monkey-note">Yes, I love <span id="monkeys-word">monkeys</span>.</p>
     </div>
   </section>
 </main>
@@ -432,26 +435,38 @@
     els.forEach(function (e) { io.observe(e); });
   })();
 
-  // the monkey: walks along the bottom with your scroll, stands when you stop, sits if you linger
+  // the monkey: walks along the bottom with your scroll, stands when you stop,
+  // sits if you linger, and at the very end climbs onto the word "monkeys"
   (function () {
     var m = document.getElementById('monkey'); if (!m) return;
-    var W = 78, x = 16, target = 16, lastMove = performance.now(), state = 'stand';
+    var word = document.getElementById('monkeys-word');
+    var W = 78, H = 52, FEET = 45.5, BOTTOM = 6;
+    var x = 16, y = 0, tx = 16, ty = 0, lastMove = performance.now(), state = 'stand';
     var calc = function () {
       var max = document.documentElement.scrollHeight - innerHeight;
       var p = max > 0 ? scrollY / max : 0;
-      target = 16 + p * (innerWidth - W - 32);
+      tx = 16 + p * (innerWidth - W - 32); ty = 0;
+      if (word && p > 0.97) {
+        var r = word.getBoundingClientRect();
+        if (r.top > 0 && r.top < innerHeight) {
+          tx = r.left + r.width / 2 - W / 2 + 4;
+          ty = (r.top + 7) - (innerHeight - BOTTOM - H + FEET);   // feet on top of the word
+        }
+      }
     };
     var set = function (st) { if (st !== state) { m.classList.remove(state); m.classList.add(st); state = st; } };
     addEventListener('scroll', calc, { passive: true }); addEventListener('resize', calc);
-    calc(); x = target;
+    calc(); x = tx; y = ty;
     (function tick(now) {
-      var dx = (target - x) * 0.06;
-      if (Math.abs(dx) > 0.12) {
-        x += dx; lastMove = now; set('walk');
-        m.classList.toggle('left', dx < 0);
-      } else if (now - lastMove > 3800) set('sit');
+      calc();   // the word moves while scrolling, keep tracking it
+      var dx = (tx - x) * 0.06, dy = (ty - y) * 0.09;
+      if (Math.abs(dx) > 0.12 || Math.abs(dy) > 0.12) {
+        x += dx; y += dy; lastMove = now;
+        set(Math.abs(dy) > 0.6 ? 'stand' : 'walk');   // a leap up/down, or walking
+        if (Math.abs(dx) > 0.12) m.classList.toggle('left', dx < 0);
+      } else if (now - lastMove > (ty < -1 ? 700 : 3800)) set('sit');   // quick to sit on the word
       else if (now - lastMove > 250) set('stand');
-      m.style.transform = 'translateX(' + x.toFixed(1) + 'px)';
+      m.style.transform = 'translate(' + x.toFixed(1) + 'px,' + y.toFixed(1) + 'px)';
       requestAnimationFrame(tick);
     })(performance.now());
   })();
