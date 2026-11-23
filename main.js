@@ -394,7 +394,7 @@ let bedBox = null;
 
 const posterMeshes = [];
 const raycaster = new THREE.Raycaster();
-const ndcCenter = new THREE.Vector2(0, 0);
+const ndcCenter = window.__ptrNdc || (window.__ptrNdc = new THREE.Vector2(0, 0));   // the mouse pointer, set by the look controls
 let posterFocus = 0;
 let hoverPoster = null;
 
@@ -518,42 +518,57 @@ const clock = new THREE.Clock();
    • free  — pointer position maps to a bounded look direction (works instantly
              on page load, cursor stays visible)
    • lock  — click the page for pointer lock and unlimited 360° mouse-look */
-// The reticle stays pinned to the centre of the screen and the pointer steers
-// the view under it. The view is unlocked: a full sweep of the pointer turns
-// the camera a full circle on yaw and almost straight up/down on pitch, so the
-// character can look anywhere in the room, including behind the desk.
-const HALF_YAW = Math.PI;                          // full 360° turn, no limit
-const HALF_PITCH = THREE.MathUtils.degToRad(88);   // just shy of vertical
+// Seated at the desk, like a desk-view portfolio: click and drag to turn and
+// look around. The view swings left and right to the side walls and up/down a
+// little, but never round to the wall behind. Hover and clicks follow the
+// mouse pointer itself, not the centre of the screen.
+const HALF_YAW = THREE.MathUtils.degToRad(100);    // left/right of the desk, no behind
+const PITCH_UP = THREE.MathUtils.degToRad(35);
+const PITCH_DOWN = THREE.MathUtils.degToRad(60);
 let baseYaw = 0;
 let targetYaw = 0, targetPitch = 0;
+const wrapPi = (a) => Math.atan2(Math.sin(a), Math.cos(a));
+const clampYaw = (y) => baseYaw + THREE.MathUtils.clamp(wrapPi(y - baseYaw), -HALF_YAW, HALF_YAW);
+const clampPitch = (p) => THREE.MathUtils.clamp(p, -PITCH_DOWN, PITCH_UP);
 
 let pointerX = window.innerWidth * 0.5;
 let pointerY = window.innerHeight * 0.5;
-
-window.addEventListener('mousemove', (e) => {
-  pointerX = e.clientX;
-  pointerY = e.clientY;
-  const nx = e.clientX / window.innerWidth - 0.5;
-  const ny = e.clientY / window.innerHeight - 0.5;
-  targetYaw = baseYaw - THREE.MathUtils.clamp(nx * 2, -1, 1) * HALF_YAW;
-  targetPitch = -THREE.MathUtils.clamp(ny * 2, -1, 1) * HALF_PITCH;
-});
-
-let touchId = null, touchLast = { x: 0, y: 0 };
-window.addEventListener('touchstart', (e) => {
-  const t = e.changedTouches[0];
-  touchId = t.identifier; touchLast = { x: t.clientX, y: t.clientY };
-}, { passive: true });
-window.addEventListener('touchmove', (e) => {
-  for (const t of e.changedTouches) {
-    if (t.identifier !== touchId) continue;
-    targetYaw = THREE.MathUtils.clamp(
-      targetYaw + (t.clientX - touchLast.x) * 0.005, baseYaw - HALF_YAW, baseYaw + HALF_YAW);
-    targetPitch = THREE.MathUtils.clamp(
-      targetPitch - (t.clientY - touchLast.y) * 0.005, -HALF_PITCH, HALF_PITCH);
-    touchLast = { x: t.clientX, y: t.clientY };
+const ptrNdc = window.__ptrNdc = new THREE.Vector2(0, 0);
+const setPtr = (x, y) => {
+  pointerX = x; pointerY = y;
+  ptrNdc.set((x / innerWidth) * 2 - 1, -(y / innerHeight) * 2 + 1);
+};
+let drag = null, dragMoved = false;
+const DRAG_SPEED = 0.0042;
+window.addEventListener('pointermove', (e) => {
+  setPtr(e.clientX, e.clientY);
+  if (!drag || e.pointerId !== drag.id) return;
+  const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+  if (!dragMoved && Math.hypot(e.clientX - drag.x0, e.clientY - drag.y0) > 6) {
+    dragMoved = true; document.body.classList.add('dragging');
   }
-}, { passive: true });
+  if (dragMoved) {
+    targetYaw = clampYaw(targetYaw + dx * DRAG_SPEED);       // grab the room and swing it
+    targetPitch = clampPitch(targetPitch + dy * DRAG_SPEED);
+  }
+  drag.x = e.clientX; drag.y = e.clientY;
+});
+window.addEventListener('pointerdown', (e) => {
+  setPtr(e.clientX, e.clientY);
+  if (e.button !== 0 || e.target !== renderer.domElement) return;   // UI buttons are not drags
+  drag = { id: e.pointerId, x: e.clientX, y: e.clientY, x0: e.clientX, y0: e.clientY };
+  dragMoved = false;
+});
+const endDrag = (e) => {
+  if (!drag || (e && e.pointerId !== drag.id)) return;
+  drag = null; document.body.classList.remove('dragging');
+};
+window.addEventListener('pointerup', endDrag);
+window.addEventListener('pointercancel', endDrag);
+// a drag is not a click: swallow the click that ends it
+window.addEventListener('click', (e) => {
+  if (dragMoved) { dragMoved = false; e.stopImmediatePropagation(); e.preventDefault(); }
+}, true);
 
 const DEFAULT_FOV = 60;
 let targetFov = DEFAULT_FOV;
@@ -586,21 +601,17 @@ addEventListener('keydown', (e) => {
   if (e.repeat) return;
   if (pdfOpen) return;
   if (bookApi && bookApi.active) return;   // reading: books.js owns the keyboard
-  if (keyMap[e.code]) {
-    move[keyMap[e.code]] = true;
-    // Any walk input gets you on your feet.
-    if (pose !== 'stand' && pose !== 'crouch') setPose('stand');
+  // Seated at the desk: no walking. The arrow keys turn the view instead.
+  const turn = { ArrowLeft: [1, 0], KeyA: [1, 0], ArrowRight: [-1, 0], KeyD: [-1, 0],
+    ArrowUp: [0, 1], KeyW: [0, 1], ArrowDown: [0, -1], KeyS: [0, -1] }[e.code];
+  if (turn) {
+    e.preventDefault();
+    targetYaw = clampYaw(targetYaw + turn[0] * 0.35);
+    targetPitch = clampPitch(targetPitch + turn[1] * 0.25);
   }
-  if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') move.run = true;
-  if (e.code === 'KeyE') setPose('sit');
-  if (e.code === 'KeyF' && liePos) setPose('lie');
-  if (e.code === 'KeyC') setPose(pose === 'crouch' ? 'stand' : 'crouch');
-  if (e.code === 'Space') { e.preventDefault(); setPose('stand'); }
   if (e.code === 'KeyH') toggleHud();
 });
 addEventListener('keyup', (e) => {
-  if (keyMap[e.code]) move[keyMap[e.code]] = false;
-  if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') move.run = false;
 });
 addEventListener('blur', () => { move.f = move.b = move.l = move.r = move.run = false; });
 
@@ -1579,6 +1590,11 @@ function animate() {
 
   const reading = !!(bookApi && bookApi.active);
   if (!reading) {
+    if (ready) {
+      // keep the view facing the desk side of the room, never round the back
+      targetYaw = clampYaw(targetYaw); targetPitch = clampPitch(targetPitch);
+      camera.rotation.y = baseYaw + wrapPi(camera.rotation.y - baseYaw);
+    }
     camera.rotation.y += (targetYaw - camera.rotation.y) * ease;
     camera.rotation.x += (targetPitch - camera.rotation.x) * ease;
     if (Math.abs(camera.fov - targetFov) > 0.01) {

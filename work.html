@@ -522,39 +522,52 @@
      .filter(function (d) { return d.el; });
     var quad = function (a, c, b, u) { var v = 1 - u; return [v * v * a[0] + 2 * v * u * c[0] + u * u * b[0], v * v * a[1] + 2 * v * u * c[1] + u * u * b[1]]; };
     var ease = function (u) { return u * u * (3 - 2 * u); };
-    var gx = 0, gy = 0;                      // where its feet should be, in page coordinates
+    // Scroll only decides WHICH perch it should be on. Once a jump starts it is
+    // always finished on its own clock, so it never hangs mid-air between perches.
+    var perchPts = function () { return PERCH.map(function (d) { var r = pageRect(d.el, d.text); return [r.l + r.w * d.fx, r.t + r.h * d.fy]; }); };
+    var want = 0;
     var calc = function () {
       var max = Math.max(0, document.documentElement.scrollHeight - innerHeight), n = PERCH.length;
-      if (!n) { gx = 60; gy = scrollY + innerHeight - BOTTOM; return; }
-      var P = PERCH.map(function (d) { var r = pageRect(d.el, d.text); return [r.l + r.w * d.fx, r.t + r.h * d.fy]; });
-      // the scroll at which it is sitting on each perch: perch about mid-screen, always in order, last one at the very bottom
+      if (!n) return;
+      var P = perchPts();
       var S = P.map(function (p) { return p[1] - innerHeight * 0.5; }), G = Math.min(160, innerHeight * 0.2), i;
       S[0] = Math.max(0, S[0]);
       for (i = 1; i < n; i++) S[i] = Math.max(S[i], S[i - 1] + G);
       S[n - 1] = Math.min(S[n - 1], max);
       for (i = n - 2; i >= 0; i--) S[i] = Math.min(S[i], S[i + 1] - G * 0.6);
       for (i = 0; i < n; i++) S[i] = Math.max(0, S[i]);
-      var y = scrollY;
-      if (y <= S[0]) { gx = P[0][0]; gy = P[0][1]; return; }
-      if (y >= S[n - 1]) { gx = P[n - 1][0]; gy = P[n - 1][1]; return; }
-      for (i = 0; i < n - 1 && y >= S[i + 1]; i++);
-      var u = (y - S[i]) / Math.max(1, S[i + 1] - S[i]);
-      u = u < 0.3 ? 0 : ease((u - 0.3) / 0.7);     // sits a moment, then jumps
-      var A = P[i], B = P[i + 1], dx = B[0] - A[0];
-      var C = [B[0] - dx * 0.2, Math.min(A[1], B[1]) - (30 + Math.abs(dx) * 0.12)];   // up and over, then down onto it
-      var pt = quad(A, C, B, u); gx = pt[0]; gy = pt[1];
+      // halfway between two perches' scroll points, it commits to the next one
+      var y = scrollY; want = 0;
+      for (i = 1; i < n; i++) if (y >= (S[i - 1] + S[i]) / 2) want = i;
+      if (y >= max - 2) want = n - 1;
     };
     addEventListener('scroll', calc, { passive: true }); addEventListener('resize', calc);
     calc();
-    var px = gx, py = gy, x = 0, y = 0;
+    var at = want, hop = null, x = 0, y = 0, px = 0, py = 0;
+    var arc = function (A, B) { var dx = B[0] - A[0]; return [B[0] - dx * 0.2, Math.min(A[1], B[1]) - (30 + Math.abs(dx) * 0.12)]; };
     (function tick(now) {
       calc();
-      var t = (now - t0) / 1000;
-      var dx = (gx - px) * 0.14, dy = (gy - py) * 0.14;
-      var moving = Math.abs(dx) > 0.15 || Math.abs(dy) > 0.15;
-      if (moving) { px += dx; py += dy; lastMove = now; if (Math.abs(dx) > 0.15) m.classList.toggle('left', dx < 0); }
+      var t = (now - t0) / 1000, moving = false, dx = 0;
+      var P = PERCH.length ? perchPts() : [[60, scrollY + innerHeight]];
+      if (!hop && want !== at) {
+        var to = at + (want > at ? 1 : -1), A = P[at], B = P[to];
+        var backlog = Math.abs(want - at);
+        var dur = Math.min(1300, Math.max(650, 450 + Math.hypot(B[0] - A[0], B[1] - A[1]) * 0.45)) / Math.min(3, backlog);
+        hop = { from: at, to: to, t0: now, dur: dur };
+      }
+      var ox = px, oy = py;
+      if (hop) {
+        var u = Math.min(1, (now - hop.t0) / hop.dur), A2 = P[hop.from], B2 = P[hop.to];
+        var pt = quad(A2, arc(A2, B2), B2, ease(u));
+        px = pt[0]; py = pt[1];
+        if (u >= 1) { at = hop.to; hop = null; }
+        moving = true; lastMove = now;
+      } else { px = P[at][0]; py = P[at][1]; }   // sitting on its perch, riding along with the page
+      dx = px - ox;
+      if (moving && Math.abs(dx) > 0.15) m.classList.toggle('left', dx < 0);
       x = px - W / 2; y = py - scrollY - (innerHeight - BOTTOM - H + FEET);
-      var idle = now - lastMove, mode = moving ? 'run' : idle > 700 ? 'sit' : 'stand';
+      var dy = py - oy;
+    var idle = now - lastMove, mode = moving ? 'run' : idle > 700 ? 'sit' : 'stand';
       if (reduce()) mode = 'stand';
       var target, k = 0.14;
       if (mode === 'run') {
