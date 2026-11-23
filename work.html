@@ -102,6 +102,7 @@
   .process .cap b { display: block; font-weight: 500; margin-bottom: 4px; }
   .process .cap b::before { content: counter(step, decimal-leading-zero) "  "; color: var(--blue); font-weight: 500; }
   .process .cap span { font-size: 14px; color: var(--soft); line-height: 1.45; }
+  @media (max-width: 600px) { .process li .img.text { aspect-ratio: auto; } }   /* phones: text tiles only as tall as their words */
   @media (max-width: 900px) { .process { grid-template-columns: 1fr 1fr; } }
   @media (max-width: 560px) { .process { grid-template-columns: 1fr; } }
   .pattern { margin: 36px 0 0; padding: 20px 22px; border-radius: 16px; background: var(--tint); }

@@ -26,7 +26,8 @@ const canvas = document.getElementById('scene');
 const loadingEl = document.getElementById('loading');
 
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+const COARSE = matchMedia('(pointer: coarse)').matches;   // phones and tablets
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, COARSE ? 1.5 : 2));
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -538,7 +539,7 @@ const setPtr = (x, y) => {
   pointerX = x; pointerY = y;
   ptrNdc.set((x / innerWidth) * 2 - 1, -(y / innerHeight) * 2 + 1);
 };
-let drag = null, dragMoved = false;
+let drag = null, dragMoved = false, lastPointerType = 'mouse';
 const DRAG_SPEED = 0.0042;
 window.addEventListener('pointermove', (e) => {
   setPtr(e.clientX, e.clientY);
@@ -555,6 +556,7 @@ window.addEventListener('pointermove', (e) => {
 });
 window.addEventListener('pointerdown', (e) => {
   setPtr(e.clientX, e.clientY);
+  lastPointerType = e.pointerType || 'mouse';
   if (e.button !== 0 || e.target !== renderer.domElement) return;   // UI buttons are not drags
   drag = { id: e.pointerId, x: e.clientX, y: e.clientY, x0: e.clientX, y0: e.clientY };
   dragMoved = false;
@@ -570,12 +572,17 @@ window.addEventListener('click', (e) => {
   if (dragMoved) { dragMoved = false; e.stopImmediatePropagation(); e.preventDefault(); }
 }, true);
 
-const DEFAULT_FOV = 60;
+// Landscape screens use 60°. A tall phone screen is narrow, so open the view up
+// until about 56° fits across it (capped, so the edges don't stretch).
+const fovFor = (aspect) => aspect >= 1.2 ? 60
+  : THREE.MathUtils.clamp(THREE.MathUtils.radToDeg(2 * Math.atan(Math.tan(THREE.MathUtils.degToRad(28)) / aspect)), 60, 92);
+let DEFAULT_FOV = fovFor(innerWidth / innerHeight);
+camera.fov = DEFAULT_FOV; camera.updateProjectionMatrix();
 let targetFov = DEFAULT_FOV;
 window.addEventListener('wheel', (e) => {
   if (pdfOpen) return;
   if (bookApi && bookApi.active) return;
-  targetFov = THREE.MathUtils.clamp(targetFov + e.deltaY * 0.02, 28, 78);
+  targetFov = THREE.MathUtils.clamp(targetFov + e.deltaY * 0.02, 28, Math.max(78, DEFAULT_FOV));
 }, { passive: true });
 
 const keyMap = {
@@ -621,7 +628,9 @@ addEventListener('click', () => {
   // Blender room: the toilets poster or the open book itself opens Book 1.
   if (isGlb && bookApi && bookApi.open) {
     // toilets poster -> Book 1, IKEA (ETT LYCKLIG) poster -> Book 2, Navigation poster -> Book 3
-    const posterKey = hoverPoster && posterFocus > 0.4
+    const tap = lastPointerType === 'touch';
+    if (tap && ready) pickUnderPointer();   // a finger has no hover: look under the tap now
+    const posterKey = hoverPoster && (tap || posterFocus > 0.4)
       ? ({ 'poster-left': 'book1', 'poster-center': 'book2', 'A4_-_2': 'book3' })[hoverPoster.name] : null;
     const bookKey = curInfo && ({ 'Book 1': 'book1', 'Book 2': 'book2', 'Book 3': 'book3', 'Book 4': 'book4' })[curInfo.title];
     if (curInfo && curInfo.wall && bookApi.readers.wall) { bookApi.readers.wall.open(); return; }
@@ -1596,6 +1605,9 @@ function step(dx, dz) {
 
 addEventListener('resize', () => {
   camera.aspect = window.innerWidth / window.innerHeight;
+  const nf = fovFor(camera.aspect);
+  if (Math.abs(targetFov - DEFAULT_FOV) < 0.5) targetFov = nf;   // keep a zoom the visitor chose
+  DEFAULT_FOV = nf;
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
   composer.setSize(window.innerWidth, window.innerHeight);
@@ -1604,6 +1616,22 @@ addEventListener('resize', () => {
 });
 
 /* ---------------- Frame loop ---------------- */
+// What's under the pointer (or the finger): poster and documented object.
+function pickUnderPointer() {
+  raycaster.setFromCamera(ndcCenter, camera);
+  const hit = raycaster.intersectObjects(posterMeshes, false)[0];
+  hoverPoster = hit && hit.distance < 6.5 ? hit.object : null;
+  // Pointer resting on a documented object -> bottom-left info card.
+  // A proxy box wraps its object loosely; if a real documented mesh sits just
+  // inside it (the headphones inside the stand's box), that one wins.
+  const ihits = raycaster.intersectObjects(infoHitTargets, false);
+  let ihit = ihits[0];
+  if (ihit && ihit.object.userData.isProxy) {
+    const real = ihits.find((h) => !h.object.userData.isProxy);
+    if (real && real.distance - ihit.distance < 0.35) ihit = real;
+  }
+  updateObjInfo(ihit && ihit.distance < 7 ? ihit.object : null);
+}
 const fwd = new THREE.Vector3(), right = new THREE.Vector3();
 let bob = 0;
 
@@ -1657,9 +1685,7 @@ function animate() {
     camera.position.y = floorY + eyeHeight +
       (moving ? Math.sin(bob) * (move.run ? 0.045 : 0.028) : 0);
 
-    raycaster.setFromCamera(ndcCenter, camera);
-    const hit = raycaster.intersectObjects(posterMeshes, false)[0];
-    hoverPoster = hit && hit.distance < 6.5 ? hit.object : null;
+    pickUnderPointer();
     const wantFocus = hoverPoster ? 1 : 0;
     if (wantFocus || posterFocus > 0) {
       posterFocus += (wantFocus - posterFocus) * (1 - Math.pow(0.0004, dt));
@@ -1671,14 +1697,7 @@ function animate() {
     // Reticle resting on a documented object -> bottom-left info card.
     // A proxy box wraps its object loosely; if a real documented mesh sits just
     // inside it (the headphones inside the stand's box), that one wins.
-    const ihits = raycaster.intersectObjects(infoHitTargets, false);
-    let ihit = ihits[0];
-    if (ihit && ihit.object.userData.isProxy) {
-      const real = ihits.find((h) => !h.object.userData.isProxy);
-      if (real && real.distance - ihit.distance < 0.35) ihit = real;
-    }
-    updateObjInfo(ihit && ihit.distance < 7 ? ihit.object : null);
-    setClickTip(clickLabel(), pointerX, pointerY);
+    setClickTip(lastPointerType === 'touch' ? null : clickLabel(), pointerX, pointerY);
   } else {
     if (curInfo) updateObjInfo(null);
     // entering a close-up view: drop the reticle's tip once (overlays may
