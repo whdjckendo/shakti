@@ -140,6 +140,41 @@
   @media (prefers-reduced-motion: reduce) { .spin, .pop { animation: none; } }
   @media (max-width: 760px) { .claim-head .num { width: 48px; height: 48px; } }
   h1 { margin-bottom: 22px; }
+
+  /* the little monkey that walks along as you scroll */
+  #monkey { position: fixed; left: 0; bottom: 6px; width: 78px; height: 52px; z-index: 30; pointer-events: none; will-change: transform; }
+  #monkey svg { width: 100%; height: 100%; overflow: visible; }
+  #monkey .flip { transform-origin: 60px 40px; transform-box: view-box; transition: transform .25s ease; }
+  #monkey.left .flip { transform: scaleX(-1); }
+  #monkey .p { transform-box: view-box; transition: transform .45s cubic-bezier(.4,0,.2,1); }
+  #monkey .bob   { transform-origin: 60px 60px; }
+  #monkey .torso { transform-origin: 42px 46px; }
+  #monkey .head  { transform-origin: 80px 36px; }
+  #monkey .fl1, #monkey .fl2 { transform-origin: 74px 44px; }
+  #monkey .bl1, #monkey .bl2 { transform-origin: 42px 45px; }
+  #monkey .tail  { transform-origin: 34px 40px; }
+  /* walk */
+  #monkey.walk .bob { animation: m-bob .5s ease-in-out infinite; }
+  #monkey.walk .fl1, #monkey.walk .bl2 { animation: m-leg .5s ease-in-out infinite; }
+  #monkey.walk .fl2, #monkey.walk .bl1 { animation: m-leg .5s ease-in-out infinite reverse; }
+  #monkey.walk .tail { animation: m-tail 1s ease-in-out infinite; }
+  @keyframes m-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-1.6px); } }
+  @keyframes m-leg { 0%, 100% { transform: rotate(-22deg); } 50% { transform: rotate(22deg); } }
+  @keyframes m-tail { 0%, 100% { transform: rotate(-6deg); } 50% { transform: rotate(6deg); } }
+  /* stand: still, slow breath and a lazy tail */
+  #monkey.stand .bob { animation: m-breath 2.4s ease-in-out infinite; }
+  #monkey.stand .tail { animation: m-tail 3s ease-in-out infinite; }
+  @keyframes m-breath { 0%, 100% { transform: scaleY(1); } 50% { transform: scaleY(1.025); } }
+  /* sit: torso upright on the haunches, back legs forward, arms down */
+  #monkey.sit .bob { transform: translateY(13px); }
+  #monkey.sit .torso { transform: rotate(-58deg); }
+  #monkey.sit .head  { transform: rotate(58deg) translate(-2px, 1px); }
+  #monkey.sit .fl1, #monkey.sit .fl2 { transform: rotate(50deg) scaleY(.75); }
+  #monkey.sit .bl1, #monkey.sit .bl2 { transform: rotate(-84deg) scaleY(.8); }
+  #monkey.sit .tail  { transform: rotate(28deg); }
+  html.reduce-motion #monkey * { animation: none !important; transition: none !important; }
+  @media (prefers-reduced-motion: reduce) { #monkey * { animation: none !important; transition: none !important; } }
+  @media print { #monkey { display: none; } }
 </style>
 </head>
 <body>
@@ -334,7 +369,7 @@
           <div class="cap"><b>In use</b><span>The final product, in use at a desk.</span></div></li>
       </ol>
 
-      <div class="pattern reveal"><p><span class="k">The process changes with the problem.</span> The toilets project was organic: on field observations, secondary research, ideation, and a surprise :). The navigation project was more structured: survey, interviews and ethnography, then personas, a journey map, user flows and a site map.</p></div>
+      <div class="pattern reveal"><p><span class="k">The process changes with the problem.</span> The toilets project was organic: on field observations, secondary research, then ideation into a buildable design. The navigation project was more structured: survey, interviews and ethnography, then personas, a journey map, user flows and a site map.</p></div>
     </div>
   </section>
 
@@ -351,6 +386,28 @@
   </section>
 </main>
 
+<div id="monkey" class="stand" aria-hidden="true">
+  <svg viewBox="0 0 120 80">
+    <g class="flip" fill="#002fa7" stroke="#002fa7" stroke-linecap="round">
+      <g class="p bob">
+        <path class="p tail" d="M35 40 C22 36 14 46 15 60 C16 68 21 72 24 69" fill="none" stroke-width="4"/>
+        <g class="p bl2"><path d="M44 45 L41 70" stroke-width="6" opacity=".72"/></g>
+        <g class="p bl1"><path d="M40 45 L38 70" stroke-width="7"/></g>
+        <g class="p torso">
+          <g class="p fl2"><path d="M76 44 L80 70" stroke-width="5.5" opacity=".72"/></g>
+          <path d="M34 42 C34 30 48 27 62 28 C74 29 82 32 82 40 C82 49 70 52 56 52 C42 52 34 50 34 42 Z" stroke="none"/>
+          <g class="p fl1"><path d="M72 44 L75 70" stroke-width="6.5"/></g>
+          <g class="p head">
+            <circle cx="86" cy="30" r="11" stroke="none"/>
+            <ellipse cx="96" cy="34" rx="6.5" ry="5.2" stroke="none"/>
+            <path d="M81 25 a4 4 0 0 1 0 7" fill="none" stroke="#fff" stroke-width="1.3" opacity=".85"/>
+            <circle cx="92" cy="27" r="1.3" fill="#fff" stroke="none"/>
+          </g>
+        </g>
+      </g>
+    </g>
+  </svg>
+</div>
 <footer><div class="wrap">Shakthi Nanda Kumar · Department of Design, IIT Roorkee</div></footer>
 
 <script>
@@ -373,6 +430,30 @@
       entries.forEach(function (en) { if (en.isIntersecting) { en.target.classList.add('in'); io.unobserve(en.target); } });
     }, { rootMargin: '0px 0px -8% 0px', threshold: 0.08 });
     els.forEach(function (e) { io.observe(e); });
+  })();
+
+  // the monkey: walks along the bottom with your scroll, stands when you stop, sits if you linger
+  (function () {
+    var m = document.getElementById('monkey'); if (!m) return;
+    var W = 78, x = 16, target = 16, lastMove = performance.now(), state = 'stand';
+    var calc = function () {
+      var max = document.documentElement.scrollHeight - innerHeight;
+      var p = max > 0 ? scrollY / max : 0;
+      target = 16 + p * (innerWidth - W - 32);
+    };
+    var set = function (st) { if (st !== state) { m.classList.remove(state); m.classList.add(st); state = st; } };
+    addEventListener('scroll', calc, { passive: true }); addEventListener('resize', calc);
+    calc(); x = target;
+    (function tick(now) {
+      var dx = (target - x) * 0.06;
+      if (Math.abs(dx) > 0.12) {
+        x += dx; lastMove = now; set('walk');
+        m.classList.toggle('left', dx < 0);
+      } else if (now - lastMove > 3800) set('sit');
+      else if (now - lastMove > 250) set('stand');
+      m.style.transform = 'translateX(' + x.toFixed(1) + 'px)';
+      requestAnimationFrame(tick);
+    })(performance.now());
   })();
 </script>
 </body>
