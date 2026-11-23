@@ -879,6 +879,31 @@ const paint = () => new Promise((r) => requestAnimationFrame(() => requestAnimat
   root.scale.setScalar(SCALE);
   root.updateMatrixWorld(true);
 
+  // Close the room door. In the model it stands ~36° open (Mesh285 is the
+  // slab, Mesh286/287 the lever handle). Swing all three shut about the hinge
+  // edge so the slab lies along its wall. Points are in the model's own units.
+  {
+    const slab = root.getObjectByName('Mesh285');
+    if (slab) {
+      const H = root.localToWorld(new THREE.Vector3(0.555, 0, 5.615));   // hinge edge
+      const F = root.localToWorld(new THREE.Vector3(7.865, 0, 0.355));   // free edge (handle side)
+      const C = root.localToWorld(new THREE.Vector3(0.555 + 1, 0, 5.615)); // closed: along +x
+      const ang = (v) => Math.atan2(-v.z, v.x);
+      const phi = ang(C.clone().sub(H)) - ang(F.clone().sub(H));
+      const R = new THREE.Matrix4().makeTranslation(H.x, 0, H.z)
+        .multiply(new THREE.Matrix4().makeRotationY(phi))
+        .multiply(new THREE.Matrix4().makeTranslation(-H.x, 0, -H.z));
+      for (const name of ['Mesh285', 'Mesh286', 'Mesh287']) {
+        const o = root.getObjectByName(name);
+        if (!o || !o.parent) continue;
+        o.updateWorldMatrix(true, false);
+        const P = o.parent.matrixWorld, Pi = P.clone().invert();
+        o.applyMatrix4(Pi.multiply(R).multiply(P));   // world-space swing, kept in the parent's frame
+      }
+      root.updateMatrixWorld(true);
+    }
+  }
+
   // The seated figure is our body: its meshes sit under the "Group19" /
   // "Sitting_colored_man" SketchUp groups. Hide them (we're looking out
   // through this character's eyes) but keep the bounds to place the camera.
@@ -1406,9 +1431,8 @@ const paint = () => new Promise((r) => requestAnimationFrame(() => requestAnimat
         } else wallBox.union(b);
       }
       wallBox.expandByScalar(0.06);
-      // The open door stands in front of this wall, so look at it from an angle,
-      // from the desk side, where nothing is in the way (nothing gets cut).
-      readers.wall = initFocus({ camera, box: wallBox, normal: new THREE.Vector3(0.78, 0, -0.62), clear: 0, fill: 0.86, onExit });
+      // The door is closed now, so look at the wall straight on.
+      readers.wall = initFocus({ camera, box: wallBox, normal: new THREE.Vector3(1, 0, 0), clear: 0.08, fill: 0.86, onExit });
     }
     const list = Object.values(readers);
     bookApi = {
