@@ -54,8 +54,14 @@ composer.addPass(new ShaderPass({
   fragmentShader: `uniform sampler2D tDiffuse; varying vec2 vUv;
     void main() {
       vec4 c = texture2D(tDiffuse, vUv);
-      if (any(isnan(c)) || any(isinf(c))) c = vec4(0.0, 0.0, 0.0, 1.0);
-      gl_FragColor = vec4(min(c.rgb, vec3(64.0)), c.a);
+      // isnan()/isinf() can be compiled away on Windows (ANGLE/Direct3D), and
+      // there min(NaN, x) returns x: a broken pixel turned into a full-bright
+      // one and the bloom smeared it into a white cloud. Check the raw float
+      // bits instead (exponent all ones = NaN or Inf), which can't be skipped.
+      uvec4 bits = floatBitsToUint(c);
+      uvec4 ex = (bits >> 23u) & 255u;
+      if (any(equal(ex, uvec4(255u)))) c = vec4(0.0, 0.0, 0.0, 1.0);
+      gl_FragColor = vec4(clamp(c.rgb, 0.0, 10.0), c.a);   // no single pixel bright enough to bloom into a cloud
     }`,
 }));
 const bloomPass = new UnrealBloomPass(
@@ -900,6 +906,7 @@ const paint = () => new Promise((r) => requestAnimationFrame(() => requestAnimat
 
   root.scale.setScalar(SCALE);
   root.updateMatrixWorld(true);
+
 
   // Close the room door. In the model it stands ~36° open (Mesh285 is the
   // slab, Mesh286/287 the lever handle). Swing all three shut about the hinge
