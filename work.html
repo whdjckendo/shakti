@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Shakthi Nanda Kumar — The short version</title>
+<meta name="description" content="Industrial designer. Research that drives decisions, reframing the real problem, and a clear design process — shown through five projects.">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="icon" href="favicon-32.png" sizes="32x32">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --blue: #002fa7; --ink: #141416; --soft: #55565c; --line: #e4e4e8; --paper: #ffffff; --tint: #f3f5fb;
+    --ui-zoom: 1;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; background: var(--paper); color: var(--ink); font: 300 17px/1.6 'Lexend', system-ui, sans-serif; zoom: var(--ui-zoom); -webkit-font-smoothing: antialiased; }
+  a { color: var(--blue); }
+  img { display: block; max-width: 100%; height: auto; }
+  .wrap { width: min(1120px, 100% - 48px); margin: 0 auto; }
+
+  /* top bar */
+  .bar { position: sticky; top: 0; z-index: 10; background: rgba(255,255,255,.88); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border-bottom: 1px solid var(--line); }
+  .bar .wrap { display: flex; align-items: center; justify-content: space-between; height: 58px; gap: 16px; }
+  .bar .me { font-weight: 500; font-size: 15px; letter-spacing: .01em; }
+  .bar nav { display: flex; gap: 6px; align-items: center; }
+  .pill { display: inline-flex; align-items: center; gap: 8px; padding: 9px 15px; border-radius: 999px; font: 400 14px/1 'Lexend', sans-serif; text-decoration: none; border: 1px solid var(--line); color: var(--ink); background: #fff; }
+  .pill:hover { border-color: var(--blue); color: var(--blue); }
+  .pill.solid { background: var(--blue); border-color: var(--blue); color: #fff; }
+  .pill.solid:hover { background: #0638c4; color: #fff; }
+  .pill:focus-visible, a:focus-visible { outline: 2px solid var(--blue); outline-offset: 3px; }
+  @media (max-width: 640px) { .bar .hide-s { display: none; } }
+
+  /* hero */
+  .hero { padding: 96px 0 72px; }
+  .eyebrow { font: 500 12px/1 'Lexend', sans-serif; letter-spacing: .16em; text-transform: uppercase; color: var(--blue); margin: 0 0 22px; }
+  h1 { font: 300 clamp(44px, 7vw, 84px)/1.02 'Lexend', sans-serif; letter-spacing: -.03em; margin: 0 0 26px; }
+  .lede { font-size: clamp(18px, 2vw, 21px); color: var(--soft); max-width: 680px; margin: 0 0 40px; }
+  .three { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin: 0; padding: 0; list-style: none; }
+  .three a { display: block; height: 100%; padding: 20px 20px 22px; border-radius: 18px; background: var(--tint); text-decoration: none; color: var(--ink); transition: background .2s, transform .2s; }
+  .three a:hover { background: #e7ecf8; transform: translateY(-2px); }
+  .three .n { font: 500 13px/1 'Lexend', sans-serif; color: var(--blue); margin-bottom: 12px; display: block; }
+  .three b { font-weight: 500; font-size: 18px; line-height: 1.3; }
+  @media (max-width: 760px) { .three { grid-template-columns: 1fr; } }
+
+  /* sections */
+  section.claim { padding: 84px 0 24px; border-top: 1px solid var(--line); }
+  .claim-head { display: grid; grid-template-columns: 120px 1fr; gap: 24px; margin-bottom: 48px; }
+  .claim-head .num { font: 300 64px/1 'Lexend', sans-serif; color: var(--blue); letter-spacing: -.04em; }
+  .claim-head h2 { font: 400 clamp(30px, 4vw, 44px)/1.12 'Lexend', sans-serif; letter-spacing: -.02em; margin: 4px 0 14px; }
+  .claim-head p { color: var(--soft); margin: 0; max-width: 640px; }
+  @media (max-width: 760px) { .claim-head { grid-template-columns: 1fr; gap: 6px; } .claim-head .num { font-size: 44px; } }
+
+  .case { display: grid; grid-template-columns: 1fr 1.15fr; gap: 44px; align-items: start; padding: 0 0 64px; }
+  .case.flip { grid-template-columns: 1.15fr 1fr; }
+  .case.flip .txt { order: 2; }
+  @media (max-width: 900px) { .case, .case.flip { grid-template-columns: 1fr; gap: 24px; } .case.flip .txt { order: 0; } }
+  .tag { display: inline-block; font: 500 11px/1 'Lexend', sans-serif; letter-spacing: .12em; text-transform: uppercase; color: var(--soft); margin-bottom: 12px; }
+  .case h3 { font: 500 24px/1.25 'Lexend', sans-serif; margin: 0 0 16px; letter-spacing: -.01em; }
+  .case p { margin: 0 0 14px; }
+  .case ul { margin: 0 0 16px; padding-left: 18px; }
+  .case li { margin-bottom: 6px; }
+  .k { font-weight: 500; }
+  .decision { margin-top: 18px; padding: 16px 18px; border-left: 3px solid var(--blue); background: var(--tint); border-radius: 0 12px 12px 0; }
+  .decision .lbl { display: block; font: 500 11px/1 'Lexend', sans-serif; letter-spacing: .14em; text-transform: uppercase; color: var(--blue); margin-bottom: 8px; }
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 18px 0; }
+  .stat { padding: 14px 14px 12px; border: 1px solid var(--line); border-radius: 14px; }
+  .stat .v { display: block; font: 400 26px/1.1 'Lexend', sans-serif; color: var(--blue); letter-spacing: -.02em; }
+  .stat .d { display: block; font-size: 13px; line-height: 1.35; color: var(--soft); margin-top: 6px; }
+  @media (max-width: 480px) { .stats { grid-template-columns: 1fr; } }
+  figure { margin: 0; }
+  figure img { border-radius: 16px; border: 1px solid var(--line); background: #fafafa; }
+  figcaption { font-size: 13px; color: var(--soft); margin-top: 9px; }
+  .duo { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .stack { display: grid; gap: 14px; }
+
+  /* reframe */
+  .reframe { display: grid; grid-template-columns: 1fr auto 1fr; gap: 16px; align-items: stretch; margin: 20px 0 6px; }
+  .reframe .box { padding: 18px 18px 16px; border-radius: 16px; border: 1px solid var(--line); }
+  .reframe .box.to { border-color: var(--blue); background: var(--tint); }
+  .reframe .lbl { display: block; font: 500 11px/1 'Lexend', sans-serif; letter-spacing: .14em; text-transform: uppercase; color: var(--soft); margin-bottom: 10px; }
+  .reframe .to .lbl { color: var(--blue); }
+  .reframe .q { font: 400 17px/1.45 'Lexend', sans-serif; margin: 0; }
+  .reframe .arrow { align-self: center; font-size: 24px; color: var(--blue); }
+  @media (max-width: 640px) { .reframe { grid-template-columns: 1fr; } .reframe .arrow { transform: rotate(90deg); justify-self: center; } }
+  blockquote { margin: 18px 0; font: 400 20px/1.4 'Lexend', sans-serif; letter-spacing: -.01em; }
+  blockquote cite { display: block; margin-top: 6px; font: 300 13px/1.4 'Lexend', sans-serif; color: var(--soft); font-style: normal; }
+
+  /* process strip */
+  .process { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; counter-reset: step; }
+  .process li { counter-increment: step; border: 1px solid var(--line); border-radius: 18px; overflow: hidden; display: flex; flex-direction: column; background: #fff; }
+  .process li .img { aspect-ratio: 4 / 3; background: #f6f6f7; display: grid; place-items: center; overflow: hidden; border-bottom: 1px solid var(--line); }
+  .process li .img img { width: 100%; height: 100%; object-fit: cover; }
+  .process li .img.contain img { object-fit: contain; padding: 10px; }
+  .process li .img.text { padding: 22px; text-align: left; place-items: start; background: var(--tint); }
+  .process li .img.text p { margin: 0; font: 400 16px/1.5 'Lexend', sans-serif; }
+  .process li .img.text .big { font: 300 34px/1.1 'Lexend', sans-serif; color: var(--blue); letter-spacing: -.02em; display: block; margin-bottom: 8px; }
+  .process .cap { padding: 14px 16px 16px; }
+  .process .cap b { display: block; font-weight: 500; margin-bottom: 4px; }
+  .process .cap b::before { content: counter(step, decimal-leading-zero) "  "; color: var(--blue); font-weight: 500; }
+  .process .cap span { font-size: 14px; color: var(--soft); line-height: 1.45; }
+  @media (max-width: 900px) { .process { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 560px) { .process { grid-template-columns: 1fr; } }
+  .pattern { margin: 36px 0 0; padding: 20px 22px; border-radius: 16px; background: var(--tint); }
+  .pattern p { margin: 0; }
+
+  /* close */
+  .close { padding: 88px 0 110px; border-top: 1px solid var(--line); text-align: left; }
+  .close h2 { font: 300 clamp(32px, 4.6vw, 52px)/1.1 'Lexend', sans-serif; letter-spacing: -.02em; margin: 0 0 18px; }
+  .close p { color: var(--soft); margin: 0 0 30px; max-width: 620px; }
+  .close .row { display: flex; flex-wrap: wrap; gap: 10px; }
+  footer { padding: 26px 0 40px; color: var(--soft); font-size: 13px; border-top: 1px solid var(--line); }
+
+  /* gentle reveal on scroll */
+  .reveal { opacity: 0; transform: translateY(18px); transition: opacity .7s ease, transform .7s cubic-bezier(.2,.7,.2,1); }
+  .reveal.in { opacity: 1; transform: none; }
+
+  /* accessibility settings shared with the room (saved by the room's panel) */
+  html.cb-protan body { filter: url(#cb-protan); }
+  html.cb-deutan body { filter: url(#cb-deutan); }
+  html.cb-tritan body { filter: url(#cb-tritan); }
+  html.cb-grey body { filter: grayscale(1) contrast(1.08); }
+  html.hi-con body { --soft: #222; --line: #111; --tint: #eef1fb; font-weight: 400; }
+  html.hi-con figure img { border-color: #111; }
+  html.reduce-motion { scroll-behavior: auto; }
+  html.reduce-motion .reveal { opacity: 1; transform: none; transition: none; }
+  @media (prefers-reduced-motion: reduce) { .reveal { opacity: 1; transform: none; transition: none; } html { scroll-behavior: auto; } }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <filter id="cb-protan" color-interpolation-filters="linearRGB"><feColorMatrix type="matrix" values="1 0 0 0 0  -0.255 1.255 0 0 0  0.303 -0.545 1.242 0 0  0 0 0 1 0"/></filter>
+  <filter id="cb-deutan" color-interpolation-filters="linearRGB"><feColorMatrix type="matrix" values="1 0 0 0 0  -0.438 1.438 0 0 0  0.262 -0.562 1.300 0 0  0 0 0 1 0"/></filter>
+  <filter id="cb-tritan" color-interpolation-filters="linearRGB"><feColorMatrix type="matrix" values="1.050 -0.382 0.332 0 0  0 1.234 -0.234 0 0  0 0 1 0 0  0 0 0 1 0"/></filter>
+</svg>
+
+<header class="bar">
+  <div class="wrap">
+    <span class="me">Shakthi Nanda Kumar</span>
+    <nav aria-label="Page">
+      <a class="pill hide-s" href="media/resume.pdf" target="_blank" rel="noopener">Resume</a>
+      <a class="pill hide-s" href="mailto:whdjckendo@gmail.com">Email</a>
+      <a class="pill solid" href="./">Back to the room</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <div class="wrap hero">
+    <p class="eyebrow">Industrial designer · M.Des, IIT Roorkee</p>
+    <h1>The short version.</h1>
+    <p class="lede">I'm a designer with a B.Des in Interior Space &amp; Furniture Design, now doing my Masters in Industrial Design at IIT Roorkee. Here is what I bring to a team, shown through five projects.</p>
+    <ul class="three">
+      <li><a href="#research"><span class="n">01</span><b>I research first, and let the data decide.</b></a></li>
+      <li><a href="#reframe"><span class="n">02</span><b>I find what actually needs solving.</b></a></li>
+      <li><a href="#process"><span class="n">03</span><b>My process is clear and easy to follow.</b></a></li>
+    </ul>
+  </div>
+
+  <!-- 01 ------------------------------------------------------------ -->
+  <section class="claim" id="research" aria-labelledby="h-research">
+    <div class="wrap">
+      <div class="claim-head reveal">
+        <span class="num" aria-hidden="true">01</span>
+        <div>
+          <h2 id="h-research">I research first, and let the data decide.</h2>
+          <p>Surveys, interviews, observation, eye tracking and statistics. I pick the method that fits the question, and then design from what it shows rather than from what I assumed.</p>
+        </div>
+      </div>
+
+      <article class="case reveal">
+        <div class="txt">
+          <span class="tag">Research paper · Emotional Design, IIT Roorkee</span>
+          <h3>Do different personalities want different car interiors?</h3>
+          <p>Mid-segment cars in India get one interior for every buyer. I ran an eye-tracking study to test whether personality changes what people are drawn to.</p>
+          <ul>
+            <li><span class="k">16 drivers</span>, sorted into OCEAN personality types with the Big Five Inventory (BFI-10).</li>
+            <li>Shown car interiors across <span class="k">4 themes</span>: Comfort, Concise, Hard and Technological. The themes came from Kansei words.</li>
+            <li>Fixation time analysed with a <span class="k">two-way ANOVA</span> in JASP, plus post-hoc tests.</li>
+          </ul>
+          <div class="stats" role="list">
+            <div class="stat" role="listitem"><span class="v">p &lt; .001</span><span class="d">Personality changed fixation time (F = 14.93)</span></div>
+            <div class="stat" role="listitem"><span class="v">p &lt; .001</span><span class="d">Theme changed fixation time (F = 11.25)</span></div>
+            <div class="stat" role="listitem"><span class="v">p = .039</span><span class="d">Personality × theme interact</span></div>
+          </div>
+          <div class="decision"><span class="lbl">What it led to</span>Different personalities favour different interior themes. That's evidence for small, modular, personality-tuned interior options instead of one interior for everyone. I also reported my own limitation: the themes were shown in a fixed order, which skewed attention.</div>
+        </div>
+        <div class="stack">
+          <figure><img src="work/img/ocean-heatmaps.jpg" alt="Eye-tracking heatmaps and gaze plots over four car dashboards" loading="lazy" width="647" height="712"><figcaption>Heatmaps and gaze paths from the pilot.</figcaption></figure>
+          <figure><img src="work/img/ocean-anova.jpg" alt="Slide with the personality split of participants and the ANOVA table" loading="lazy" width="1400" height="788"><figcaption>Participant split and the ANOVA result.</figcaption></figure>
+        </div>
+      </article>
+
+      <article class="case flip reveal">
+        <div class="txt">
+          <span class="tag">ETT LYCKLIG · IKEA Studio, B.Des</span>
+          <h3>A laptop stand sized by real bodies, not guesses.</h3>
+          <p>I tested heights and angles on myself across floor, table and bed postures. Then I checked my conclusions with four people: a desk worker and three hostel students.</p>
+          <ul>
+            <li>Typing was comfortable at about <span class="k">10°</span>.</li>
+            <li>Browsing and watching needed about <span class="k">45°</span> and at least <span class="k">9 cm</span> of lift.</li>
+            <li>Everyone liked an inclined mouse surface.</li>
+          </ul>
+          <div class="decision"><span class="lbl">What it led to</span>One wooden stand that switches between exactly those two angles, instead of a fixed incline.</div>
+        </div>
+        <figure><img src="work/img/stand-users.jpg" alt="Four users working on laptops with their postures sketched over the photos" loading="lazy" width="1400" height="599"><figcaption>Validating postures with four users.</figcaption></figure>
+      </article>
+
+      <article class="case reveal">
+        <div class="txt">
+          <span class="tag">Navigation &amp; transportation · M.Des, Sem 1</span>
+          <h3>Asking before assuming.</h3>
+          <p>I ran a pilot survey of <span class="k">28 people</span>, semi-structured and telephone interviews, and observation at stations and auto stands.</p>
+          <ul>
+            <li><span class="k">61%</span> use autos, more than any other mode. Buses were 50% and cabs 46%.</li>
+            <li>Visitors regularly overpay, for example ₹50 instead of ₹20 for a 2 km auto ride.</li>
+          </ul>
+          <div class="decision"><span class="lbl">What it led to</span>Design for the informal transport people actually ride, with fair, visible fares, rather than for the metro and bus systems apps already cover.</div>
+        </div>
+        <figure><img src="work/img/nav-pilot.jpg" alt="Bar chart: which public transport modes do you use — autos highest at 17 of 28" loading="lazy" width="1400" height="541"><figcaption>Pilot survey: “Which public transport modes do you use?”</figcaption></figure>
+      </article>
+    </div>
+  </section>
+
+  <!-- 02 ------------------------------------------------------------ -->
+  <section class="claim" id="reframe" aria-labelledby="h-reframe">
+    <div class="wrap">
+      <div class="claim-head reveal">
+        <span class="num" aria-hidden="true">02</span>
+        <div>
+          <h2 id="h-reframe">I find what actually needs solving.</h2>
+          <p>Briefs usually start vague. I go to the field, ask sharper questions, and turn the vague ask into a problem a design can genuinely fix.</p>
+        </div>
+      </div>
+
+      <article class="case reveal">
+        <div class="txt">
+          <span class="tag">Urban public toilets · Laboratory of Inclusive Design, IIT Roorkee</span>
+          <h3>Not a building problem. A management problem.</h3>
+          <div class="reframe">
+            <div class="box"><span class="lbl">The ask</span><p class="q">Why do public toilets look like this?</p></div>
+            <span class="arrow" aria-hidden="true">→</span>
+            <div class="box to"><span class="lbl">The real problem</span><p class="q">Nothing keeps a toilet working, accessible and usable after it's built.</p></div>
+          </div>
+          <p>Instead of starting with form, I asked three questions. Are Roorkee's toilets usable, functional and accessible? When do people use them, and when do they avoid them? Is this a behaviour problem or an architecture problem?</p>
+          <p>I studied <span class="k">6 public toilets</span> across Roorkee. The accessible stalls were locked to save on cleaning, or used as store rooms. Users rushed in and out.</p>
+          <blockquote>“No, no, I cannot go outside. I won't find a good, clean toilet!”<cite>Heard during the field study</cite></blockquote>
+          <div class="decision"><span class="lbl">What it led to</span>I mapped who owns, builds, runs and monitors public toilets. Then I designed an accessible public toilet with a service corridor, grab bars, an emergency alarm and a durable corten-steel façade, detailed down to construction drawings.</div>
+        </div>
+        <div class="stack">
+          <div class="duo">
+            <figure><img src="work/img/toilet-field.jpg" alt="Three public toilets on busy streets in Roorkee" loading="lazy" width="882" height="408"></figure>
+            <figure><img src="work/img/toilet-inside.jpg" alt="Three toilet stalls in poor condition" loading="lazy" width="865" height="455"></figure>
+          </div>
+          <figure><img src="work/img/toilet-design.jpg" alt="Isometric render of the proposed accessible public toilet on a street" loading="lazy" width="1400" height="991"><figcaption>Field study in Roorkee, and the proposed accessible toilet.</figcaption></figure>
+        </div>
+      </article>
+
+      <article class="case flip reveal">
+        <div class="txt">
+          <span class="tag">Navigation &amp; transportation · M.Des, Sem 1</span>
+          <h3>From “all transport, big cities” to the people truly stuck.</h3>
+          <div class="reframe">
+            <div class="box"><span class="lbl">Where I started</span><p class="q">Give people access to every public transport option in a metro city.</p></div>
+            <span class="arrow" aria-hidden="true">→</span>
+            <div class="box to"><span class="lbl">Where the research led</span><p class="q">Help the floating population of tier-2 cities use informal, unorganised transport.</p></div>
+          </div>
+          <p>The research changed the brief. There are no signs for auto stops, fares are bargained out loud, and newcomers depend on locals. The people who struggle most are students, visitors and seasonal workers in a city like Roorkee, not metro commuters.</p>
+          <div class="decision"><span class="lbl">What it led to</span>A service, not just another app: a transit card, modelled on RuPay metro cards and Tokyo's Suica, that standardises fares outside campus. It's backed by personas, a journey map and user flows.</div>
+        </div>
+        <div class="stack">
+          <figure><img src="work/img/nav-journey.jpg" alt="Journey map with stages from recognition to delivery" loading="lazy" width="1400" height="788"><figcaption>Journey map of a newcomer getting around.</figcaption></figure>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <!-- 03 ------------------------------------------------------------ -->
+  <section class="claim" id="process" aria-labelledby="h-process">
+    <div class="wrap">
+      <div class="claim-head reveal">
+        <span class="num" aria-hidden="true">03</span>
+        <div>
+          <h2 id="h-process">My process is clear and easy to follow.</h2>
+          <p>Every decision leaves a trail. Here's the ETT LYCKLIG laptop stand, from brief to the desk, in nine steps.</p>
+        </div>
+      </div>
+
+      <ol class="process reveal">
+        <li><div class="img text"><p><span class="big">Brief</span>An ergonomic laptop support for desk workers, used at the table, to reduce neck and back pain.</p></div>
+          <div class="cap"><b>Define</b><span>Who, where, when, why and how, written down before any sketching.</span></div></li>
+        <li><div class="img"><img src="work/img/stand-tests.jpg" alt="Testing laptop heights on stacks of books in different postures" loading="lazy"></div>
+          <div class="cap"><b>Test on myself</b><span>Heights and angles across Indian and western sitting postures.</span></div></li>
+        <li><div class="img text"><p><span class="big">4 users</span>A desk worker who wants a tilt, a student who drifts to bed, one who lives with back pain, one who works on the floor.</p></div>
+          <div class="cap"><b>Validate with users</b><span>Four people, four very different habits.</span></div></li>
+        <li><div class="img text"><p><span class="big">10° / 45°</span>Typing needs a slight tilt. Browsing needs a steep one, with at least 9 cm of lift.</p></div>
+          <div class="cap"><b>Insight</b><span>One stand, two angles: the whole design hangs on this.</span></div></li>
+        <li><div class="img contain"><img src="work/img/stand-sketches.jpg" alt="Pencil sketches of stand concepts" loading="lazy"></div>
+          <div class="cap"><b>Sketch</b><span>Many ways to hold two angles.</span></div></li>
+        <li><div class="img"><img src="work/img/stand-mockups.jpg" alt="Wooden mock-ups holding a laptop" loading="lazy"></div>
+          <div class="cap"><b>Mock up and critique</b><span>Three mock-ups, each with honest cons.</span></div></li>
+        <li><div class="img contain"><img src="work/img/stand-refine.jpg" alt="Renders of the refined stand and its flat-pack parts" loading="lazy"></div>
+          <div class="cap"><b>Refine and pack</b><span>Four lines of wood that flat-pack into a jute pouch.</span></div></li>
+        <li><div class="img contain"><img src="work/img/stand-drawing.jpg" alt="Technical drawing of the stand components" loading="lazy"></div>
+          <div class="cap"><b>Draw for making</b><span>Dimensioned drawings, ready for production.</span></div></li>
+        <li><div class="img"><img src="work/img/stand-final.jpg" alt="Shakthi using the finished wooden laptop stand at a desk" loading="lazy"></div>
+          <div class="cap"><b>In use</b><span>The finished stand, at the desk.</span></div></li>
+      </ol>
+
+      <div class="pattern reveal"><p><span class="k">The same rhythm runs through every project.</span> In the toilets project it was field observation, then secondary research, then ideation, then a buildable design. In the navigation project it was survey, interviews and ethnography, then personas, a journey map, user flows and a site map.</p></div>
+    </div>
+  </section>
+
+  <section class="close" aria-labelledby="h-close">
+    <div class="wrap reveal">
+      <h2 id="h-close">Want the long version?</h2>
+      <p>Step back into the room. Every book on the desk opens, the posters lead to their projects, and the monitor has a few surprises.</p>
+      <div class="row">
+        <a class="pill solid" href="./">Back to the room</a>
+        <a class="pill" href="media/resume.pdf" target="_blank" rel="noopener">Open my resume</a>
+        <a class="pill" href="mailto:whdjckendo@gmail.com">whdjckendo@gmail.com</a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer><div class="wrap">Shakthi Nanda Kumar · Department of Design, IIT Roorkee</div></footer>
+
+<script>
+  // use the accessibility settings chosen in the room, if any
+  (function () {
+    var p = null; try { p = JSON.parse(localStorage.getItem('shakthi-a11y') || 'null'); } catch (e) {}
+    var root = document.documentElement;
+    if (p) {
+      if (p.text) root.style.setProperty('--ui-zoom', p.text);
+      if (p.cb) root.classList.add('cb-' + p.cb);
+      if (p['hi-con']) root.classList.add('hi-con');
+      if (p['reduce-motion']) root.classList.add('reduce-motion');
+    }
+    var els = document.querySelectorAll('.reveal');
+    if (!('IntersectionObserver' in window) || root.classList.contains('reduce-motion')) { els.forEach(function (e) { e.classList.add('in'); }); return; }
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) { if (en.isIntersecting) { en.target.classList.add('in'); io.unobserve(en.target); } });
+    }, { rootMargin: '0px 0px -8% 0px', threshold: 0.08 });
+    els.forEach(function (e) { io.observe(e); });
+  })();
+</script>
+</body>
+</html>

@@ -350,7 +350,7 @@
   #a11y-btn:hover { background: rgba(22, 14, 10, 0.62); }
   #a11y-btn svg { width: 17px; height: 17px; }
   #a11y-panel {
-    position: fixed; top: 56px; right: 18px; z-index: 45; width: 270px; padding: 16px 16px 14px;
+    position: fixed; top: 96px; right: 18px; z-index: 45; width: 270px; padding: 16px 16px 14px;
     border-radius: 16px; background: rgba(22, 14, 10, 0.82); color: #f6e6cc;
     border: 1px solid rgba(255, 214, 176, 0.3); box-shadow: 0 14px 40px rgba(0,0,0,.4);
     backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
@@ -385,6 +385,19 @@
   html.hi-con #objinfo .t, html.hi-con #credits h2, html.hi-con #credits a { color: #ffe066 !important; }
   html.hi-con #reticle::after { box-shadow: 0 0 0 3px #fff; }
   html.reduce-motion *, html.reduce-motion *::before, html.reduce-motion *::after { transition: none !important; animation-duration: .01ms !important; }
+
+  /* "Skip the room": the short, scrolling version of the portfolio */
+  #skip-room {
+    position: fixed; top: 56px; right: 18px; z-index: 20;
+    padding: 8px 14px; border-radius: 14px; text-decoration: none;
+    background: #002fa7; color: #fff; border: 1px solid rgba(255, 255, 255, 0.25);
+    font: 400 12px/1 var(--ui-font); letter-spacing: .04em; zoom: var(--ui-zoom, 1);
+    transition: opacity .3s ease, background .2s ease;
+  }
+  #skip-room:hover { background: #0638c4; }
+  #skip-room:focus-visible { outline: 2px solid #ffd9b0; outline-offset: 2px; }
+  body.reading #skip-room { opacity: 0; pointer-events: none; }
+  html.hi-con #skip-room { background: #000 !important; border: 2px solid #fff !important; }
 </style>
 </head>
 <body>
@@ -416,6 +429,7 @@
     </button>
     <button id="credits-tab" type="button">Credits</button>
   </div>
+  <a id="skip-room" href="work.html" onclick="event.stopPropagation()">Skip the room <span aria-hidden="true">&rarr;</span></a>
   <div id="a11y-panel" role="dialog" aria-label="Accessibility settings">
     <h3>Accessibility</h3>
     <div class="grp"><span class="lbl" id="a-ts">Text size</span>
