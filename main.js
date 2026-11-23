@@ -1535,7 +1535,14 @@ const paint = () => new Promise((r) => requestAnimationFrame(() => requestAnimat
       { pos: ctr('Group307', 0.1), radius: 0.38, weight: 0.6, level: () => fixturesApi.level('bedside') },
       { pos: ctr('Tube_Light1'), radius: 0.6, weight: 0.5, level: () => fixturesApi.level('tube') },
     ].filter((s) => s.pos);
-    liveUpdates.push(liveDust(scene, sources, 560));
+    // keep every speck well away from where the visitor sits: a dust cloud can
+    // never reach within 1 m of the camera, however the lamps are placed
+    const SEAT_CLEAR = 1.0;
+    for (const src of sources) {
+      const room = src.pos.distanceTo(camera.position) - SEAT_CLEAR;
+      src.radius = Math.max(0.08, Math.min(src.radius * 0.85, room));   // a little tighter around each light
+    }
+    liveUpdates.push(liveDust(scene, sources, 560, camera.position.clone(), SEAT_CLEAR));
     // dhoop on the desk: a thin thread of smoke from its tip
     const dhoop = root.getObjectByName('dhoop');
     if (dhoop) {
