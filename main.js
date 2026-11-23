@@ -856,7 +856,20 @@ const paint = () => new Promise((r) => requestAnimationFrame(() => requestAnimat
     setProgress(0.02);
     await paint();
     if (isGlb) {
-      const buf = await fetchRoomBinary('./models/room.glb');
+      // room.glbz is room.glb gzipped ahead of time (Vercel doesn't compress
+      // .glb files itself): ~30% less to download. Unpacked here in the browser;
+      // anything unexpected falls back to the plain file.
+      let buf = null;
+      if ('DecompressionStream' in window) {
+        try {
+          const z = await fetchRoomBinary('./models/room.glbz');
+          const head = new Uint8Array(z, 0, 2);
+          buf = (head[0] === 0x1f && head[1] === 0x8b)
+            ? await new Response(new Blob([z]).stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer()
+            : z;   // already unpacked on the way in
+        } catch (e) { buf = null; }
+      }
+      if (!buf) buf = await fetchRoomBinary('./models/room.glb');
       setProgress(0.9);
       await paint();
       const gltf = await new Promise((res, rej) => new GLTFLoader().setMeshoptDecoder(MeshoptDecoder).parse(buf, './models/', res, rej));
