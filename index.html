@@ -15,7 +15,7 @@
   * { box-sizing: border-box; }
   html, body, button { font-family: var(--ui-font); }
   html, body { margin: 0; padding: 0; width: 100%; height: 100%; background: #140e08; overflow: hidden; }
-  canvas { display: block; cursor: none; }
+  canvas { display: block; }
 
   #vignette {
     position: fixed; inset: 0; pointer-events: none;
@@ -325,8 +325,13 @@
   @media (prefers-reduced-motion: reduce) { #credits, #credits .card { transition: none } }
 
   /* the real mouse cursor (menus, monitor, books) matches the reticle */
-  html, body, button, a, input, .focus-ui, #monitor-ui, #reader-ui {
+  html, body, canvas, button, a, input, .focus-ui, #monitor-ui, #reader-ui, body.dragging canvas {
     cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24'%3E%3Ccircle cx='12' cy='12' r='11' fill='%23002fa7' stroke='white' stroke-opacity='.55' stroke-width='1'/%3E%3C/svg%3E") 12 12, auto !important;
+  }
+  /* over anything clickable, the circle turns a lighter blue */
+  body.hot, body.hot canvas, body.hot #monitor-ui, body.hot #reader-ui, body.hot .focus-ui,
+  button:not(:disabled):hover, a:hover, [role=button]:hover, label:hover {
+    cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24'%3E%3Ccircle cx='12' cy='12' r='11' fill='%236f95f2' stroke='white' stroke-opacity='.55' stroke-width='1'/%3E%3C/svg%3E") 12 12, auto !important;
   }
   input[type=password], input[type=text] { cursor: text !important; }
   /* the old bottom "click to know more" bar is now the tip by the cursor */
@@ -457,6 +462,7 @@
       // click prompt that follows the cursor (or sits by the reticle)
       var tip = document.getElementById('click-tip'), last = null;
       window.__clickTip = function (label, x, y) {
+        document.body.classList.toggle('hot', !!label);   // lighter cursor over clickable things
         if (!label) { tip.classList.remove('show'); last = null; return; }
         if (label !== last) { tip.textContent = label; last = label; }
         tip.style.left = (x || 0) + 'px'; tip.style.top = (y || 0) + 'px';

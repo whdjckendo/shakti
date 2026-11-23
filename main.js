@@ -1654,7 +1654,7 @@ function animate() {
       if (real && real.distance - ihit.distance < 0.35) ihit = real;
     }
     updateObjInfo(ihit && ihit.distance < 7 ? ihit.object : null);
-    setClickTip(clickLabel(), innerWidth / 2, innerHeight / 2);
+    setClickTip(clickLabel(), pointerX, pointerY);
   } else {
     if (curInfo) updateObjInfo(null);
     // entering a close-up view: drop the reticle's tip once (overlays may
