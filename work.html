@@ -489,11 +489,45 @@
     }
 
     var x = 16, y = 0, tx = 16, ty = 0, lastMove = performance.now(), phase = 0, t0 = performance.now(), cur = null;
+    // Where its feet go, in page coordinates, turned into the fixed-position offset
+    var put = function (fx, fy) {
+      tx = fx - W / 2; ty = fy - scrollY - (innerHeight - BOTTOM - H + FEET);
+    };
+    var pageRect = function (el, text) {
+      var r;
+      if (text) { var rg = document.createRange(); rg.selectNodeContents(el); r = rg.getBoundingClientRect(); }   // the words, not the full-width box
+      else r = el.getBoundingClientRect();
+      return { l: r.left, t: r.top + scrollY, w: r.width, h: r.height };
+    };
+    var hey = document.querySelector('.hero h1'), card = document.querySelector('.three li:nth-child(2)'), h2 = document.getElementById('h-research');
+    var quad = function (a, c, b, u) { var v = 1 - u; return [v * v * a[0] + 2 * v * u * c[0] + u * u * b[0], v * v * a[1] + 2 * v * u * c[1] + u * u * b[1]]; };
+    var ease = function (u) { return u * u * (3 - 2 * u); };
     var calc = function () {
       var max = document.documentElement.scrollHeight - innerHeight;
-      var p = max > 0 ? scrollY / max : 0;
-      tx = 16 + p * (innerWidth - W - 32); ty = 0;
-      if (word && p > 0.97) {
+      // 1) the drawn path: on "Hey." -> arc over the intro -> top of the middle card -> down onto the first heading
+      if (hey && card && h2) {
+        var R1 = pageRect(hey, true), R2 = pageRect(card), R3 = pageRect(h2, true);
+        var A = [R1.l + R1.w * 0.42, R1.t + R1.h * 0.2];
+        var C = [R2.l + R2.w * 0.18, R2.t];
+        var D = [R3.l + R3.w * 0.12, R3.t + R3.h * 0.26];
+        var land = Math.max(1, R3.t - innerHeight * 0.55);       // scroll at which it reaches the heading
+        var leave = R3.t - innerHeight * 0.22;                    // ...and when it hops down to the bottom
+        if (scrollY < leave) {
+          var u = Math.min(1, scrollY / land), pt;
+          if (u < 0.55) { var k = ease(u / 0.55); pt = quad(A, [C[0] + 40, A[1] - 6], C, k); }
+          else { var k2 = ease((u - 0.55) / 0.45); pt = quad(C, [D[0] + (C[0] - D[0]) * 0.3, C[1] + (D[1] - C[1]) * 0.3], D, k2); }
+          put(pt[0], pt[1]);
+          return;
+        }
+        // 2) the rest of the page: along the bottom edge
+        var p = max > leave ? Math.min(1, (scrollY - leave) / (max - leave)) : 1;
+        tx = 16 + p * (innerWidth - W - 32); ty = 0;
+      } else {
+        var p0 = max > 0 ? scrollY / max : 0;
+        tx = 16 + p0 * (innerWidth - W - 32); ty = 0;
+      }
+      // 3) the very end: onto "monkeys"
+      if (word && scrollY / Math.max(1, max) > 0.97) {
         var r = word.getBoundingClientRect();
         if (r.top > 0 && r.top < innerHeight) {
           tx = r.left + r.width / 2 - W / 2 + 2;
@@ -506,9 +540,9 @@
     (function tick(now) {
       calc();
       var t = (now - t0) / 1000;
-      var dx = (tx - x) * 0.06, dy = (ty - y) * 0.09;
-      var moving = Math.abs(dx) > 0.12 || Math.abs(dy) > 0.12;
-      if (moving) { x += dx; y += dy; lastMove = now; if (Math.abs(dx) > 0.12) m.classList.toggle('left', dx < 0); }
+      var dx = (tx - x) * 0.14, dy = (ty - y) * 0.14;
+      var moving = Math.abs(dx) > 0.15 || Math.abs(dy) > 0.15;
+      if (moving) { x += dx; y += dy; lastMove = now; if (Math.abs(dx) > 0.15) m.classList.toggle('left', dx < 0); }
       var idle = now - lastMove, mode = moving ? 'run' : idle > (ty < -1 ? 700 : 3800) ? 'sit' : 'stand';
       if (reduce()) mode = 'stand';
       var target, k = 0.14;
