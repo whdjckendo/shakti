@@ -533,7 +533,7 @@ const clampPitch = (p) => THREE.MathUtils.clamp(p, -PITCH_DOWN, PITCH_UP);
 
 let pointerX = window.innerWidth * 0.5;
 let pointerY = window.innerHeight * 0.5;
-const ptrNdc = window.__ptrNdc = new THREE.Vector2(0, 0);
+const ptrNdc = window.__ptrNdc || (window.__ptrNdc = new THREE.Vector2(0, 0));   // the same object the hover raycasts read
 const setPtr = (x, y) => {
   pointerX = x; pointerY = y;
   ptrNdc.set((x / innerWidth) * 2 - 1, -(y / innerHeight) * 2 + 1);
