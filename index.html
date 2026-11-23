@@ -506,7 +506,7 @@
       apply();
     })();
   </script>
-  <audio id="ambient" src="media/ambient.mp3?v=2" loop preload="auto"></audio>
+  <audio id="ambient" src="media/ambient.mp3?v=2" loop preload="none"></audio>
   <script>
     (function () {
       // Ambient sound: on by default; browsers only allow it after the
@@ -544,6 +544,11 @@
       addEventListener('site-music', function (e) {
         music = e.detail.playing;
         if (music) ramp(0, function () { a.pause(); }); else start();
+      });
+      // only play while this tab is the one being looked at
+      document.addEventListener('visibilitychange', function () {
+        if (document.hidden) { clearInterval(fade); a.pause(); }
+        else start();
       });
       var first = function () { start(); removeEventListener('pointerdown', first); removeEventListener('keydown', first); };
       addEventListener('pointerdown', first); addEventListener('keydown', first);
