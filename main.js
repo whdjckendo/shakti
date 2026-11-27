@@ -628,6 +628,7 @@ addEventListener('keyup', (e) => {
 });
 addEventListener('blur', () => { move.f = move.b = move.l = move.r = move.run = false; });
 
+const track = (name) => { try { window.track && window.track(name); } catch (_) {} };   // analytics.js
 addEventListener('click', () => {
   if (pdfOpen) return;
   if (bookApi && bookApi.active) return;
@@ -639,18 +640,18 @@ addEventListener('click', () => {
     const posterKey = hoverPoster && (tap || posterFocus > 0.4)
       ? ({ 'poster-left': 'book1', 'poster-center': 'book2', 'A4_-_2': 'book3' })[hoverPoster.name] : null;
     const bookKey = curInfo && ({ 'Book 1': 'book1', 'Book 2': 'book2', 'Book 3': 'book3', 'Book 4': 'book4' })[curInfo.title];
-    if (curInfo && curInfo.wall && bookApi.readers.wall) { bookApi.readers.wall.open(); return; }
+    if (curInfo && curInfo.wall && bookApi.readers.wall) { track('open: wall'); bookApi.readers.wall.open(); return; }
     if (curInfo && curInfo.light && fixturesApi && fixturesApi.has(curInfo.light)) {   // light switch
-      fixturesApi.toggle(curInfo.light); refreshInfo(); return;
+      track('light switch: ' + curInfo.light); fixturesApi.toggle(curInfo.light); refreshInfo(); return;
     }
-    if (curInfo && curInfo.stand && musicApi && musicApi.worn) { musicApi.takeOff(); refreshInfo(); return; }
-    if (curInfo && curInfo.music && musicApi) { musicApi.wear(); return; }   // headphones -> music menu
-    if (!posterKey && !bookKey && bookApi.tryOpenFromView()) return;   // the monitor
+    if (curInfo && curInfo.stand && musicApi && musicApi.worn) { track('headphones off'); musicApi.takeOff(); refreshInfo(); return; }
+    if (curInfo && curInfo.music && musicApi) { track('headphones on'); musicApi.wear(); return; }   // headphones -> music menu
+    if (!posterKey && !bookKey && bookApi.tryOpenFromView()) { track('open: monitor'); return; }   // the monitor
     const key = posterKey || bookKey;
-    if (key && bookApi.readers[key]) { posterCta?.classList.remove('show'); bookApi.open(key); return; }
+    if (key && bookApi.readers[key]) { track('open: ' + key + (posterKey ? ' (poster)' : '')); posterCta?.classList.remove('show'); bookApi.open(key); return; }
   }
-  if (curInfo && curInfo.pdf) { openPdf(curInfo); return; }
-  if (bookApi && bookApi.tryOpenFromView()) return;
+  if (curInfo && curInfo.pdf) { track('open pdf: ' + curInfo.title); openPdf(curInfo); return; }
+  if (bookApi && bookApi.tryOpenFromView()) { track('open: monitor'); return; }
   if (!hoverPoster || posterFocus < 0.4) return;
   posterCta?.classList.add('show');
 });
